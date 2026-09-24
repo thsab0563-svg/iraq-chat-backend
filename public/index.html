@@ -2,19 +2,47 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
 <meta name="theme-color" content="#07080f" />
-<title>دردشة العراق</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<title>دردشة العراق | Iraq Chat</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="/socket.io/socket.io.js"></script>
+
+<script id="app-config" type="application/json">
+{
+  "app": { "name_ar": "دردشة العراق", "name_en": "Iraq Chat", "version": "3.1.0" },
+  "colors": ["#f87171","#fb923c","#facc15","#4ade80","#22d3ee","#818cf8","#c084fc","#f472b6","#e11d48","#0ea5e9"],
+  "emojis": ["😀","😂","🥰","😎","🤔","😢","😡","👍","👎","❤️","🔥","🎉","✨","🙏","👏","💪","🌹","☕","🍕","⚽","🎵","📚","💡","🚀","💯","🤝","🙌","😍"]
+}
+</script>
+
 <style>
-:root{--bg:#07080f;--card:#131829;--card2:#1a2036;--text:#eef1f8;--muted:#7a82a0;--muted2:#a5adc4;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);--accent:#7c5cff;--accent2:#22d3ee;--accent3:#5b8cff;--ok:#34d399;--danger:#ff5c78;--shadow:0 12px 40px rgba(0,0,0,.55)}
-body.light{--bg:#f5f6fa;--card:#fff;--card2:#f0f2f8;--text:#0d1020;--muted:#6b7285;--muted2:#4a5168;--border:rgba(0,0,0,.07);--border2:rgba(0,0,0,.12);--shadow:0 12px 40px rgba(0,0,0,.1)}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-input,textarea{user-select:text;-webkit-user-select:text}
+:root{
+  --bg:#07080f;--card:#131829;--card2:#1a2036;
+  --text:#eef1f8;--muted:#7a82a0;--muted2:#a5adc4;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+  --accent:#7c5cff;--accent2:#22d3ee;--accent3:#5b8cff;
+  --ok:#34d399;--warn:#fbbf24;--danger:#ff5c78;
+  --shadow:0 12px 40px rgba(0,0,0,.55);
+}
+body.light{
+  --bg:#f5f6fa;--card:#ffffff;--card2:#f0f2f8;
+  --text:#0d1020;--muted:#6b7285;--muted2:#4a5168;
+  --border:rgba(0,0,0,.07);--border2:rgba(0,0,0,.12);
+  --shadow:0 12px 40px rgba(0,0,0,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;
+  user-select:none;-webkit-user-select:none;-ms-user-select:none;
+  -webkit-touch-callout:none}
+input,textarea{user-select:text;-webkit-user-select:text;-ms-user-select:text}
 html,body{height:100%;overscroll-behavior:none}
-body{font-family:'Cairo',system-ui,sans-serif;color:var(--text);background:var(--bg);overflow:hidden;font-size:15px;transition:background .3s,color .3s}
-button,input,textarea{font-family:inherit;color:inherit;font-size:inherit}
+body{
+  font-family:'Cairo',system-ui,-apple-system,sans-serif;
+  color:var(--text);background:var(--bg);overflow:hidden;
+  -webkit-font-smoothing:antialiased;font-size:15px;
+  transition:background .3s,color .3s;
+}
+button,input,textarea,select{font-family:inherit;color:inherit;font-size:inherit}
 button{cursor:pointer;border:none;background:none}
 input,textarea{outline:none;border:none;background:none}
 ::-webkit-scrollbar{width:0;height:0}
@@ -24,52 +52,57 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 .ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
 .ic-sm{width:18px;height:18px}
 .ic-lg{width:26px;height:26px}
+.ic-xs{width:14px;height:14px}
 .screen{display:none;height:100dvh;width:100%}
 .screen.active{display:flex;flex-direction:column}
+
+/* AUTH */
 #auth{background:radial-gradient(1000px 700px at 100% 0%,rgba(124,92,255,.25),transparent 60%),radial-gradient(900px 700px at 0% 100%,rgba(34,211,238,.18),transparent 60%),var(--bg);overflow-y:auto}
 .auth-wrap{margin:auto;width:100%;max-width:440px;padding:32px 22px}
 .auth-logo{width:80px;height:80px;margin:0 auto 18px;border-radius:24px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent3) 60%,var(--accent2));color:#fff;box-shadow:0 18px 44px rgba(124,92,255,.5)}
 .auth-logo svg{width:42px;height:42px}
-.auth-title{font-size:1.6rem;font-weight:900;text-align:center}
-.auth-sub{text-align:center;color:var(--muted2);font-size:.88rem;margin:8px 0 26px}
+.auth-title{font-size:1.6rem;font-weight:900;text-align:center;letter-spacing:-.5px}
+.auth-sub{text-align:center;color:var(--muted2);font-size:.88rem;margin:8px 0 26px;line-height:1.6}
 .auth-tabs{display:flex;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:4px;margin-bottom:24px}
 .auth-tabs button{flex:1;padding:11px;border-radius:12px;font-weight:700;font-size:.9rem;color:var(--muted2);transition:.2s}
 .auth-tabs button.active{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;box-shadow:0 8px 20px rgba(124,92,255,.35)}
 .field{margin-bottom:16px}
 .field label{display:block;font-size:.78rem;font-weight:700;color:var(--muted2);margin-bottom:8px;padding-inline-start:4px}
 .field input,.field textarea{width:100%;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:.95rem;transition:.2s}
-.field input:focus,.field textarea:focus{border-color:rgba(124,92,255,.6);box-shadow:0 0 0 4px rgba(124,92,255,.15)}
+.field input:focus,.field textarea:focus{border-color:rgba(124,92,255,.6);box-shadow:0 0 0 4px rgba(124,92,255,.15);background:var(--card2)}
 .field textarea{resize:vertical;min-height:70px;line-height:1.6}
 .color-row{display:flex;gap:10px;flex-wrap:wrap}
 .color-row button{width:36px;height:36px;border-radius:50%;border:2px solid transparent;transition:.18s}
 .color-row button.on{border-color:#fff;transform:scale(1.15);box-shadow:0 0 0 3px rgba(255,255,255,.25)}
-.btn-main{width:100%;padding:15px;border-radius:15px;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;font-size:1rem;font-weight:800;box-shadow:0 14px 34px rgba(124,92,255,.35);transition:.2s;display:flex;align-items:center;justify-content:center;gap:10px;min-height:50px}
+.btn-main{width:100%;padding:15px;border-radius:15px;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;font-size:1rem;font-weight:800;box-shadow:0 14px 34px rgba(124,92,255,.35);transition:.2s;display:flex;align-items:center;justify-content:center;gap:10px}
 .btn-main:active{transform:scale(.98)}
-.btn-main:disabled{opacity:.5}
+.btn-main:disabled{opacity:.5;cursor:not-allowed}
 .err{padding:12px 16px;border-radius:14px;background:rgba(255,92,120,.13);border:1px solid rgba(255,92,120,.35);color:#ff9aa8;font-size:.85rem;font-weight:600;text-align:center;margin-top:14px;display:none}
-.err.show{display:block}
+.err.show{display:block;animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+/* APP */
 #app{position:relative;overflow:hidden}
-.tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(72px + env(safe-area-inset-bottom) + 10px)}
+.tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(72px + env(safe-area-inset-bottom) + 10px);-webkit-overflow-scrolling:touch}
 .tab{display:none}
-.tab.active{display:block}
+.tab.active{display:block;animation:fadeUp .28s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .app-header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;padding:14px 18px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
-.app-header h1{font-size:1.2rem;font-weight:900;flex:1}
+.app-header h1{font-size:1.2rem;font-weight:900;letter-spacing:-.3px;flex:1}
 .hbtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card);border:1px solid var(--border);transition:.18s}
 .hbtn:active{transform:scale(.94)}
-.hbtn.acc{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;border-color:transparent}
+.hbtn.acc{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;border-color:transparent;box-shadow:0 8px 20px rgba(124,92,255,.35)}
 .bottom-nav{position:absolute;bottom:0;inset-inline:0;z-index:60;display:flex;height:66px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(24px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom)}
 .bottom-nav button{flex:1;padding:8px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:.65rem;font-weight:700;position:relative;transition:.2s}
 .bottom-nav button.on{color:var(--accent)}
+.bottom-nav button.on .ic{transform:scale(1.12);filter:drop-shadow(0 0 8px rgba(124,92,255,.5))}
 .bottom-nav .badge{position:absolute;top:4px;inset-inline-end:calc(50% - 18px);min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:.65rem;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--bg)}
+
+/* LISTS */
 .list-pad{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;transition:.15s}
 .card:active{transform:scale(.985)}
-.room-card{display:flex;align-items:center;gap:14px;cursor:pointer}
-.room-card .rc-ic{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;font-size:1.5rem;background:linear-gradient(135deg,rgba(124,92,255,.22),rgba(34,211,238,.15))}
-.room-card .rc-info{flex:1;min-width:0}
-.room-card .rc-name{font-weight:800;font-size:.98rem}
-.room-card .rc-sub{font-size:.78rem;color:var(--muted)}
-.user-row{display:flex;align-items:center;gap:12px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:14px;cursor:pointer}
+.user-row{display:flex;align-items:center;gap:12px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:14px;transition:.15s;cursor:pointer}
 .user-row:active{background:var(--card2)}
 .avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:1.05rem;flex:0 0 auto;position:relative;overflow:hidden}
 .avatar img{width:100%;height:100%;object-fit:cover}
@@ -77,182 +110,222 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 .user-row .ur-info{flex:1;min-width:0}
 .user-row .ur-name{font-weight:800;font-size:.94rem;display:flex;align-items:center;gap:6px}
 .user-row .ur-sub{font-size:.76rem;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* POSTS */
 .post{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:12px}
 .post-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .post-head .avatar{width:42px;height:42px;font-size:.95rem}
 .post-head .ph-info{flex:1;min-width:0}
 .post-head .ph-name{font-weight:800;font-size:.92rem;display:flex;align-items:center;gap:6px}
-.post-head .ph-meta{font-size:.74rem;color:var(--muted)}
+.post-head .ph-meta{font-size:.74rem;color:var(--muted);margin-top:1px}
 .post-body{font-size:.95rem;line-height:1.75;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:10px}
 .post-body .htag{color:var(--accent3);font-weight:700;cursor:pointer}
 .post-img{border-radius:14px;overflow:hidden;margin-bottom:10px;border:1px solid var(--border)}
 .post-actions{display:flex;align-items:center;gap:6px;padding-top:10px;border-top:1px solid var(--border);margin-top:4px}
-.post-actions button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:11px;color:var(--muted2);font-size:.82rem;font-weight:700}
+.post-actions button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:11px;color:var(--muted2);font-size:.82rem;font-weight:700;transition:.15s}
+.post-actions button:active{background:var(--card2)}
 .post-actions button.liked{color:var(--danger)}
 .post-actions button.liked .ic{fill:currentColor}
+
+/* CHAT (DM only) */
 #chatView{position:fixed;inset:0;z-index:200;background:var(--bg);display:none;flex-direction:column}
 #chatView.open{display:flex}
-.chat-head{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg);padding-top:calc(12px + env(safe-area-inset-top))}
+.chat-head{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg);backdrop-filter:blur(18px);padding-top:calc(12px + env(safe-area-inset-top))}
 .chat-head .back{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card);border:1px solid var(--border)}
 .chat-head .ch-info{flex:1;min-width:0;display:flex;align-items:center;gap:10px}
 .chat-head .ch-info .avatar{width:40px;height:40px;font-size:.9rem}
 .chat-head .ch-text{flex:1;min-width:0}
 .chat-head .ch-name{font-weight:800;font-size:.98rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chat-head .ch-sub{font-size:.72rem;color:var(--ok)}
+.chat-head .ch-sub{font-size:.72rem;color:var(--ok);margin-top:1px}
 .chat-head .hbtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card);border:1px solid var(--border);color:var(--text)}
 .chat-head .hbtn.call{color:var(--ok)}
 .chat-msgs{flex:1;overflow-y:auto;padding:16px 12px 8px;display:flex;flex-direction:column;gap:10px}
-.cmsg{display:flex;gap:8px;max-width:82%;animation:fade .2s;position:relative;align-items:flex-end}
+.cmsg{display:flex;flex-direction:row;gap:8px;max-width:82%;animation:pop .2s ease;position:relative;align-items:flex-end}
 .cmsg.other{align-self:flex-start}
 .cmsg.me{align-self:flex-end;flex-direction:row-reverse}
 .cmsg .cmsg-avatar{width:32px;height:32px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;color:#fff;font-weight:800;font-size:.8rem;overflow:hidden}
 .cmsg .cmsg-avatar img{width:100%;height:100%;object-fit:cover}
-.cmsg-body{display:flex;flex-direction:column;gap:4px;min-width:0}
-.cmsg .cmeta{font-size:.7rem;color:var(--muted);padding:0 8px;display:flex;gap:6px}
-.cmsg .cbubble{padding:10px 14px;border-radius:16px;font-size:.92rem;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;cursor:pointer}
+.cmsg-body{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.cmsg .cmeta{font-size:.7rem;color:var(--muted);padding:0 8px;display:flex;align-items:center;gap:6px}
+.cmsg.me .cmeta{justify-content:flex-start}
+.cmsg .cbubble{padding:10px 14px;border-radius:16px;font-size:.92rem;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
 .cmsg.other .cbubble{background:var(--card);border:1px solid var(--border);border-start-start-radius:4px}
 .cmsg.me .cbubble{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;border-start-end-radius:4px}
-.cbubble img{border-radius:10px;margin-top:4px;max-width:220px}
+.cbubble img{border-radius:10px;margin-top:4px;max-width:220px;cursor:pointer}
 .cbubble .deleted{font-style:italic;opacity:.6;font-size:.85rem}
 .cbubble .htag{color:var(--accent3);font-weight:700}
 .cmsg.me .cbubble .htag{color:#a5e4ff}
-.cmsg .read-marks{font-size:.7rem;color:var(--muted);padding:0 8px}
+.cmsg .read-marks{font-size:.7rem;color:var(--muted);padding:0 8px;display:flex;gap:2px;justify-content:flex-start}
 .cmsg.me .read-marks{color:var(--accent2)}
-.creactions{display:flex;gap:3px;padding:0 8px;flex-wrap:wrap}
-.creactions span{background:var(--card2);border:1px solid var(--border);border-radius:99px;padding:1px 7px;font-size:.7rem}
-.cmsg .pop-actions{position:absolute;top:-6px;inset-inline-start:100%;margin-inline-start:6px;display:flex;gap:3px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:4px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.15s;z-index:5;max-width:220px;flex-wrap:wrap}
-.cmsg.other .pop-actions{inset-inline-start:auto;inset-inline-end:100%;margin-inline-end:6px}
-.cmsg.show-actions .pop-actions{opacity:1;pointer-events:auto}
-.pop-actions button{width:30px;height:30px;border-radius:7px;display:grid;place-items:center;font-size:.9rem}
-.sys-msg{align-self:center;font-size:.74rem;color:var(--muted);background:var(--card);border:1px solid var(--border);padding:5px 14px;border-radius:99px}
-@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.chat-input-row{padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--bg);display:flex;align-items:flex-end;gap:8px}
-.mini-btn{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--card);border:1px solid var(--border);color:var(--text);flex:0 0 auto;font-size:1.2rem}
-.mini-btn:active{background:var(--accent);color:#fff}
+.cmsg .read-marks.delivered{color:var(--muted2)}
+@keyframes pop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+.chat-input-row{padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--bg);backdrop-filter:blur(18px);display:flex;align-items:flex-end;gap:8px}
+.mini-btn{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--card);border:1px solid var(--border);color:var(--text);flex:0 0 auto;transition:.15s}
+.mini-btn:active{background:var(--accent);color:#fff;transform:scale(.94)}
 #chatInput{flex:1;padding:11px 15px;border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:.92rem;line-height:1.5;max-height:120px;min-height:42px;resize:none}
-.send{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;flex:0 0 auto;box-shadow:0 8px 20px rgba(124,92,255,.35);font-size:1.2rem}
+#chatInput:focus{border-color:rgba(124,92,255,.55)}
+.send{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;flex:0 0 auto;box-shadow:0 8px 20px rgba(124,92,255,.35);transition:.15s}
 .send:active{transform:scale(.93)}
+
+/* SEARCH */
 .search-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:var(--card);border:1px solid var(--border);margin:12px 16px}
-.search-bar input{flex:1;font-size:.94rem}
+.search-bar input{flex:1;font-size:.94rem;background:none}
+.search-bar svg{color:var(--muted)}
 .trends-list{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 8px}
-.trend-chip{padding:8px 14px;border-radius:12px;background:var(--card);border:1px solid var(--border);font-size:.85rem;font-weight:700}
-.trend-chip .cnt{color:var(--muted);font-size:.72rem;margin-inline-start:4px}
+.trend-chip{padding:8px 14px;border-radius:12px;background:var(--card);border:1px solid var(--border);font-size:.85rem;font-weight:700;color:var(--text);transition:.15s}
+.trend-chip:active{background:var(--accent);color:#fff}
+.trend-chip .cnt{color:var(--muted);font-size:.72rem;font-weight:600;margin-inline-start:4px}
+
+/* PROFILE */
 .profile-cover{height:150px;position:relative;background:linear-gradient(135deg,#7c5cff,#5b8cff 50%,#22d3ee);overflow:hidden}
 .profile-cover img{width:100%;height:100%;object-fit:cover}
-.profile-cover .edit-cover{position:absolute;bottom:8px;inset-inline-end:8px;padding:6px 12px;border-radius:10px;background:rgba(0,0,0,.55);color:#fff;font-size:.78rem;font-weight:700;backdrop-filter:blur(6px)}
+.profile-cover .edit-cover{position:absolute;bottom:8px;inset-inline-end:8px;padding:6px 12px;border-radius:10px;background:rgba(0,0,0,.5);color:#fff;font-size:.78rem;font-weight:700;backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.2)}
 .profile-body{padding:0 18px 20px}
 .profile-avatar{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:900;font-size:2.2rem;border:4px solid var(--bg);margin-top:-52px;background:linear-gradient(135deg,#7c5cff,#5b8cff);position:relative;overflow:hidden;cursor:pointer}
 .profile-avatar img{width:100%;height:100%;object-fit:cover}
-.profile-avatar .cam{position:absolute;bottom:4px;inset-inline-end:4px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;border:2px solid var(--bg);font-size:.7rem}
+.profile-avatar .cam{position:absolute;bottom:4px;inset-inline-end:4px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;border:2px solid var(--bg)}
 .profile-name{font-size:1.3rem;font-weight:900;margin-top:12px;display:flex;align-items:center;gap:8px}
-.profile-user{color:var(--muted);font-size:.88rem;margin-top:2px}
+.profile-user{color:var(--muted);font-size:.88rem;margin-top:2px;display:flex;align-items:center;gap:6px}
 .profile-bio{margin-top:14px;font-size:.92rem;line-height:1.65;color:var(--muted2)}
 .profile-meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:.82rem;color:var(--muted2)}
-.profile-stats{display:flex;margin-top:16px;padding:14px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-.profile-stats .stat{flex:1;text-align:center}
+.profile-meta span{display:flex;align-items:center;gap:6px}
+.profile-stats{display:flex;gap:20px;margin-top:16px;padding:14px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.profile-stats .stat{flex:1;text-align:center;cursor:pointer}
 .profile-stats .stat .num{font-size:1.3rem;font-weight:900;color:var(--accent)}
-.profile-stats .stat .lbl{font-size:.75rem;color:var(--muted);margin-top:2px}
+.profile-stats .stat .lbl{font-size:.75rem;color:var(--muted);margin-top:2px;font-weight:600}
 .profile-actions{display:flex;gap:10px;margin-top:16px}
 .profile-actions button{flex:1;padding:12px;border-radius:14px;font-weight:800;font-size:.88rem;display:flex;align-items:center;justify-content:center;gap:6px}
 .btn-fill{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff}
 .btn-ghost{background:var(--card);border:1px solid var(--border);color:var(--text)}
-.tabs-inner{display:flex;border-bottom:1px solid var(--border);position:sticky;top:60px;background:var(--bg);z-index:10}
-.tabs-inner button{flex:1;padding:14px;font-weight:800;font-size:.88rem;color:var(--muted);border-bottom:2px solid transparent}
+.tabs-inner{display:flex;margin-top:18px;border-bottom:1px solid var(--border);position:sticky;top:60px;background:var(--bg);z-index:10}
+.tabs-inner button{flex:1;padding:14px;font-weight:800;font-size:.88rem;color:var(--muted);border-bottom:2px solid transparent;transition:.2s}
 .tabs-inner button.on{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* MODAL */
 .modal{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center}
-.modal.open{display:flex}
+.modal.open{display:flex;animation:fadeIn .2s}
 .modal.center{align-items:center}
-.modal-card{background:var(--card);border-radius:24px 24px 0 0;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
-.modal.center .modal-card{border-radius:24px;margin:20px}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-card{background:var(--card);border-radius:24px 24px 0 0;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;padding:20px;animation:slideUp .3s cubic-bezier(.2,.8,.3,1);padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+.modal.center .modal-card{border-radius:24px;margin:20px;animation:rise .3s cubic-bezier(.2,.8,.3,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes rise{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+.modal-card::before{content:'';display:block;width:44px;height:4px;border-radius:99px;background:var(--border2);margin:-8px auto 14px}
+.modal.center .modal-card::before{display:none}
 .modal-title{font-size:1.05rem;font-weight:900;margin-bottom:16px;text-align:center}
 .modal-list{display:flex;flex-direction:column;gap:6px}
-.modal-item{display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;background:var(--card2);font-weight:700;font-size:.92rem;text-align:start;width:100%}
+.modal-item{display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;background:var(--card2);transition:.15s;font-weight:700;font-size:.92rem;text-align:start;width:100%}
+.modal-item:active{transform:scale(.98)}
+.modal-item svg{color:var(--muted2)}
 .modal-item.danger{color:var(--danger)}
+.modal-item.danger svg{color:var(--danger)}
 .modal-item .arrow{margin-inline-start:auto;color:var(--muted)}
+
+/* TOAST */
 #toasts{position:fixed;top:calc(14px + env(safe-area-inset-top));inset-inline:14px;z-index:999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
-.toast{padding:12px 18px;border-radius:14px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);font-size:.88rem;font-weight:700;max-width:100%;pointer-events:auto}
+.toast{padding:12px 18px;border-radius:14px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:10px;animation:slideDown .25s;max-width:100%;pointer-events:auto}
 .toast.ok{border-color:rgba(52,211,153,.4);color:#7ee7b8}
 .toast.err{border-color:rgba(255,92,120,.4);color:#ff9aa8}
 .toast.info{border-color:rgba(124,92,255,.4);color:#c9b8ff}
+@keyframes slideDown{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+
 .spinner{width:22px;height:22px;border:2.5px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 #pageLoader{position:fixed;inset:0;z-index:9999;background:var(--bg);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
 #pageLoader.show{display:flex}
 #pageLoader .spinner{width:44px;height:44px;border-width:4px}
+
 #netBanner{position:fixed;top:0;inset-inline:0;z-index:1000;background:var(--danger);color:#fff;padding:10px 16px;text-align:center;font-weight:700;font-size:.85rem;display:none;align-items:center;justify-content:center;gap:12px;padding-top:calc(10px + env(safe-area-inset-top))}
 #netBanner.show{display:flex}
 #netBanner button{background:rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:6px 12px;font-weight:800;font-size:.78rem}
-#callOverlay{position:fixed;inset:0;z-index:500;background:linear-gradient(180deg,#0a0d18,#131829);display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px}
-#callOverlay.open{display:flex}
-.call-avatar-lg{width:130px;height:130px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:900;font-size:3rem;background:linear-gradient(135deg,var(--accent),var(--accent3));margin-bottom:24px;overflow:hidden}
+
+/* CALL */
+#callOverlay{position:fixed;inset:0;z-index:500;background:radial-gradient(circle at 50% 30%,rgba(124,92,255,.3),transparent 60%),linear-gradient(180deg,#0a0d18,#131829);display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px}
+#callOverlay.open{display:flex;animation:fadeIn .25s}
+.call-avatar-lg{width:130px;height:130px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:900;font-size:3rem;background:linear-gradient(135deg,var(--accent),var(--accent3));box-shadow:0 0 0 0 rgba(124,92,255,.6);animation:pulseCall 2s infinite;margin-bottom:24px;overflow:hidden}
 .call-avatar-lg img{width:100%;height:100%;object-fit:cover}
+@keyframes pulseCall{0%{box-shadow:0 0 0 0 rgba(124,92,255,.5)}70%{box-shadow:0 0 0 32px rgba(124,92,255,0)}100%{box-shadow:0 0 0 0 rgba(124,92,255,0)}}
 .call-name-lg{font-size:1.6rem;font-weight:900;color:#fff;margin-bottom:6px}
 .call-status-lg{font-size:.95rem;color:rgba(255,255,255,.65);margin-bottom:8px;text-align:center}
-.call-timer{font-size:.95rem;color:rgba(255,255,255,.8);font-weight:700;margin-bottom:36px;display:none}
+.call-timer{font-size:.95rem;color:rgba(255,255,255,.8);font-variant-numeric:tabular-nums;font-weight:700;margin-bottom:36px;display:none}
 .call-timer.show{display:block}
 .call-buttons{display:flex;gap:24px}
-.call-btn{width:70px;height:70px;border-radius:50%;display:grid;place-items:center;color:#fff}
-.call-btn.accept{background:linear-gradient(135deg,#34d399,#22c55e)}
-.call-btn.reject{background:linear-gradient(135deg,#ff5c78,#ef4444)}
+.call-btn{width:70px;height:70px;border-radius:50%;display:grid;place-items:center;color:#fff;transition:.15s}
+.call-btn:active{transform:scale(.92)}
+.call-btn.accept{background:linear-gradient(135deg,#34d399,#22c55e);box-shadow:0 12px 34px rgba(52,211,153,.5)}
+.call-btn.reject{background:linear-gradient(135deg,#ff5c78,#ef4444);box-shadow:0 12px 34px rgba(255,92,120,.5)}
 .call-btn.mute{background:rgba(255,255,255,.15);width:60px;height:60px}
 .call-btn.mute.on{background:#ff5c78}
 .call-btn.mute.speaker-on{background:linear-gradient(135deg,#34d399,#22c55e)}
 .call-btn svg{width:30px;height:30px}
 .call-controls{display:flex;gap:18px;margin-top:20px}
+
 #emojiPick{display:none;padding:12px;background:var(--card);border-top:1px solid var(--border);flex-wrap:wrap;gap:4px;max-height:200px;overflow-y:auto}
 #emojiPick.show{display:flex}
-#emojiPick button{font-size:1.6rem;padding:6px;border-radius:10px}
+#emojiPick button{font-size:1.6rem;padding:6px;border-radius:10px;transition:.12s}
+#emojiPick button:active{background:var(--accent);transform:scale(1.15)}
+
 .empty{padding:60px 30px;text-align:center;color:var(--muted)}
+.empty svg{width:60px;height:60px;opacity:.35;margin:0 auto 16px;stroke:currentColor;fill:none;stroke-width:1.5}
 .empty p{font-size:.9rem;line-height:1.6}
-.sec-title{padding:18px 18px 8px;font-size:.82rem;font-weight:800;color:var(--muted)}
+.sec-title{padding:18px 18px 8px;font-size:.82rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+@media(min-width:720px){
+  .auth-wrap{padding:48px 32px}
+  .modal{align-items:center}
+  .modal-card{border-radius:24px;margin:20px}
+}
 </style>
 </head>
 <body>
 
 <div id="pageLoader"><div class="spinner"></div><div style="color:var(--muted);font-weight:700">جارٍ التحميل...</div></div>
-<div id="netBanner"><span>⚠️ لا يوجد اتصال</span><button id="netClose">إغلاق</button></div>
+<div id="netBanner"><span>⚠️ لا يوجد اتصال بالإنترنت</span><button onclick="document.getElementById('netBanner').classList.remove('show')">إغلاق</button></div>
 <div id="toasts"></div>
 
+<!-- AUTH -->
 <div id="auth" class="screen active">
   <div class="auth-wrap">
-    <div class="auth-logo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 5.94 2 10.8c0 2.7 1.36 5.1 3.5 6.7V22l4.03-2.2c.79.16 1.61.25 2.47.25 5.52 0 10-3.94 10-8.8S17.52 2 12 2z"/></svg></div>
+    <div class="auth-logo">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 5.94 2 10.8c0 2.7 1.36 5.1 3.5 6.7V22l4.03-2.2c.79.16 1.61.25 2.47.25 5.52 0 10-3.94 10-8.8S17.52 2 12 2z"/></svg>
+    </div>
     <h1 class="auth-title">دردشة العراق</h1>
-    <p class="auth-sub">تواصل مع أصدقائك</p>
+    <p class="auth-sub">تواصل مع أصدقائك في محافظاتك</p>
     <div class="auth-tabs">
       <button id="tabLogin" class="active">دخول</button>
       <button id="tabRegister">حساب جديد</button>
     </div>
     <div id="loginForm">
-      <div class="field"><label>اسم المستخدم أو الاسم</label><input id="liUser" placeholder="اكتب اسمك..." /></div>
-      <div class="field"><label>كلمة المرور</label><input id="liPass" type="password" placeholder="••••••" /></div>
-      <button id="btnLogin" class="btn-main"><span>تسجيل الدخول</span></button>
+      <div class="field"><label>اسم المستخدم أو الاسم</label><input id="liUser" placeholder="اكتب اسمك..." autocomplete="username" /></div>
+      <div class="field"><label>كلمة المرور</label><input id="liPass" type="password" placeholder="••••••" autocomplete="current-password" /></div>
+      <button id="btnLogin" class="btn-main">تسجيل الدخول</button>
     </div>
     <div id="regForm" class="hide">
-      <div class="field"><label>الاسم الظاهر</label><input id="rgName" placeholder="أحمد" maxlength="30" /></div>
-      <div class="field"><label>كلمة المرور</label><input id="rgPass" type="password" placeholder="4 أحرف على الأقل" /></div>
-      <div class="field"><label>رقم الهاتف (اختياري)</label><input id="rgPhone" type="tel" placeholder="+964..." /></div>
+      <div class="field"><label>الاسم الظاهر</label><input id="rgName" placeholder="مثال: أحمد" maxlength="30" /></div>
+      <div class="field"><label>كلمة المرور (4 أحرف على الأقل)</label><input id="rgPass" type="password" placeholder="••••••" /></div>
+      <div class="field"><label>رقم الهاتف (اختياري - للتوثيق)</label><input id="rgPhone" type="tel" placeholder="+964..." /></div>
       <div class="field"><label>المحافظة</label><input id="rgLocation" placeholder="بغداد" /></div>
       <div class="field"><label>لون اسمك</label><div class="color-row" id="colorRow"></div></div>
-      <button id="btnRegister" class="btn-main"><span>إنشاء حساب</span></button>
+      <button id="btnRegister" class="btn-main">إنشاء حساب</button>
     </div>
     <div class="err" id="authErr"></div>
   </div>
 </div>
 
+<!-- APP -->
 <div id="app" class="screen">
   <div class="tab-content">
-    <div id="tab-rooms" class="tab active">
-      <header class="app-header"><h1>الغرف</h1><button class="hbtn" id="btnMenu">☰</button></header>
-      <div class="list-pad" id="roomsList"></div>
-    </div>
-    <div id="tab-posts" class="tab">
-      <header class="app-header"><h1>المنشورات</h1><button class="hbtn acc" id="btnNewPost">+</button></header>
+    <div id="tab-posts" class="tab active">
+      <header class="app-header">
+        <h1>المنشورات</h1>
+        <button class="hbtn" id="btnMenu">☰</button>
+        <button class="hbtn acc" id="btnNewPost">+</button>
+      </header>
       <div id="suggestionsSection"></div>
       <div class="list-pad" id="postsList"></div>
     </div>
     <div id="tab-search" class="tab">
       <header class="app-header"><h1>البحث</h1></header>
-      <div class="search-bar"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="searchInput" placeholder="ابحث..." /></div>
+      <div class="search-bar"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="searchInput" placeholder="ابحث عن مستخدم أو هاشتاق..." /></div>
       <div class="sec-title">الأكثر تداولاً</div>
       <div class="trends-list" id="trendsList"></div>
       <div id="searchResults"></div>
@@ -271,31 +344,27 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
     <div id="tab-profile" class="tab"><div id="profileContent"></div></div>
   </div>
   <nav class="bottom-nav">
-    <button data-tab="rooms" class="on"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>الدردشة</span></button>
-    <button data-tab="posts"><svg class="ic" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><span>المنشورات</span></button>
+    <button data-tab="posts" class="on"><svg class="ic" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><span>المنشورات</span></button>
     <button data-tab="search"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>البحث</span></button>
-    <button data-tab="notifs"><svg class="ic" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg><span>التنبيهات</span><span class="badge hide" id="notifBadge">0</span></button>
+    <button data-tab="notifs"><svg class="ic" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>التنبيهات</span><span class="badge hide" id="notifBadge">0</span></button>
     <button data-tab="profile"><svg class="ic" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>حسابي</span></button>
   </nav>
 </div>
 
+<!-- CHAT VIEW (DM only) -->
 <div id="chatView">
   <header class="chat-head">
-    <button class="back" id="chatBack">←</button>
+    <button class="back" id="chatBack"><svg class="ic" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
     <div class="ch-info">
       <div class="avatar" id="chatAvatar" style="display:none">?</div>
       <div class="ch-text">
-        <div class="ch-name" id="chatName">غرفة</div>
-        <div class="ch-sub" id="chatSub">0 متصل</div>
+        <div class="ch-name" id="chatName">—</div>
+        <div class="ch-sub" id="chatSub">متصل</div>
       </div>
     </div>
-    <button class="hbtn call hide" id="chatCall">📞</button>
-    <button class="hbtn" id="chatInfo">ⓘ</button>
+    <button class="hbtn call" id="chatCall"><svg class="ic" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+    <button class="hbtn" id="chatInfo"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
   </header>
-  <div id="pinBar" style="display:none;padding:8px 14px;background:var(--card);border-bottom:1px solid var(--border);font-size:.82rem;align-items:center;gap:8px">
-    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="pinText"></span>
-    <button id="unpinBtn" style="color:var(--muted);padding:4px">✕</button>
-  </div>
   <div class="chat-msgs" id="chatMsgs"></div>
   <div style="height:20px;font-size:.78rem;color:var(--accent2);padding:0 22px;opacity:0;transition:.2s" id="typing"></div>
   <div id="emojiPick"></div>
@@ -304,156 +373,176 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
     <button id="cancelImg" style="background:rgba(255,92,120,.2);color:#ff9aa8;border-radius:10px;padding:8px 14px;font-weight:700">إلغاء</button>
   </div>
   <div class="chat-input-row">
-    <button class="mini-btn" id="emojiBtn">😀</button>
-    <button class="mini-btn" id="imgBtn">📷</button>
+    <button class="mini-btn" id="emojiBtn"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg></button>
+    <button class="mini-btn" id="imgBtn"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>
     <textarea id="chatInput" rows="1" placeholder="اكتب رسالة..."></textarea>
-    <button class="send" id="chatSend">➤</button>
+    <button class="send" id="chatSend"><svg class="ic" viewBox="0 0 24 24" style="transform:scaleX(-1)"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
   </div>
   <input type="file" id="imgInput" accept="image/*" class="hide" />
 </div>
 
 <div class="modal" id="modal"><div class="modal-card" id="modalBody"></div></div>
 
+<!-- CALL OVERLAY -->
 <div id="callOverlay">
   <div class="call-avatar-lg" id="callAvatar">؟</div>
   <div class="call-name-lg" id="callName">-</div>
   <div class="call-status-lg" id="callStatus">...</div>
   <div class="call-timer" id="callTimer">00:00</div>
   <div id="callIncoming" class="call-buttons">
-    <button class="call-btn reject" id="callReject">📵</button>
-    <button class="call-btn accept" id="callAccept">📞</button>
+    <button class="call-btn reject" id="callReject"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07"/><line x1="23" y1="1" x2="1" y2="23"/></svg></button>
+    <button class="call-btn accept" id="callAccept"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
   </div>
   <div id="callActive" class="call-controls hide">
-    <button class="call-btn mute" id="speakerBtn">🔊</button>
-    <button class="call-btn mute" id="muteBtn">🎤</button>
-    <button class="call-btn reject" id="endCallBtn">📵</button>
+    <button class="call-btn mute" id="speakerBtn" title="السبيكر"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+    <button class="call-btn mute" id="muteBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
+    <button class="call-btn reject" id="endCallBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform:rotate(135deg)"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
   </div>
 </div>
+
+<!-- DM ALERT -->
+<div class="modal" id="dmAlert"><div class="modal-card" style="text-align:center">
+  <div style="font-size:1.1rem;font-weight:900;margin-bottom:12px" id="dmAlertTitle">تنبيه</div>
+  <p style="color:var(--muted2);font-size:.9rem;line-height:1.7;margin-bottom:20px" id="dmAlertText"></p>
+  <button class="btn-main" onclick="document.getElementById('dmAlert').classList.remove('open')">فهمت</button>
+</div></div>
 
 <script>
 (function(){
 'use strict';
-var $ = function(id){ return document.getElementById(id); };
-var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
-var COLORS = ['#f87171','#fb923c','#facc15','#4ade80','#22d3ee','#818cf8','#c084fc','#f472b6','#e11d48','#0ea5e9'];
-var EMOJIS = ['😀','😂','🥰','😎','🤔','😢','😡','👍','👎','❤️','🔥','🎉','✨','🙏','👏','💪','🌹','☕','🍕','⚽','🎵','📚','💡','🚀'];
-var REACTS = ['❤️','😂','👍','😮','😢','🔥'];
-var ROOM_ICONS = {'بغداد':'🏛️','البصرة':'⚓','نينوى':'🕌','أربيل':'🏔️','النجف':'🕋','كربلاء':'🌙','ذي قار':'📜','الأنبار':'🏜️','بابل':'🗿','ديالى':'🍊','واسط':'🌾','ميسان':'🐟','المثنى':'🏜️','القادسية':'🌾','صلاح الدين':'⛰️','كركوك':'🛢️','دهوك':'🏔️','السليمانية':'🌿','حلبجة':'🌸'};
-var ROOMS_LIST = ['بغداد','البصرة','نينوى','أربيل','النجف','كربلاء','ذي قار','الأنبار','بابل','ديالى','واسط','ميسان','المثنى','القادسية','صلاح الدين','كركوك','دهوك','السليمانية','حلبجة'];
+const CFG = JSON.parse(document.getElementById('app-config').textContent);
+const socket = io({ transports: ['websocket', 'polling'] });
+const $ = function(id){ return document.getElementById(id); };
+const $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
 
-var ME = null, TOKEN = localStorage.getItem('token');
-var CURRENT_ROOM = null, CURRENT_DM = null;
-var selectedColor = COLORS[0];
-var soundOn = true, pendingImage = null;
-var typingTimer = null, typingSent = false, dmTypingTimer = null;
-var callTimerInterval = null, callSeconds = 0, speakerOn = false;
-var typingUsers = new Map();
-var usersByRoom = {};
+let ME = null, TOKEN = localStorage.getItem('token');
+let CURRENT_DM = null;
+let selectedColor = CFG.colors[0];
+let soundOn = true;
+let pendingChatImage = null;    // صورة الدردشة
+let pendingPostImage = null;    // صورة المنشور (منفصلة!)
+let dmTypingTimer = null;
+let callTimerInterval = null, callSeconds = 0, speakerOn = false;
+let dmAlertShown = false;
+let currentTab = 'posts';
 
-var esc = function(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
-var initial = function(n){ return (n||'؟').trim().charAt(0).toUpperCase(); };
-var fmtTime = function(ts){ return new Intl.DateTimeFormat('ar-EG',{hour:'2-digit',minute:'2-digit'}).format(new Date(ts)); };
-var fmtDate = function(ts){
-  var diff = (Date.now() - ts) / 1000;
+const esc = function(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+const initial = function(n){ return (n||'؟').trim().charAt(0).toUpperCase(); };
+const fmtTime = function(ts){ return new Intl.DateTimeFormat('ar-EG',{hour:'2-digit',minute:'2-digit'}).format(new Date(ts)); };
+const fmtDate = function(ts){
+  const d = new Date(ts), now = new Date(), diff = (now-d)/1000;
   if(diff < 60) return 'الآن';
   if(diff < 3600) return 'منذ ' + Math.floor(diff/60) + ' د';
   if(diff < 86400) return 'منذ ' + Math.floor(diff/3600) + ' س';
-  if(diff < 604800) return 'منذ ' + Math.floor(diff/86400) + ' ي';
-  return new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'short'}).format(new Date(ts));
+  if(diff < 172800) return 'أمس';
+  if(diff < 604800) return 'منذ ' + Math.floor(diff/86400) + ' أيام';
+  return new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'short'}).format(d);
 };
 function linkify(text){
-  var s = esc(text);
-  s = s.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+  let s = esc(text);
+  s = s.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
   s = s.replace(/#([\u0600-\u06FF\w_]{1,40})/g, '<span class="htag" data-tag="$1">#$1</span>');
   return s;
 }
 function avatarHTML(user, size){
-  var color = (user && user.color) || '#7c5cff';
-  var sz = size ? 'width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size*0.42) + 'px' : '';
-  var vb = (user && user.verified) ? '<span class="vbadge">✓</span>' : '';
+  const color = (user && user.color) || '#7c5cff';
+  const sz = size ? 'width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size*0.42) + 'px' : '';
+  const vb = (user && user.verified) ? '<span class="vbadge">✓</span>' : '';
   if(user && user.avatar) return '<div class="avatar" style="' + sz + '"><img src="' + esc(user.avatar) + '" />' + vb + '</div>';
-  var nm = (user && user.display_name) ? user.display_name : '';
+  const nm = (user && user.display_name) ? user.display_name : '';
   return '<div class="avatar" style="background:linear-gradient(135deg,' + color + ',#5b8cff);' + sz + '">' + esc(initial(nm)) + vb + '</div>';
 }
 function toast(text, type){
-  var el = document.createElement('div');
+  const container = $('toasts');
+  while(container.children.length >= 4) container.removeChild(container.firstChild);
+  const el = document.createElement('div');
   el.className = 'toast ' + (type || 'info');
   el.textContent = text;
-  $('toasts').appendChild(el);
-  setTimeout(function(){ el.style.opacity = '0'; el.style.transition = '.3s'; setTimeout(function(){ el.remove(); }, 300); }, 2800);
+  container.appendChild(el);
+  setTimeout(function(){ el.style.opacity='0'; el.style.transition='.3s'; setTimeout(function(){ el.remove(); }, 300); }, 2800);
 }
-function showErr(text){ var e = $('authErr'); e.textContent = text; e.classList.add('show'); setTimeout(function(){ e.classList.remove('show'); }, 4000); }
+function showErr(text){ const e = $('authErr'); e.textContent = text; e.classList.add('show'); setTimeout(function(){ e.classList.remove('show'); }, 4000); }
 function showLoader(){ $('pageLoader').classList.add('show'); }
 function hideLoader(){ $('pageLoader').classList.remove('show'); }
 
 async function api(path, opts){
   opts = opts || {};
-  var headers = { 'Content-Type': 'application/json' };
+  const headers = { 'Content-Type': 'application/json' };
+  if(opts.headers) for(const k in opts.headers) headers[k] = opts.headers[k];
   if(TOKEN) headers['Authorization'] = 'Bearer ' + TOKEN;
-  var res = await fetch('/api' + path, Object.assign({}, opts, { headers: headers }));
-  var data = null;
+  const res = await fetch('/api' + path, Object.assign({}, opts, { headers: headers }));
+  let data = null;
   try { data = await res.json(); } catch(_){}
-  if(!res.ok){
-    var err = new Error((data && data.error) || ('http_' + res.status));
+  if(!res.ok) {
+    const err = new Error((data && data.error) || ('http_' + res.status));
     if(data && data.days_left) err.days_left = data.days_left;
     throw err;
   }
   return data;
 }
 
-var socket = io();
+/* رفع الصور مع توثيق */
+async function uploadImage(file){
+  const fd = new FormData();
+  fd.append('image', file);
+  const headers = {};
+  if(TOKEN) headers['Authorization'] = 'Bearer ' + TOKEN;
+  const res = await fetch('/upload', { method: 'POST', body: fd, headers: headers });
+  if(!res.ok) throw new Error('upload_failed');
+  return res.json();
+}
 
-window.addEventListener('online', function(){ $('netBanner').classList.remove('show'); toast('عاد الاتصال', 'ok'); });
-window.addEventListener('offline', function(){ $('netBanner').classList.add('show'); });
-$('netClose').onclick = function(){ $('netBanner').classList.remove('show'); };
+window.addEventListener('online', function(){
+  $('netBanner').classList.remove('show');
+  toast('✅ عاد الاتصال بالإنترنت', 'ok');
+});
+window.addEventListener('offline', function(){
+  $('netBanner').classList.add('show');
+  toast('⚠️ انقطع الاتصال بالإنترنت', 'err');
+});
 
-var colorRow = $('colorRow');
-COLORS.forEach(function(c, i){
-  var b = document.createElement('button');
-  b.type = 'button'; b.style.background = c;
+/* AUTH */
+const colorRow = $('colorRow');
+CFG.colors.forEach(function(c, i){
+  const b = document.createElement('button');
+  b.type = 'button'; b.style.background = c; b.dataset.color = c;
   if(i === 0) b.classList.add('on');
-  b.onclick = function(){
+  b.addEventListener('click', function(){
     Array.prototype.forEach.call(colorRow.children, function(x){ x.classList.remove('on'); });
     b.classList.add('on'); selectedColor = c;
-  };
+  });
   colorRow.appendChild(b);
 });
 
-$('tabLogin').onclick = function(){
-  $('tabLogin').classList.add('active'); $('tabRegister').classList.remove('active');
-  $('loginForm').classList.remove('hide'); $('regForm').classList.add('hide');
-};
-$('tabRegister').onclick = function(){
-  $('tabRegister').classList.add('active'); $('tabLogin').classList.remove('active');
-  $('regForm').classList.remove('hide'); $('loginForm').classList.add('hide');
-};
+$('tabLogin').onclick = function(){ $('tabLogin').classList.add('active'); $('tabRegister').classList.remove('active'); $('loginForm').classList.remove('hide'); $('regForm').classList.add('hide'); };
+$('tabRegister').onclick = function(){ $('tabRegister').classList.add('active'); $('tabLogin').classList.remove('active'); $('regForm').classList.remove('hide'); $('loginForm').classList.add('hide'); };
 
 $('btnLogin').onclick = async function(){
-  var u = $('liUser').value.trim(), p = $('liPass').value;
+  const u = $('liUser').value.trim(), p = $('liPass').value;
   if(!u || !p) return showErr('الرجاء تعبئة الحقول');
-  this.disabled = true; showLoader();
+  $('btnLogin').disabled = true; showLoader();
   try {
-    var r = await api('/login', { method: 'POST', body: JSON.stringify({ username: u, password: p }) });
+    const r = await api('/login', { method: 'POST', body: JSON.stringify({ username: u, password: p }) });
     TOKEN = r.token; localStorage.setItem('token', TOKEN);
     enterApp(r.user);
   } catch(e) { showErr(e.message === 'invalid_credentials' ? 'بيانات الدخول غير صحيحة' : e.message); }
-  this.disabled = false; hideLoader();
+  $('btnLogin').disabled = false; hideLoader();
 };
 
 $('btnRegister').onclick = async function(){
-  var name = $('rgName').value.trim(), pass = $('rgPass').value;
+  const name = $('rgName').value.trim(), pass = $('rgPass').value;
   if(!name) return showErr('الاسم مطلوب');
   if(pass.length < 4) return showErr('كلمة المرور قصيرة');
-  this.disabled = true; showLoader();
+  $('btnRegister').disabled = true; showLoader();
   try {
-    var r = await api('/register', { method: 'POST', body: JSON.stringify({
+    const r = await api('/register', { method: 'POST', body: JSON.stringify({
       display_name: name, password: pass, color: selectedColor,
       phone: $('rgPhone').value.trim(), location: $('rgLocation').value.trim(), country: 'العراق'
     }) });
     TOKEN = r.token; localStorage.setItem('token', TOKEN);
     enterApp(r.user);
   } catch(e) { showErr(e.message === 'name_taken' ? 'الاسم مستخدم' : e.message); }
-  this.disabled = false; hideLoader();
+  $('btnRegister').disabled = false; hideLoader();
 };
 
 function enterApp(user){
@@ -466,352 +555,287 @@ function enterApp(user){
 }
 function applyTheme(theme){ document.body.classList.toggle('light', theme === 'light'); }
 
+/* SOCKET */
 socket.on('auth-error', function(){ logout(true); });
 socket.on('auth-ok', function(data){ ME = data.user; loadEverything(); });
-socket.on('rooms', function(rooms){ renderRooms(rooms); });
-socket.on('joined', function(data){
-  CURRENT_ROOM = data.room; CURRENT_DM = null;
-  $('chatName').textContent = data.room;
-  $('chatSub').textContent = '0 متصل';
-  $('chatAvatar').style.display = 'none';
-  $('chatCall').classList.add('hide');
-  $('chatView').classList.add('open');
-  $('chatMsgs').innerHTML = '';
-});
-socket.on('history', function(msgs){ $('chatMsgs').innerHTML = ''; msgs.forEach(renderChatMsg); scrollChat(true); });
-socket.on('message', function(m){
-  var near = isNearBottom();
-  renderChatMsg(m);
-  if(m.system) return;
-  if(m.sid === socket.id || near) scrollChat();
-  if(m.sid !== socket.id && soundOn) playBeep();
-});
-socket.on('users', function(list){
-  usersByRoom[CURRENT_ROOM] = list;
-  if($('chatSub')) $('chatSub').textContent = list.length + ' متصل';
-});
-socket.on('typing', function(data){
-  if(data.isTyping) typingUsers.set(data.name, Date.now());
-  else typingUsers.delete(data.name);
-  renderTyping();
-});
-setInterval(function(){
-  var ch = false, now = Date.now();
-  typingUsers.forEach(function(ts, n){ if(now - ts > 3500){ typingUsers.delete(n); ch = true; } });
-  if(ch) renderTyping();
-}, 1000);
-function renderTyping(){
-  var el = $('typing'); if(!el) return;
-  var names = Array.from(typingUsers.keys());
-  if(!names.length){ el.style.opacity = 0; el.textContent = ''; return; }
-  el.style.opacity = 1;
-  el.textContent = names.length === 1 ? names[0] + ' يكتب...' : names.length + ' أشخاص يكتبون...';
-}
-socket.on('deleted', function(d){
-  var b = document.querySelector('.cmsg[data-id="' + d.id + '"] .cbubble');
-  if(b) b.innerHTML = '<span class="deleted">🚫 تم حذف الرسالة</span>';
-});
-socket.on('reaction', function(d){
-  var r = document.querySelector('.cmsg[data-id="' + d.msgId + '"] .creactions');
-  if(r) renderReactions(r, d.reactions);
-  var c = document.querySelector('.cmsg[data-id="' + d.msgId + '"]');
-  if(c) c.classList.remove('show-actions');
-});
-socket.on('pin', function(pin){
-  if(pin){ $('pinBar').style.display = 'flex'; $('pinText').innerHTML = '<b>' + esc(pin.name) + ':</b> ' + linkify(pin.text); }
-  else $('pinBar').style.display = 'none';
-});
+
 socket.on('notification', function(n){
-  var badge = $('notifBadge');
-  var c = parseInt(badge.textContent || '0') + 1;
+  const badge = $('notifBadge');
+  const c = parseInt(badge.textContent || '0') + 1;
   badge.textContent = c; badge.classList.remove('hide');
   toast(n.text || 'إشعار جديد', 'info');
+  if(currentTab === 'notifs') loadNotifs();
 });
+
 socket.on('dm-message', function(m){
-  if(CURRENT_DM && ME && (m.from_id === CURRENT_DM.user.id || m.to_id === CURRENT_DM.user.id)){
+  if(CURRENT_DM && (m.from_id === CURRENT_DM.user.id || m.to_id === CURRENT_DM.user.id)){
     renderDMMsg(m); scrollChat();
     if(m.from_id === CURRENT_DM.user.id) socket.emit('dm-read', { fromId: m.from_id });
-  } else if(ME && m.from_id !== ME.id){
+  } else if(m.from_id !== ME.id){
     toast('رسالة خاصة جديدة', 'info');
     if(soundOn) playBeep();
   }
+  if(currentTab === 'notifs') loadDMConversations();
 });
 socket.on('dm-read-receipt', function(){
-  var marks = document.querySelectorAll('.cmsg.me .read-marks');
-  Array.prototype.forEach.call(marks, function(el){ el.textContent = '✓✓'; });
+  const marks = document.querySelectorAll('.cmsg.me .read-marks');
+  marks.forEach(function(el){ el.textContent = '✓✓'; el.classList.add('delivered'); });
 });
 socket.on('dm-typing', function(d){
-  if(CURRENT_DM && CURRENT_DM.user.id === d.fromId && d.isTyping){
-    $('chatSub').textContent = 'يكتب الآن...';
-    setTimeout(function(){ if(CURRENT_DM) $('chatSub').textContent = 'متصل'; }, 3000);
+  if(CURRENT_DM && CURRENT_DM.user.id === d.fromId){
+    if(d.isTyping){
+      $('chatSub').textContent = 'يكتب الآن...';
+      clearTimeout(d._t);
+      d._t = setTimeout(function(){ if(CURRENT_DM) $('chatSub').textContent = 'متصل'; }, 3000);
+    } else {
+      if(CURRENT_DM) $('chatSub').textContent = 'متصل';
+    }
   }
 });
-socket.on('online-status', function(d){ if(window._onlineCallback) window._onlineCallback(d); });
 
+/* LOAD */
 async function loadEverything(){
-  loadRooms(); loadPosts(); loadTrends(); loadNotifs(); loadProfile(); loadSuggestions();
+  loadPosts(); loadTrends(); loadNotifs(); loadProfile(); loadSuggestions();
 }
-function switchTab(name){
+
+function switchTab(name, opts){
+  opts = opts || {};
+  currentTab = name;
   $$('.tab').forEach(function(t){ t.classList.remove('active'); });
-  var el = $('tab-' + name); if(el) el.classList.add('active');
+  const el = $('tab-' + name); if(el) el.classList.add('active');
   $$('.bottom-nav button').forEach(function(b){ b.classList.toggle('on', b.dataset.tab === name); });
   if(name === 'notifs'){ $('notifBadge').classList.add('hide'); $('notifBadge').textContent = '0'; loadNotifs(); loadDMConversations(); loadRequests(); }
-  if(name === 'posts'){ loadPosts(); loadSuggestions(); }
+  if(name === 'posts' && !opts.skipLoad){ loadPosts(); loadSuggestions(); }
   if(name === 'profile') loadProfile();
   if(name === 'search') loadTrends();
 }
 $$('.bottom-nav button').forEach(function(b){ b.onclick = function(){ switchTab(b.dataset.tab); }; });
 
-function loadRooms(){ renderRooms(ROOMS_LIST); }
-function renderRooms(rooms){
-  var el = $('roomsList');
-  el.innerHTML = rooms.map(function(r){
-    return '<div class="card room-card" data-room="' + esc(r) + '"><div class="rc-ic">' + (ROOM_ICONS[r] || '💬') + '</div><div class="rc-info"><div class="rc-name">' + esc(r) + '</div><div class="rc-sub">' + esc(r) + '</div></div></div>';
-  }).join('');
-  el.querySelectorAll('.room-card').forEach(function(c){ c.onclick = function(){ joinRoom(c.dataset.room); }; });
+/* CHAT — DM فقط */
+function scrollChat(instant){
+  const el = $('chatMsgs');
+  requestAnimationFrame(function(){ el.scrollTo({ top: el.scrollHeight, behavior: instant ? 'auto' : 'smooth' }); });
 }
-function joinRoom(room){
-  $('chatMsgs').innerHTML = '';
-  $('chatName').textContent = room;
-  $('chatSub').textContent = '...';
-  $('pinBar').style.display = 'none';
-  CURRENT_DM = null;
-  socket.emit('join', { room: room });
+function isNearBottom(){
+  const el = $('chatMsgs');
+  return el.scrollHeight - el.scrollTop - el.clientHeight < 140;
 }
-
-function renderChatMsg(m){
-  var el = document.createElement('div');
-  if(m.system){ el.className = 'sys-msg'; el.textContent = m.text; $('chatMsgs').appendChild(el); return; }
-  var mine = m.sid === socket.id || (m.user && ME && m.user.id === ME.id);
+function renderDMMsg(m){
+  const el = document.createElement('div');
+  const mine = m.from_id === ME.id;
   el.className = 'cmsg ' + (mine ? 'me' : 'other');
   el.dataset.id = m.id;
+  const other = CURRENT_DM ? CURRENT_DM.user : ME;
+  const u = mine ? ME : other;
 
-  var av = document.createElement('div');
+  const av = document.createElement('div');
   av.className = 'cmsg-avatar';
-  if(m.user && m.user.avatar) av.innerHTML = '<img src="' + esc(m.user.avatar) + '" />';
-  else { av.style.background = 'linear-gradient(135deg,' + ((m.user && m.user.color) || '#7c5cff') + ',#5b8cff)'; av.textContent = initial(m.user && m.user.display_name); }
+  if(u && u.avatar) av.innerHTML = '<img src="' + esc(u.avatar) + '" />';
+  else { av.style.background = 'linear-gradient(135deg,' + ((u && u.color) || '#7c5cff') + ',#5b8cff)'; av.textContent = initial(u && u.display_name); }
   el.appendChild(av);
 
-  var body = document.createElement('div');
+  const body = document.createElement('div');
   body.className = 'cmsg-body';
-  var meta = document.createElement('div');
+  const meta = document.createElement('div');
   meta.className = 'cmeta';
-  var metaHTML = '';
-  if(!mine && m.user) metaHTML += '<span style="font-weight:800;color:' + esc(m.user.color) + '">' + esc(m.user.display_name) + (m.user.verified ? ' ✓' : '') + '</span>';
-  metaHTML += '<span>' + fmtTime(m.time) + '</span>';
-  meta.innerHTML = metaHTML;
-
-  var bubble = document.createElement('div');
+  meta.innerHTML = '<span>' + fmtTime(m.time) + '</span>';
+  const bubble = document.createElement('div');
   bubble.className = 'cbubble';
-  if(m.deleted) bubble.innerHTML = '<span class="deleted">🚫 تم حذف الرسالة</span>';
-  else {
-    if(m.text) bubble.innerHTML = linkify(m.text);
-    if(m.image){ var img = document.createElement('img'); img.src = m.image; img.loading = 'lazy'; img.onclick = function(e){ e.stopPropagation(); openLightbox(m.image); }; bubble.appendChild(img); }
-  }
-  bubble.querySelectorAll('.htag').forEach(function(t){ t.onclick = function(e){ e.stopPropagation(); searchHashtag(t.dataset.tag); }; });
-
-  var pops = document.createElement('div');
-  pops.className = 'pop-actions';
-  REACTS.forEach(function(e){
-    var b = document.createElement('button'); b.textContent = e;
-    b.onclick = function(ev){ ev.stopPropagation(); socket.emit('react', { msgId: m.id, emoji: e }); el.classList.remove('show-actions'); };
-    pops.appendChild(b);
-  });
-  if(mine && !m.deleted){
-    var db = document.createElement('button'); db.textContent = '🗑️';
-    db.onclick = function(ev){ ev.stopPropagation(); socket.emit('delete', m.id); el.classList.remove('show-actions'); };
-    pops.appendChild(db);
-  }
-  if(!m.deleted){
-    var pb = document.createElement('button'); pb.textContent = '📌';
-    pb.onclick = function(ev){ ev.stopPropagation(); socket.emit('pin', m.id); el.classList.remove('show-actions'); };
-    pops.appendChild(pb);
-  }
-  el.appendChild(pops);
-
-  var rx = document.createElement('div');
-  rx.className = 'creactions';
-  renderReactions(rx, m.reactions || {});
-
-  bubble.onclick = function(ev){
-    if(ev.target.tagName === 'IMG' || ev.target.classList.contains('htag')) return;
-    el.classList.toggle('show-actions');
-  };
-
-  body.appendChild(meta); body.appendChild(bubble); body.appendChild(rx);
-  if(mine){ var mk = document.createElement('div'); mk.className = 'read-marks'; mk.textContent = '✓'; body.appendChild(mk); }
+  if(m.text) bubble.innerHTML = linkify(m.text);
+  if(m.image){ const img = document.createElement('img'); img.src = m.image; img.loading='lazy'; img.onclick = function(){ openLightbox(m.image); }; bubble.appendChild(img); }
+  bubble.querySelectorAll('.htag').forEach(function(t2){ t2.onclick = function(){ searchHashtag(t2.dataset.tag); }; });
+  body.appendChild(meta); body.appendChild(bubble);
+  if(mine){ const mk = document.createElement('div'); mk.className = 'read-marks' + (m.read ? ' delivered' : ''); mk.textContent = m.read ? '✓✓' : '✓'; body.appendChild(mk); }
   el.appendChild(body);
   $('chatMsgs').appendChild(el);
 }
-function renderReactions(el, reactions){
-  el.innerHTML = '';
-  Object.keys(reactions).forEach(function(emoji){
-    var c = reactions[emoji]; if(!c) return;
-    var s = document.createElement('span'); s.textContent = emoji + ' ' + c; el.appendChild(s);
-  });
-}
-function scrollChat(instant){
-  var el = $('chatMsgs');
-  requestAnimationFrame(function(){ el.scrollTo({ top: el.scrollHeight, behavior: instant ? 'auto' : 'smooth' }); });
-}
-function isNearBottom(){ var el = $('chatMsgs'); return el.scrollHeight - el.scrollTop - el.clientHeight < 140; }
 
-$('chatBack').onclick = function(){ $('chatView').classList.remove('open'); CURRENT_DM = null; CURRENT_ROOM = null; };
-$('chatInfo').onclick = function(){
-  if(CURRENT_DM){ openUserById(CURRENT_DM.user.id); return; }
-  var users = usersByRoom[CURRENT_ROOM] || [];
-  showModal('<div class="modal-title">الأعضاء (' + users.length + ')</div><div class="modal-list">' + (users.length ? users.map(function(u){ return '<button class="modal-item" data-uid="' + u.id + '">' + avatarHTML(u, 36) + '<span>' + esc(u.display_name) + '</span></button>'; }).join('') : '<div class="empty"><p>لا يوجد أحد</p></div>') + '</div>');
-  $$('.modal-item[data-uid]').forEach(function(b){ b.onclick = function(){ closeModal(); openUserById(parseInt(b.dataset.uid)); }; });
+$('chatBack').onclick = function(){
+  $('chatView').classList.remove('open');
+  CURRENT_DM = null;
 };
+$('chatInfo').onclick = function(){ if(CURRENT_DM) openUserById(CURRENT_DM.user.id); };
 $('chatCall').onclick = function(){
-  if(CURRENT_DM && CURRENT_DM.user) startCall(CURRENT_DM.user.id, CURRENT_DM.user.display_name, CURRENT_DM.user.color, CURRENT_DM.user.avatar);
+  if(CURRENT_DM && CURRENT_DM.user){
+    startCall(CURRENT_DM.user.id, CURRENT_DM.user.display_name, CURRENT_DM.user.color, CURRENT_DM.user.avatar);
+  }
 };
-$('unpinBtn').onclick = function(){ socket.emit('unpin'); };
 
-function autoGrow(){ var t = $('chatInput'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px'; }
+function autoGrow(){
+  const t2 = $('chatInput');
+  t2.style.height = 'auto';
+  t2.style.height = Math.min(t2.scrollHeight, 120) + 'px';
+}
 $('chatInput').addEventListener('input', function(){
   autoGrow();
-  if(!typingSent){ socket.emit('typing', true); typingSent = true; }
-  clearTimeout(typingTimer);
-  typingTimer = setTimeout(function(){ socket.emit('typing', false); typingSent = false; }, 1500);
-  if(CURRENT_DM){
-    socket.emit('dm-typing', { toId: CURRENT_DM.user.id, isTyping: true });
-    clearTimeout(dmTypingTimer);
-    dmTypingTimer = setTimeout(function(){ socket.emit('dm-typing', { toId: CURRENT_DM.user.id, isTyping: false }); }, 1500);
-  }
+  if(!CURRENT_DM) return;
+  socket.emit('dm-typing', { toId: CURRENT_DM.user.id, isTyping: true });
+  clearTimeout(dmTypingTimer);
+  dmTypingTimer = setTimeout(function(){
+    if(CURRENT_DM) socket.emit('dm-typing', { toId: CURRENT_DM.user.id, isTyping: false });
+  }, 1500);
 });
-$('chatInput').addEventListener('keydown', function(e){ if(e.key === 'Enter' && !e.shiftKey && window.innerWidth > 720){ e.preventDefault(); sendChat(); } });
+$('chatInput').addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !e.shiftKey && window.innerWidth > 720){ e.preventDefault(); sendChat(); }
+});
 $('chatSend').onclick = sendChat;
+
 function sendChat(){
-  var txt = $('chatInput').value.trim();
-  if(!txt && !pendingImage) return;
-  if(CURRENT_DM) socket.emit('dm-send', { toId: CURRENT_DM.user.id, text: txt, image: pendingImage });
-  else if(CURRENT_ROOM) socket.emit('message', { text: txt, image: pendingImage });
-  $('chatInput').value = ''; autoGrow(); clearPendingImage();
-  socket.emit('typing', false); typingSent = false;
+  const txt = $('chatInput').value.trim();
+  if(!txt && !pendingChatImage) return;
+  if(!CURRENT_DM) return;
+  socket.emit('dm-send', { toId: CURRENT_DM.user.id, text: txt, image: pendingChatImage });
+  socket.emit('dm-typing', { toId: CURRENT_DM.user.id, isTyping: false });
+  clearTimeout(dmTypingTimer);
+  $('chatInput').value = ''; autoGrow(); clearPendingChatImage();
 }
 
-var emojiPick = $('emojiPick');
-EMOJIS.forEach(function(e){
-  var b = document.createElement('button'); b.textContent = e;
+const emojiPick = $('emojiPick');
+CFG.emojis.forEach(function(e){
+  const b = document.createElement('button');
+  b.textContent = e;
   b.onclick = function(){ $('chatInput').value += e; autoGrow(); $('chatInput').focus(); };
   emojiPick.appendChild(b);
 });
 $('emojiBtn').onclick = function(){ emojiPick.classList.toggle('show'); };
+
 $('imgBtn').onclick = function(){ $('imgInput').click(); };
 $('imgInput').onchange = async function(e){
-  var f = e.target.files[0]; if(!f) return;
-  if(f.size > 4 * 1024 * 1024) return toast('الصورة كبيرة (4 ميجا)', 'err');
+  const f = e.target.files[0]; if(!f) return;
+  if(f.size > 4 * 1024 * 1024) return toast('الصورة كبيرة (4 ميجا كحد أقصى)', 'err');
   showLoader();
-  var fd = new FormData(); fd.append('image', f);
   try {
-    var r = await fetch('/upload', { method: 'POST', body: fd });
-    var d = await r.json();
-    if(d.url){ pendingImage = d.url; $('imgPreviewTag').src = d.url; $('imgPreview').style.display = 'flex'; }
-  } catch(_) { toast('فشل الرفع', 'err'); }
-  hideLoader(); e.target.value = '';
+    const d = await uploadImage(f);
+    if(d.url){ pendingChatImage = d.url; $('imgPreviewTag').src = d.url; $('imgPreview').style.display = 'flex'; }
+  } catch(_) { toast('فشل رفع الصورة', 'err'); }
+  hideLoader();
+  e.target.value = '';
 };
-function clearPendingImage(){ pendingImage = null; $('imgPreview').style.display = 'none'; }
-$('cancelImg').onclick = clearPendingImage;
+function clearPendingChatImage(){ pendingChatImage = null; $('imgPreview').style.display = 'none'; }
+$('cancelImg').onclick = clearPendingChatImage;
 
+/* POSTS */
 async function loadPosts(hashtag){
-  try { var r = await api('/posts' + (hashtag ? '?hashtag=' + encodeURIComponent(hashtag) : '')); renderPosts(r.posts); } catch(e) { toast(e.message, 'err'); }
+  try {
+    const q = hashtag ? '?hashtag=' + encodeURIComponent(hashtag) : '';
+    const r = await api('/posts' + q);
+    renderPosts(r.posts);
+  } catch(e) { toast(e.message, 'err'); }
 }
 function renderPosts(posts){
-  var el = $('postsList');
-  if(!posts.length){ el.innerHTML = '<div class="empty"><p>لا توجد منشورات</p></div>'; return; }
+  const el = $('postsList');
+  if(!posts.length){ el.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><p>لا توجد منشورات</p></div>'; return; }
   el.innerHTML = posts.map(function(p){
     return '<article class="post" data-post-id="' + p.id + '"><div class="post-head">' + avatarHTML(p.user, 42) + '<div class="ph-info"><div class="ph-name">' + esc(p.user.display_name) + (p.user.verified ? ' ✓' : '') + '</div><div class="ph-meta">@' + esc(p.user.username) + ' · ' + fmtDate(p.time) + '</div></div></div><div class="post-body">' + linkify(p.text) + '</div>' + (p.image ? '<div class="post-img"><img src="' + esc(p.image) + '" loading="lazy" /></div>' : '') + '<div class="post-actions"><button class="like-btn ' + (p.liked ? 'liked' : '') + '" data-pid="' + p.id + '"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>' + p.likes + '</span></button><button class="comment-btn" data-pid="' + p.id + '"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg><span>' + p.comments + '</span></button></div></article>';
   }).join('');
-  el.querySelectorAll('.post-body .htag').forEach(function(t){ t.onclick = function(){ searchHashtag(t.dataset.tag); }; });
+  el.querySelectorAll('.post-body .htag').forEach(function(t2){ t2.onclick = function(){ searchHashtag(t2.dataset.tag); }; });
   el.querySelectorAll('.like-btn').forEach(function(b){ b.onclick = async function(){
-    try { var r = await api('/posts/' + b.dataset.pid + '/like', { method: 'POST' }); b.classList.toggle('liked', r.liked); b.querySelector('span').textContent = r.likes; } catch(e) { toast(e.message, 'err'); }
+    try { const r = await api('/posts/' + b.dataset.pid + '/like', { method: 'POST' }); b.classList.toggle('liked', r.liked); b.querySelector('span').textContent = r.likes; } catch(e) { toast(e.message, 'err'); }
   }; });
   el.querySelectorAll('.comment-btn').forEach(function(b){ b.onclick = function(){ openComments(parseInt(b.dataset.pid)); }; });
 }
-function searchHashtag(tag){ switchTab('posts'); loadPosts(tag); toast('#' + tag, 'info'); }
+
+/* ✅ إصلاح race condition: نروح للتبويب بدون إعادة تحميل المنشورات */
+function searchHashtag(tag){
+  switchTab('posts', { skipLoad: true });
+  loadPosts(tag);
+  toast('#' + tag, 'info');
+}
 
 $('btnNewPost').onclick = function(){
-  pendingImage = null;
-  showModal('<div class="modal-title">منشور جديد</div><div class="field"><textarea id="npText" placeholder="ماذا يجري؟" maxlength="1000" style="min-height:120px"></textarea></div><button class="btn-ghost" id="npImg" style="width:100%;padding:12px;border-radius:12px;font-weight:800;margin-bottom:12px">📷 صورة</button><div id="npPreview"></div><button class="btn-main" id="npSubmit">نشر</button>');
-  $('npImg').onclick = function(){ $('postImgInput').click(); };
+  pendingPostImage = null;
+  showModal('<div class="modal-title">منشور جديد</div><div class="field"><textarea id="npText" placeholder="ماذا يجري؟" maxlength="1000" style="min-height:120px"></textarea></div><div style="display:flex;gap:10px;margin-bottom:12px"><button class="btn-ghost" id="npImg" style="flex:1;padding:12px;border-radius:12px;font-weight:800">📷 صورة</button></div><div id="npPreview"></div><button class="btn-main" id="npSubmit">نشر</button>');
+  $('npImg').onclick = function(){ postImgInput.click(); };
   $('npSubmit').onclick = async function(){
-    var text = $('npText').value.trim();
-    if(!text && !pendingImage) return toast('اكتب شيئاً', 'err');
-    var btn = $('npSubmit'); btn.disabled = true;
-    try { await api('/posts', { method: 'POST', body: JSON.stringify({ text: text, image: pendingImage }) }); closeModal(); pendingImage = null; loadPosts(); toast('تم النشر', 'ok'); }
-    catch(e) { toast(e.message, 'err'); btn.disabled = false; }
+    const text = $('npText').value.trim();
+    if(!text && !pendingPostImage) return toast('اكتب شيئاً', 'err');
+    const btn = $('npSubmit');
+    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div>';
+    btn.disabled = true;
+    try {
+      await api('/posts', { method: 'POST', body: JSON.stringify({ text: text, image: pendingPostImage }) });
+      closeModal(); pendingPostImage = null; loadPosts(); toast('تم النشر', 'ok');
+    } catch(e) { toast(e.message, 'err'); btn.disabled = false; btn.textContent = 'نشر'; }
   };
 };
 
 async function openComments(pid){
-  showModal('<div class="modal-title">التعليقات</div><div id="cmList"></div><div class="field" style="margin-top:12px"><input id="cmInput" placeholder="أضف تعليقاً..." /></div><button class="btn-main" id="cmSubmit">إرسال</button>');
-  try { var r = await api('/posts/' + pid + '/comments'); renderComments(r.comments); } catch(_){ renderComments([]); }
+  showModal('<div class="modal-title">التعليقات</div><div id="cmList" style="margin-bottom:12px"></div><div class="field"><input id="cmInput" placeholder="أضف تعليقاً..." /></div><button class="btn-main" id="cmSubmit">إرسال</button>');
+  try { const r = await api('/posts/' + pid + '/comments'); renderComments(r.comments || []); } catch(_){ renderComments([]); }
   $('cmSubmit').onclick = async function(){
-    var text = $('cmInput').value.trim(); if(!text) return;
-    try { var r = await api('/posts/' + pid + '/comment', { method: 'POST', body: JSON.stringify({ text: text }) }); renderComments(r.comments); $('cmInput').value = ''; } catch(e) { toast(e.message, 'err'); }
+    const text = $('cmInput').value.trim();
+    if(!text) return;
+    try { const r = await api('/posts/' + pid + '/comment', { method: 'POST', body: JSON.stringify({ text: text }) }); renderComments(r.comments); $('cmInput').value = ''; } catch(e) { toast(e.message, 'err'); }
   };
 }
 function renderComments(list){
-  var el = $('cmList');
+  const el = $('cmList'); if(!el) return;
   if(!list.length){ el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:14px;font-size:.85rem">لا توجد تعليقات</div>'; return; }
   el.innerHTML = list.map(function(c){
-    return '<div style="padding:10px;background:var(--card2);border-radius:12px;margin-bottom:8px"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">' + avatarHTML(c.user, 28) + '<b style="font-size:.85rem">' + esc(c.user.display_name) + '</b></div><div style="font-size:.88rem">' + esc(c.text) + '</div></div>';
+    return '<div style="padding:10px;background:var(--card2);border-radius:12px;margin-bottom:8px"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">' + avatarHTML(c.user, 28) + '<b style="font-size:.85rem">' + esc(c.user.display_name) + '</b><span style="color:var(--muted);font-size:.72rem;margin-inline-start:auto">' + fmtDate(c.time) + '</span></div><div style="font-size:.88rem;line-height:1.6">' + esc(c.text) + '</div></div>';
   }).join('');
 }
 
+/* SUGGESTIONS */
 async function loadSuggestions(){
   try {
-    var r = await api('/suggestions');
-    var el = $('suggestionsSection');
+    const r = await api('/suggestions');
+    const el = $('suggestionsSection');
     if(!r.users.length){ el.innerHTML = ''; return; }
     el.innerHTML = '<div class="sec-title">أشخاص قد تعرفهم</div><div style="display:flex;gap:10px;overflow-x:auto;padding:0 16px 12px">' + r.users.map(function(u){
-      return '<div style="min-width:130px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;text-align:center;display:flex;flex-direction:column;gap:8px"><div data-uid="' + u.id + '" style="cursor:pointer">' + avatarHTML(u, 56) + '</div><div style="font-weight:800;font-size:.85rem">' + esc(u.display_name) + '</div><button style="padding:6px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;font-weight:800;font-size:.78rem" data-add="' + u.id + '">+ إضافة</button></div>';
+      return '<div style="min-width:130px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;text-align:center;display:flex;flex-direction:column;gap:8px" data-sug="' + u.id + '">' + avatarHTML(u, 56) + '<div style="font-weight:800;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(u.display_name) + '</div><div style="font-size:.72rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@' + esc(u.username) + '</div><button style="padding:6px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;font-weight:800;font-size:.78rem" data-add="' + u.id + '">+ إضافة</button></div>';
     }).join('') + '</div>';
-    el.querySelectorAll('[data-uid]').forEach(function(c){ c.onclick = function(){ openUserById(parseInt(c.dataset.uid)); }; });
-    el.querySelectorAll('[data-add]').forEach(function(b){ b.onclick = async function(){
-      try { await api('/friends/request/' + b.dataset.add, { method: 'POST' }); toast('تم', 'ok'); b.textContent = '✓'; } catch(e) { toast(e.message, 'err'); }
+    el.querySelectorAll('[data-sug]').forEach(function(card){ card.onclick = function(e){ if(e.target.closest('[data-add]')) return; openUserById(parseInt(card.dataset.sug)); }; });
+    el.querySelectorAll('[data-add]').forEach(function(b){ b.onclick = async function(e){
+      e.stopPropagation();
+      try { await api('/friends/request/' + b.dataset.add, { method: 'POST' }); toast('تم إرسال الطلب', 'ok'); b.textContent = '✓'; b.disabled = true; } catch(err){ toast(err.message, 'err'); }
     }; });
   } catch(_){}
 }
 
-var searchTimeout = null;
+/* SEARCH */
+let searchTimeout = null;
 $('searchInput').oninput = function(e){
-  var q = e.target.value.trim();
+  const q = e.target.value.trim();
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(async function(){
     if(!q){ $('searchResults').innerHTML = ''; return; }
-    try { var r = await api('/users/search?q=' + encodeURIComponent(q)); renderSearchResults(r.users); } catch(_){}
+    try { const r = await api('/users/search?q=' + encodeURIComponent(q)); renderSearchResults(r.users); } catch(_){}
   }, 300);
 };
 function renderSearchResults(users){
-  var el = $('searchResults');
+  const el = $('searchResults');
   if(!users.length){ el.innerHTML = '<div class="empty"><p>لا توجد نتائج</p></div>'; return; }
-  el.innerHTML = '<div class="list-pad">' + users.map(function(u){ return '<div class="user-row" data-uid="' + u.id + '">' + avatarHTML(u) + '<div class="ur-info"><div class="ur-name">' + esc(u.display_name) + (u.verified ? ' ✓' : '') + '</div><div class="ur-sub">@' + esc(u.username) + '</div></div></div>'; }).join('') + '</div>';
+  el.innerHTML = '<div class="list-pad">' + users.map(function(u){
+    return '<div class="user-row" data-uid="' + u.id + '">' + avatarHTML(u) + '<div class="ur-info"><div class="ur-name">' + esc(u.display_name) + (u.verified ? ' ✓' : '') + '</div><div class="ur-sub">@' + esc(u.username) + (u.location ? ' · ' + esc(u.location) : '') + '</div></div></div>';
+  }).join('') + '</div>';
   el.querySelectorAll('.user-row').forEach(function(r){ r.onclick = function(){ openUserById(parseInt(r.dataset.uid)); }; });
 }
 async function loadTrends(){
   try {
-    var r = await api('/trends');
-    var el = $('trendsList');
+    const r = await api('/trends');
+    const el = $('trendsList');
     if(!r.trends.length){ el.innerHTML = '<div style="color:var(--muted);padding:0 16px;font-size:.85rem">لا توجد هاشتاقات</div>'; return; }
-    el.innerHTML = r.trends.map(function(t){ return '<button class="trend-chip" data-tag="' + esc(t.tag) + '">#' + esc(t.tag) + '<span class="cnt">' + t.c + '</span></button>'; }).join('');
+    el.innerHTML = r.trends.map(function(t2){ return '<button class="trend-chip" data-tag="' + esc(t2.tag) + '">#' + esc(t2.tag) + '<span class="cnt">' + t2.c + '</span></button>'; }).join('');
     el.querySelectorAll('.trend-chip').forEach(function(b){ b.onclick = function(){ searchHashtag(b.dataset.tag); }; });
   } catch(_){}
 }
 
+/* NOTIFICATIONS */
 async function loadNotifs(){
   try {
-    var r = await api('/friends/requests');
+    const r = await api('/friends/requests');
     $('notifsList').innerHTML = r.requests.length ? r.requests.map(function(u){
-      return '<div class="user-row">' + avatarHTML(u) + '<div class="ur-info"><div class="ur-name">' + esc(u.display_name) + '</div><div class="ur-sub">طلب صداقة</div></div><button class="btn-fill" style="padding:8px 14px;border-radius:10px;font-weight:800;font-size:.8rem" data-accept="' + u.id + '">قبول</button></div>';
+      return '<div class="user-row">' + avatarHTML(u) + '<div class="ur-info"><div class="ur-name">' + esc(u.display_name) + '</div><div class="ur-sub">أرسل لك طلب صداقة</div></div><button class="btn-fill" style="padding:8px 14px;border-radius:10px;font-weight:800;font-size:.8rem" data-accept="' + u.id + '">قبول</button></div>';
     }).join('') : '<div class="empty"><p>لا توجد إشعارات</p></div>';
-    $('notifsList').querySelectorAll('[data-accept]').forEach(function(b){ b.onclick = async function(){ try { await api('/friends/accept/' + b.dataset.accept, { method: 'POST' }); toast('تم', 'ok'); loadNotifs(); } catch(e) { toast(e.message, 'err'); } }; });
+    $('notifsList').querySelectorAll('[data-accept]').forEach(function(b){ b.onclick = async function(){
+      try { await api('/friends/accept/' + b.dataset.accept, { method: 'POST' }); toast('تم قبول الصداقة', 'ok'); loadNotifs(); } catch(e) { toast(e.message, 'err'); }
+    }; });
   } catch(_){}
 }
 async function loadRequests(){
   try {
-    var r = await api('/friends/requests');
+    const r = await api('/friends/requests');
     $('requestsList').innerHTML = r.requests.length ? r.requests.map(function(u){
       return '<div class="user-row">' + avatarHTML(u) + '<div class="ur-info"><div class="ur-name">' + esc(u.display_name) + '</div><div class="ur-sub">@' + esc(u.username) + '</div></div><div style="display:flex;gap:6px"><button style="padding:8px 12px;border-radius:10px;background:linear-gradient(135deg,#34d399,#22c55e);color:#fff;font-weight:800;font-size:.8rem" data-a="' + u.id + '">قبول</button><button style="padding:8px 12px;border-radius:10px;background:var(--card2);font-weight:800;font-size:.8rem" data-r="' + u.id + '">رفض</button></div></div>';
     }).join('') : '<div class="empty"><p>لا توجد طلبات</p></div>';
@@ -821,9 +845,9 @@ async function loadRequests(){
 }
 async function loadDMConversations(){
   try {
-    var r = await api('/dm-conversations');
+    const r = await api('/dm-conversations');
     $('dmsList').innerHTML = r.conversations.length ? r.conversations.map(function(c){
-      return '<div class="user-row" data-dmuid="' + c.user.id + '">' + avatarHTML(c.user) + '<div class="ur-info"><div class="ur-name">' + esc(c.user.display_name) + '</div><div class="ur-sub">' + esc((c.last && c.last.text) || '📷').slice(0, 40) + '</div></div>' + (c.unread ? '<span style="background:var(--danger);color:#fff;font-size:.7rem;padding:2px 7px;border-radius:99px">' + c.unread + '</span>' : '') + '</div>';
+      return '<div class="user-row" data-dmuid="' + c.user.id + '">' + avatarHTML(c.user) + '<div class="ur-info"><div class="ur-name">' + esc(c.user.display_name) + '</div><div class="ur-sub">' + esc((c.last && c.last.text) || '📷').slice(0, 40) + '</div></div>' + (c.unread ? '<span style="background:var(--danger);color:#fff;font-size:.7rem;font-weight:800;padding:2px 7px;border-radius:99px">' + c.unread + '</span>' : '') + '</div>';
     }).join('') : '<div class="empty"><p>لا توجد رسائل</p></div>';
     $('dmsList').querySelectorAll('[data-dmuid]').forEach(function(r){ r.onclick = function(){ openDMById(parseInt(r.dataset.dmuid)); }; });
   } catch(_){}
@@ -831,86 +855,121 @@ async function loadDMConversations(){
 $$('.tabs-inner button').forEach(function(b){ b.onclick = function(){
   $$('.tabs-inner button').forEach(function(x){ x.classList.remove('on'); });
   b.classList.add('on');
-  var nt = b.dataset.ntab;
+  const nt = b.dataset.ntab;
   ['notifsList','dmsList','requestsList'].forEach(function(id){ $(id).classList.add('hide'); });
   if(nt === 'notifs'){ $('notifsList').classList.remove('hide'); loadNotifs(); }
   if(nt === 'dms'){ $('dmsList').classList.remove('hide'); loadDMConversations(); }
   if(nt === 'requests'){ $('requestsList').classList.remove('hide'); loadRequests(); }
 }; });
 
+/* ✅ إصلاح: جلب إحصائيات الملف الحقيقية */
 async function loadProfile(){
-  try { var r = await api('/me'); ME = r.user; renderProfile(r.user, true, { friends: 0, posts: 0, views: 0 }); }
-  catch(e) { toast(e.message, 'err'); }
+  try {
+    const r = await api('/me');
+    ME = r.user;
+    let stats = { friends: 0, posts: 0, views: 0 };
+    try {
+      const s = await api('/me/stats');
+      stats = { friends: s.friends || 0, posts: s.posts || 0, views: s.views || 0 };
+    } catch(_){ /* إذا السيرفر ما يدعم /me/stats نترك الأصفار */ }
+    renderProfile(r.user, true, stats);
+  } catch(e) { toast(e.message, 'err'); }
 }
 function renderProfile(u, isMe, stats){
-  var el = $('profileContent');
+  const el = $('profileContent');
   stats = stats || { friends: 0, posts: 0, views: 0 };
   el.innerHTML = '<div class="profile-cover" id="profCover">' + (u.cover ? '<img src="' + esc(u.cover) + '" />' : '') + (isMe ? '<button class="edit-cover" id="editCover">📷 تعديل الغلاف</button>' : '') + '</div>' +
   '<div class="profile-body">' +
     '<div class="profile-avatar" id="profAvatar">' + (u.avatar ? '<img src="' + esc(u.avatar) + '" />' : esc(initial(u.display_name))) + (isMe ? '<span class="cam">📷</span>' : '') + '</div>' +
-    '<div class="profile-name">' + esc(u.display_name) + (u.verified ? ' ✓' : '') + '</div>' +
+    '<div class="profile-name">' + esc(u.display_name) + (u.verified ? ' <svg class="ic" style="color:var(--accent3)" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="10" opacity=".25"/><polyline points="20 6 9 17 4 12" stroke="#5b8cff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>' : '') + '</div>' +
     '<div class="profile-user">@' + esc(u.username) + '</div>' +
     (u.bio ? '<div class="profile-bio">' + esc(u.bio) + '</div>' : '') +
-    '<div class="profile-meta">' + (u.location ? '<span>📍 ' + esc(u.location) + '</span>' : '') + (u.country ? '<span>🌍 ' + esc(u.country) + '</span>' : '') + '</div>' +
-    '<div class="profile-stats"><div class="stat"><div class="num">' + stats.friends + '</div><div class="lbl">صديق</div></div><div class="stat"><div class="num">' + stats.posts + '</div><div class="lbl">منشور</div></div><div class="stat"><div class="num">' + stats.views + '</div><div class="lbl">زيارة</div></div></div>' +
-    '<div class="profile-actions">' + (isMe ? '<button class="btn-fill" id="btnEditProfile">✏️ تعديل</button><button class="btn-ghost" id="btnSettings">⚙️ الإعدادات</button>' : '<button class="btn-fill" id="btnMsgUser">💬 رسالة</button><button class="btn-ghost" id="btnAddFriend">+ صديق</button>') + '</div>' +
+    '<div class="profile-meta">' +
+      (u.location ? '<span>📍 ' + esc(u.location) + '</span>' : '') +
+      (u.country ? '<span>🌍 ' + esc(u.country) + '</span>' : '') +
+      '<span>📅 انضم ' + fmtDate(u.created_at) + '</span>' +
+    '</div>' +
+    '<div class="profile-stats">' +
+      '<div class="stat"><div class="num">' + stats.friends + '</div><div class="lbl">صديق</div></div>' +
+      '<div class="stat"><div class="num">' + stats.posts + '</div><div class="lbl">منشور</div></div>' +
+      '<div class="stat"><div class="num">' + stats.views + '</div><div class="lbl">زيارة</div></div>' +
+    '</div>' +
+    '<div class="profile-actions">' +
+      (isMe ? '<button class="btn-fill" id="btnEditProfile">✏️ تعديل الملف</button><button class="btn-ghost" id="btnSettings">⚙️ الإعدادات</button>' : '<button class="btn-fill" id="btnMsgUser">💬 رسالة</button>') +
+    '</div>' +
   '</div>';
 
   if(isMe){
     $('btnEditProfile').onclick = function(){ openEditProfile(ME); };
     $('btnSettings').onclick = function(){ openSettings(); };
-    $('profAvatar').onclick = function(){ $('avatarInput').click(); };
-    if($('editCover')) $('editCover').onclick = function(e){ e.stopPropagation(); $('coverInput').click(); };
-    if($('profCover')) $('profCover').onclick = function(){ $('coverInput').click(); };
+    $('profAvatar').onclick = function(){ avatarInput.click(); };
+    if($('editCover')) $('editCover').onclick = function(){ coverInput.click(); };
   } else {
     $('btnMsgUser').onclick = function(){ openDM(u); };
-    if($('btnAddFriend')) $('btnAddFriend').onclick = async function(){ try { await api('/friends/request/' + u.id, { method: 'POST' }); toast('تم', 'ok'); } catch(e) { toast(e.message, 'err'); } };
   }
 }
 async function openUserById(id){
   if(ME && id === ME.id){ switchTab('profile'); return; }
-  try { var r = await api('/users/' + id); openUserModal(r.user, r.isFriend, r.blocked, r.stats); } catch(e) { toast(e.message, 'err'); }
+  try {
+    const r = await api('/users/' + id);
+    openUserModal(r.user, r.isFriend, r.blocked, r.stats);
+  } catch(e) { toast(e.message, 'err'); }
 }
 function openUserModal(u, isFriend, blocked, stats){
   stats = stats || { friends: 0, posts: 0, views: 0 };
-  var html = '<div class="modal-title">' + esc(u.display_name) + '</div><div style="text-align:center;padding:14px 0">' + avatarHTML(u, 80) + '<div style="font-weight:900;font-size:1.2rem;margin-top:12px">' + esc(u.display_name) + (u.verified ? ' ✓' : '') + '</div><div style="color:var(--muted);font-size:.85rem">@' + esc(u.username) + '</div>' + (u.bio ? '<div style="margin-top:10px;color:var(--muted2);font-size:.88rem">' + esc(u.bio) + '</div>' : '') + (u.location ? '<div style="margin-top:8px;color:var(--muted);font-size:.8rem">📍 ' + esc(u.location) + '</div>' : '') + '<div style="display:flex;gap:20px;justify-content:center;margin-top:14px"><div><div style="font-size:1.1rem;font-weight:900;color:var(--accent)">' + stats.friends + '</div><div style="font-size:.7rem;color:var(--muted)">صديق</div></div><div><div style="font-size:1.1rem;font-weight:900;color:var(--accent)">' + stats.posts + '</div><div style="font-size:.7rem;color:var(--muted)">منشور</div></div></div></div>';
-  html += '<div class="modal-list" style="margin-top:12px"><button class="modal-item" id="umMsg">💬 رسالة</button>';
-  if(isFriend) html += '<button class="modal-item" id="umCall">📞 مكالمة</button>';
-  if(!isFriend) html += '<button class="modal-item" id="umAdd">+ إضافة صديق</button>';
-  if(blocked) html += '<button class="modal-item" id="umUnblock">✅ إلغاء الحظر</button>';
-  else html += '<button class="modal-item danger" id="umBlock">🚫 حظر</button>';
-  html += '</div>';
-  showModal(html);
+  showModal('<div class="modal-title">' + esc(u.display_name) + '</div>' +
+  '<div style="text-align:center;padding:14px 0">' + avatarHTML(u, 80) +
+  '<div style="font-weight:900;font-size:1.2rem;margin-top:12px">' + esc(u.display_name) + (u.verified ? ' ✓' : '') + '</div>' +
+  '<div style="color:var(--muted);font-size:.85rem">@' + esc(u.username) + '</div>' +
+  (u.bio ? '<div style="margin-top:10px;color:var(--muted2);font-size:.88rem">' + esc(u.bio) + '</div>' : '') +
+  (u.location ? '<div style="margin-top:8px;color:var(--muted);font-size:.8rem">📍 ' + esc(u.location) + (u.country ? ' - ' + esc(u.country) : '') + '</div>' : '') +
+  '<div style="display:flex;gap:20px;justify-content:center;margin-top:14px"><div><div style="font-size:1.1rem;font-weight:900;color:var(--accent)">' + stats.friends + '</div><div style="font-size:.7rem;color:var(--muted)">صديق</div></div><div><div style="font-size:1.1rem;font-weight:900;color:var(--accent)">' + stats.posts + '</div><div style="font-size:.7rem;color:var(--muted)">منشور</div></div></div>' +
+  '</div>' +
+  '<div class="modal-list" style="margin-top:12px">' +
+    '<button class="modal-item" id="umMsg">💬 رسالة</button>' +
+    (isFriend ? '<button class="modal-item" id="umCall">📞 مكالمة صوتية</button>' : '') +
+    (isFriend ? '<button class="modal-item danger" id="umUnfriend">🚫 إزالة من الأصدقاء</button>' : '<button class="modal-item" id="umAdd">+ إضافة صديق</button>') +
+    (blocked ? '<button class="modal-item" id="umUnblock">✅ إلغاء الحظر</button>' : '<button class="modal-item danger" id="umBlock">🚫 حظر</button>') +
+  '</div>');
   $('umMsg').onclick = function(){ closeModal(); openDM(u); };
   if($('umCall')) $('umCall').onclick = function(){ closeModal(); startCall(u.id, u.display_name, u.color, u.avatar); };
-  if($('umAdd')) $('umAdd').onclick = async function(){ try { await api('/friends/request/' + u.id, { method: 'POST' }); toast('تم', 'ok'); closeModal(); } catch(e) { toast(e.message, 'err'); } };
-  if($('umBlock')) $('umBlock').onclick = async function(){ if(!confirm('حظر ' + u.display_name + '؟')) return; try { await api('/block/' + u.id, { method: 'POST' }); toast('تم', 'ok'); closeModal(); } catch(e) { toast(e.message, 'err'); } };
-  if($('umUnblock')) $('umUnblock').onclick = async function(){ try { await api('/unblock/' + u.id, { method: 'POST' }); toast('تم', 'ok'); closeModal(); } catch(e) { toast(e.message, 'err'); } };
+  if($('umAdd')) $('umAdd').onclick = async function(){ try { await api('/friends/request/' + u.id, { method: 'POST' }); toast('تم الإرسال', 'ok'); closeModal(); } catch(e) { toast(e.message, 'err'); } };
+  if($('umUnfriend')) $('umUnfriend').onclick = async function(){ if(!confirm('إزالة ' + u.display_name + ' من الأصدقاء؟')) return; try { await api('/friends/' + u.id, { method: 'DELETE' }); toast('تم', 'ok'); closeModal(); } catch(e) { toast(e.message, 'err'); } };
+  if($('umBlock')) $('umBlock').onclick = async function(){ if(!confirm('حظر ' + u.display_name + '؟')) return; try { await api('/block/' + u.id, { method: 'POST' }); toast('تم الحظر', 'ok'); closeModal(); } catch(e) { toast(e.message, 'err'); } };
+  if($('umUnblock')) $('umUnblock').onclick = async function(){ try { await api('/unblock/' + u.id, { method: 'POST' }); toast('تم إلغاء الحظر', 'ok'); closeModal(); } catch(e) { toast(e.message, 'err'); } };
 }
 
 function openEditProfile(u){
-  showModal('<div class="modal-title">تعديل الملف</div>' +
+  showModal('<div class="modal-title">تعديل الملف الشخصي</div>' +
   '<div class="field"><label>الاسم</label><input id="epName" value="' + esc(u.display_name) + '" maxlength="30" /></div>' +
-  '<div class="field"><label>اسم المستخدم (كل 7 أيام)</label><input id="epUsername" value="' + esc(u.username) + '" maxlength="20" /></div>' +
+  '<div class="field"><label>اسم المستخدم (@) - يمكن تغييره مرة كل 7 أيام</label><input id="epUsername" value="' + esc(u.username) + '" maxlength="20" placeholder="lowercase_letters" /></div>' +
   '<div class="field"><label>نبذة</label><textarea id="epBio" maxlength="200">' + esc(u.bio || '') + '</textarea></div>' +
-  '<div class="field"><label>المحافظة</label><input id="epLoc" value="' + esc(u.location || '') + '" /></div>' +
+  '<div class="field"><label>المحافظة / المدينة</label><input id="epLoc" value="' + esc(u.location || '') + '" /></div>' +
   '<div class="field"><label>البلد</label><input id="epCountry" value="' + esc(u.country || '') + '" /></div>' +
-  '<div class="field"><label>الهاتف</label><input id="epPhone" value="' + esc(u.phone || '') + '" /></div>' +
+  '<div class="field"><label>رقم الهاتف (للتوثيق)</label><input id="epPhone" value="' + esc(u.phone || '') + '" placeholder="+964..." /></div>' +
   '<button class="btn-main" id="epSubmit">حفظ</button>');
   $('epSubmit').onclick = async function(){
-    var btn = $('epSubmit'); btn.disabled = true;
+    const btn = $('epSubmit');
+    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div>';
+    btn.disabled = true;
     try {
-      var body = { display_name: $('epName').value.trim(), bio: $('epBio').value.trim(), location: $('epLoc').value.trim(), country: $('epCountry').value.trim(), phone: $('epPhone').value.trim() };
-      var newU = $('epUsername').value.trim().toLowerCase();
+      const body = {
+        display_name: $('epName').value.trim(),
+        bio: $('epBio').value.trim(),
+        location: $('epLoc').value.trim(),
+        country: $('epCountry').value.trim(),
+        phone: $('epPhone').value.trim()
+      };
+      const newU = $('epUsername').value.trim().toLowerCase();
       if(newU && newU !== u.username) body.username = newU;
-      var r = await api('/me', { method: 'PUT', body: JSON.stringify(body) });
-      ME = r.user; closeModal(); renderProfile(ME, true); toast('تم الحفظ', 'ok');
+      const r = await api('/me', { method: 'PUT', body: JSON.stringify(body) });
+      ME = r.user; closeModal(); loadProfile(); toast('تم الحفظ', 'ok');
     } catch(e) {
-      if(e.message === 'username_cooldown') toast('بقي ' + e.days_left + ' يوم', 'err');
-      else if(e.message === 'username_taken') toast('اليوزر مستخدم', 'err');
+      if(e.message === 'username_cooldown') toast('لا يمكن تغيير اسم المستخدم. بقي ' + e.days_left + ' يوم', 'err');
+      else if(e.message === 'username_taken') toast('اسم المستخدم مستخدم', 'err');
       else if(e.message === 'name_taken') toast('الاسم مستخدم', 'err');
       else toast(e.message, 'err');
-      btn.disabled = false;
+      btn.disabled = false; btn.textContent = 'حفظ';
     }
   };
 }
@@ -918,15 +977,15 @@ function openEditProfile(u){
 function openSettings(){
   showModal('<div class="modal-title">الإعدادات</div><div class="modal-list">' +
   '<button class="modal-item" id="setPassword">🔑 تغيير كلمة السر<span class="arrow">›</span></button>' +
-  '<button class="modal-item" id="setTheme">🌙 الوضع الليلي<span class="arrow" style="color:var(--muted2)">' + (document.body.classList.contains('light') ? 'OFF' : 'ON') + '</span></button>' +
-  '<button class="modal-item" id="setSound">🔊 الأصوات<span class="arrow" style="color:var(--muted2)">' + (soundOn ? 'ON' : 'OFF') + '</span></button>' +
+  '<button class="modal-item" id="setTheme">🌙 الوضع الليلي<span style="margin-inline-start:auto;color:var(--muted2)">' + (document.body.classList.contains('light') ? 'OFF' : 'ON') + '</span></button>' +
+  '<button class="modal-item" id="setSound">🔊 الأصوات<span style="margin-inline-start:auto;color:var(--muted2)">' + (soundOn ? 'ON' : 'OFF') + '</span></button>' +
   '<button class="modal-item" id="setBlocks">🚫 الحظر<span class="arrow">›</span></button>' +
-  '<button class="modal-item" id="setPrivacy">🛡️ الخصوصية<span class="arrow">›</span></button>' +
+  '<button class="modal-item" id="setPrivacy">🛡️ سياسة الخصوصية<span class="arrow">›</span></button>' +
   '<button class="modal-item danger" id="setDeleteAccount">🗑️ حذف الحساب</button>' +
   '<button class="modal-item danger" id="setLogout">🚪 تسجيل الخروج</button>' +
   '</div>');
   $('setPassword').onclick = function(){ closeModal(); openChangePassword(); };
-  $('setTheme').onclick = async function(){ var light = !document.body.classList.contains('light'); applyTheme(light ? 'light' : 'dark'); try { await api('/me', { method: 'PUT', body: JSON.stringify({ theme: light ? 'light' : 'dark' }) }); } catch(_){} closeModal(); openSettings(); };
+  $('setTheme').onclick = async function(){ const light = !document.body.classList.contains('light'); applyTheme(light ? 'light' : 'dark'); try { await api('/me', { method: 'PUT', body: JSON.stringify({ theme: light ? 'light' : 'dark' }) }); } catch(_){} closeModal(); openSettings(); };
   $('setSound').onclick = async function(){ soundOn = !soundOn; try { await api('/me', { method: 'PUT', body: JSON.stringify({ sound: soundOn }) }); } catch(_){} closeModal(); openSettings(); };
   $('setBlocks').onclick = function(){ closeModal(); openBlocksList(); };
   $('setPrivacy').onclick = function(){ closeModal(); openPrivacy(); };
@@ -936,283 +995,228 @@ function openSettings(){
 
 function openChangePassword(){
   showModal('<div class="modal-title">تغيير كلمة السر</div>' +
-  '<div class="field"><label>كلمة السر الحالية</label><input id="cpOld" type="password" /></div>' +
-  '<div class="field"><label>كلمة السر الجديدة</label><input id="cpNew" type="password" /></div>' +
-  '<div class="field"><label>تأكيد الجديدة</label><input id="cpConfirm" type="password" /></div>' +
-  '<button class="btn-main" id="cpSubmit">حفظ</button>');
+  '<div class="field"><label>كلمة السر الحالية</label><input id="cpOld" type="password" placeholder="••••••" /></div>' +
+  '<div class="field"><label>كلمة السر الجديدة</label><input id="cpNew" type="password" placeholder="4 أحرف على الأقل" /></div>' +
+  '<div class="field"><label>تأكيد كلمة السر الجديدة</label><input id="cpConfirm" type="password" placeholder="••••••" /></div>' +
+  '<button class="btn-main" id="cpSubmit">حفظ كلمة السر</button>');
   $('cpSubmit').onclick = async function(){
-    var o = $('cpOld').value, n = $('cpNew').value, c = $('cpConfirm').value;
-    if(!o) return toast('أدخل الحالية', 'err');
-    if(n.length < 4) return toast('الجديدة قصيرة', 'err');
-    if(n !== c) return toast('غير متطابقتين', 'err');
-    try { await api('/change-password', { method: 'POST', body: JSON.stringify({ old_password: o, new_password: n }) }); closeModal(); toast('تم التغيير', 'ok'); }
-    catch(e) { toast(e.message === 'wrong_old_password' ? 'الحالية خاطئة' : e.message, 'err'); }
+    const oldP = $('cpOld').value, newP = $('cpNew').value, confP = $('cpConfirm').value;
+    if(!oldP) return toast('أدخل كلمة السر الحالية', 'err');
+    if(newP.length < 4) return toast('كلمة السر الجديدة قصيرة', 'err');
+    if(newP !== confP) return toast('كلمتا السر غير متطابقتين', 'err');
+    try { await api('/change-password', { method: 'POST', body: JSON.stringify({ old_password: oldP, new_password: newP }) }); closeModal(); toast('تم تغيير كلمة السر', 'ok'); }
+    catch(e) { toast(e.message === 'wrong_old_password' ? 'كلمة السر الحالية خاطئة' : e.message, 'err'); }
   };
 }
 
 function confirmDeleteAccount(){
-  showModal('<div class="modal-title" style="color:var(--danger)">حذف الحساب</div><p style="color:var(--muted2);font-size:.9rem;margin-bottom:16px">لا يمكن استرجاع الحساب. اكتب "حذف" للتأكيد.</p><div class="field"><input id="delConfirm" placeholder="حذف" /></div><button class="btn-main" id="delSubmit" style="background:linear-gradient(135deg,#ff5c78,#ef4444)">حذف نهائي</button>');
+  showModal('<div class="modal-title" style="color:var(--danger)">حذف الحساب نهائياً</div>' +
+  '<p style="color:var(--muted2);font-size:.9rem;line-height:1.7;margin-bottom:16px">سيتم حذف حسابك ورسائلك ومنشوراتك. لا يمكن استرجاعها.</p>' +
+  '<div class="field"><label>اكتب "حذف" للتأكيد</label><input id="delConfirm" placeholder="حذف" /></div>' +
+  '<button class="btn-main" id="delSubmit" style="background:linear-gradient(135deg,#ff5c78,#ef4444)">حذف حسابي نهائياً</button>');
   $('delSubmit').onclick = async function(){
-    if($('delConfirm').value.trim() !== 'حذف') return toast('اكتب "حذف"', 'err');
-    try { await api('/me', { method: 'DELETE' }); localStorage.removeItem('token'); location.reload(); } catch(e) { toast(e.message, 'err'); }
+    if($('delConfirm').value.trim() !== 'حذف') return toast('اكتب "حذف" للتأكيد', 'err');
+    try { await api('/me', { method: 'DELETE' }); localStorage.removeItem('token'); location.reload(); }
+    catch(e) { toast(e.message, 'err'); }
   };
 }
 
 async function openBlocksList(){
   showModal('<div class="modal-title">قائمة الحظر</div><div id="blocksList" style="min-height:60px"></div>');
   try {
-    var r = await api('/blocks');
+    const r = await api('/blocks');
     if(!r.blocks.length){ $('blocksList').innerHTML = '<div class="empty"><p>لا يوجد محظورون</p></div>'; return; }
-    $('blocksList').innerHTML = r.blocks.map(function(u){ return '<div class="user-row" style="margin-bottom:8px">' + avatarHTML(u) + '<div class="ur-info"><div class="ur-name">' + esc(u.display_name) + '</div><div class="ur-sub">@' + esc(u.username) + '</div></div><button style="padding:8px 12px;border-radius:10px;background:var(--card2);font-weight:800;font-size:.78rem" data-unblock="' + u.id + '">إلغاء</button></div>'; }).join('');
-    $('blocksList').querySelectorAll('[data-unblock]').forEach(function(b){ b.onclick = async function(){ await api('/unblock/' + b.dataset.unblock, { method: 'POST' }); toast('تم', 'ok'); openBlocksList(); }; });
+    $('blocksList').innerHTML = r.blocks.map(function(u){
+      return '<div class="user-row" style="margin-bottom:8px">' + avatarHTML(u) + '<div class="ur-info"><div class="ur-name">' + esc(u.display_name) + '</div><div class="ur-sub">@' + esc(u.username) + '</div></div><button style="padding:8px 12px;border-radius:10px;background:var(--card2);font-weight:800;font-size:.78rem" data-unblock="' + u.id + '">إلغاء الحظر</button></div>';
+    }).join('');
+    $('blocksList').querySelectorAll('[data-unblock]').forEach(function(b){ b.onclick = async function(){ await api('/unblock/' + b.dataset.unblock, { method: 'POST' }); toast('تم إلغاء الحظر', 'ok'); openBlocksList(); }; });
   } catch(e) { toast(e.message, 'err'); }
 }
 
 function openPrivacy(){
-  showModal('<div class="modal-title">سياسة الخصوصية</div><div style="font-size:.88rem;line-height:1.9;color:var(--muted2)"><p><b style="color:var(--text)">١. البيانات</b><br>نجمع الاسم وكلمة المرور المشفرة والمنطقة.</p><p style="margin-top:12px"><b style="color:var(--text)">٢. التشفير</b><br>الرسائل مشفرة بـ AES-256-GCM.</p><p style="margin-top:12px"><b style="color:var(--text)">٣. الحذف التلقائي</b><br>الرسائل تُحذف بعد 48 ساعة.</p><p style="margin-top:12px"><b style="color:var(--text)">٤. حقوقك</b><br>يمكنك حذف حسابك في أي وقت.</p></div><button class="btn-main" style="margin-top:20px" id="privacyOk">فهمت</button>');
+  showModal('<div class="modal-title">سياسة الخصوصية</div>' +
+  '<div style="font-size:.88rem;line-height:1.9;color:var(--muted2)">' +
+  '<p><b style="color:var(--text)">١. البيانات</b><br>نجمع الاسم وكلمة المرور المشفرة والمنطقة ورقم الهاتف (اختياري).</p>' +
+  '<p style="margin-top:12px"><b style="color:var(--text)">٢. التشفير</b><br>الرسائل مشفرة بـ AES-256-GCM على الخادم.</p>' +
+  '<p style="margin-top:12px"><b style="color:var(--text)">٣. الحذف التلقائي</b><br>الرسائل تُحذف تلقائياً بعد 48 ساعة.</p>' +
+  '<p style="margin-top:12px"><b style="color:var(--text)">٤. حقوقك</b><br>يمكنك حذف حسابك في أي وقت من الإعدادات.</p>' +
+  '</div><button class="btn-main" style="margin-top:20px" id="privacyOk">فهمت</button>');
   $('privacyOk').onclick = closeModal;
 }
 
 function logout(silent){
-  if(!silent && !confirm('تسجيل الخروج؟')) return;
-  localStorage.removeItem('token'); TOKEN = null; ME = null;
+  if(!silent && !confirm('تسجيل الخروج من الحساب؟')) return;
+  localStorage.removeItem('token');
+  TOKEN = null; ME = null;
+  showLoader();
   location.reload();
 }
 
+/* DM */
 async function openDMById(userId){
   if(ME && userId === ME.id) return toast('لا يمكنك مراسلة نفسك', 'err');
-  try { var r = await api('/users/' + userId); openDM(r.user); } catch(e) { toast(e.message, 'err'); }
+  try { const r = await api('/users/' + userId); openDM(r.user); } catch(e) { toast(e.message, 'err'); }
 }
 async function openDM(user){
   if(ME && user.id === ME.id) return toast('لا يمكنك مراسلة نفسك', 'err');
-  CURRENT_DM = { user: user }; CURRENT_ROOM = null;
+  CURRENT_DM = { user: user };
   $('chatName').textContent = user.display_name;
   $('chatSub').textContent = 'متصل';
   $('chatAvatar').style.display = 'grid';
   $('chatAvatar').innerHTML = user.avatar ? '<img src="' + esc(user.avatar) + '" />' : initial(user.display_name);
   $('chatAvatar').style.background = 'linear-gradient(135deg,' + (user.color || '#7c5cff') + ',#5b8cff)';
-  $('chatCall').classList.remove('hide');
   $('chatView').classList.add('open');
   $('chatMsgs').innerHTML = '';
-  $('pinBar').style.display = 'none';
   try {
-    var r = await api('/dms/' + user.id);
-    r.messages.forEach(renderDMMsg);
+    const r = await api('/dms/' + user.id);
+    r.messages.forEach(function(m){ renderDMMsg(m); });
     scrollChat(true);
     socket.emit('dm-read', { fromId: user.id });
+    if(!dmAlertShown && !localStorage.getItem('dmAlertShown')){
+      dmAlertShown = true;
+      setTimeout(function(){
+        $('dmAlertTitle').textContent = 'تنبيه مهم';
+        $('dmAlertText').textContent = 'الرسائل الخاصة تُحذف تلقائياً من النظام بعد مرور 48 ساعة.';
+        $('dmAlert').classList.add('open');
+        localStorage.setItem('dmAlertShown', '1');
+      }, 800);
+    }
   } catch(_){}
 }
-function renderDMMsg(m){
-  var el = document.createElement('div');
-  var mine = ME && m.from_id === ME.id;
-  el.className = 'cmsg ' + (mine ? 'me' : 'other');
-  el.dataset.id = m.id;
-  var u = mine ? ME : (CURRENT_DM ? CURRENT_DM.user : null);
-  var av = document.createElement('div');
-  av.className = 'cmsg-avatar';
-  if(u && u.avatar) av.innerHTML = '<img src="' + esc(u.avatar) + '" />';
-  else if(u){ av.style.background = 'linear-gradient(135deg,' + (u.color || '#7c5cff') + ',#5b8cff)'; av.textContent = initial(u.display_name); }
-  el.appendChild(av);
-  var body = document.createElement('div');
-  body.className = 'cmsg-body';
-  var meta = document.createElement('div'); meta.className = 'cmeta'; meta.innerHTML = '<span>' + fmtTime(m.time) + '</span>';
-  var bubble = document.createElement('div'); bubble.className = 'cbubble';
-  if(m.text) bubble.innerHTML = linkify(m.text);
-  if(m.image){ var img = document.createElement('img'); img.src = m.image; img.onclick = function(){ openLightbox(m.image); }; bubble.appendChild(img); }
-  body.appendChild(meta); body.appendChild(bubble);
-  if(mine){ var mk = document.createElement('div'); mk.className = 'read-marks'; mk.textContent = m.read ? '✓✓' : '✓'; body.appendChild(mk); }
-  el.appendChild(body);
-  $('chatMsgs').appendChild(el);
-}
 
+/* MODAL */
 function showModal(html){ $('modalBody').innerHTML = html; $('modal').classList.add('open'); }
 function closeModal(){ $('modal').classList.remove('open'); }
 $('modal').onclick = function(e){ if(e.target === $('modal')) closeModal(); };
-function openLightbox(src){ showModal('<img src="' + esc(src) + '" style="width:100%;border-radius:14px" />'); }
+function openLightbox(src){
+  showModal('<img src="' + esc(src) + '" style="width:100%;max-height:80vh;object-fit:contain;border-radius:14px" />');
+}
 
+/* MENU */
 $('btnMenu').onclick = function(){
-  showModal('<div class="modal-title">القائمة</div><div class="modal-list"><button class="modal-item" id="mProfile">👤 ملفي<span class="arrow">›</span></button><button class="modal-item" id="mFriends">👥 الأصدقاء<span class="arrow">›</span></button><button class="modal-item" id="mSettings">⚙️ الإعدادات<span class="arrow">›</span></button><button class="modal-item" id="mPrivacy">🛡️ الخصوصية<span class="arrow">›</span></button><button class="modal-item danger" id="mLogout">🚪 تسجيل الخروج</button></div>');
+  showModal('<div class="modal-title">القائمة</div><div class="modal-list">' +
+  '<button class="modal-item" id="mProfile">👤 ملفي الشخصي<span class="arrow">›</span></button>' +
+  '<button class="modal-item" id="mFriends">👥 الأصدقاء<span class="arrow">›</span></button>' +
+  '<button class="modal-item" id="mSettings">⚙️ الإعدادات<span class="arrow">›</span></button>' +
+  '<button class="modal-item" id="mPrivacy">🛡️ الخصوصية<span class="arrow">›</span></button>' +
+  '<button class="modal-item danger" id="mLogout">🚪 تسجيل الخروج</button>' +
+  '</div>');
   $('mProfile').onclick = function(){ closeModal(); switchTab('profile'); };
-  $('mFriends').onclick = async function(){ closeModal(); try { var r = await api('/friends'); showModal('<div class="modal-title">الأصدقاء (' + r.friends.length + ')</div><div class="modal-list">' + (r.friends.length ? r.friends.map(function(u){ return '<button class="modal-item" data-uid="' + u.id + '">' + avatarHTML(u, 36) + '<span>' + esc(u.display_name) + '</span></button>'; }).join('') : '<div class="empty"><p>لا يوجد أصدقاء</p></div>') + '</div>'); $$('.modal-item[data-uid]').forEach(function(b){ b.onclick = function(){ closeModal(); openUserById(parseInt(b.dataset.uid)); }; }); } catch(e){ toast(e.message, 'err'); } };
+  $('mFriends').onclick = async function(){ closeModal();
+    try { const r = await api('/friends'); showModal('<div class="modal-title">الأصدقاء (' + r.friends.length + ')</div><div class="modal-list">' + (r.friends.length ? r.friends.map(function(u){ return '<button class="modal-item" data-uid="' + u.id + '">' + avatarHTML(u, 36) + '<span>' + esc(u.display_name) + '</span></button>'; }).join('') : '<div class="empty"><p>لا يوجد أصدقاء</p></div>') + '</div>'); $$('.modal-item[data-uid]').forEach(function(b){ b.onclick = function(){ closeModal(); openUserById(parseInt(b.dataset.uid)); }; }); } catch(e){ toast(e.message, 'err'); }
+  };
   $('mSettings').onclick = function(){ closeModal(); openSettings(); };
   $('mPrivacy').onclick = function(){ closeModal(); openPrivacy(); };
   $('mLogout').onclick = function(){ closeModal(); logout(); };
 };
 
-var avatarInput = document.createElement('input');
+/* AVATAR / COVER / POST IMG */
+const avatarInput = document.createElement('input');
 avatarInput.type = 'file'; avatarInput.accept = 'image/*'; avatarInput.style.display = 'none';
 document.body.appendChild(avatarInput);
 avatarInput.onchange = async function(e){
-  var f = e.target.files[0]; if(!f) return;
+  const f = e.target.files[0]; if(!f) return;
   if(f.size > 3 * 1024 * 1024) return toast('الحد 3 ميجا', 'err');
   showLoader();
-  var fd = new FormData(); fd.append('image', f);
   try {
-    var r = await fetch('/upload', { method: 'POST', body: fd });
-    var d = await r.json();
-    if(d.url){ var resp = await api('/me', { method: 'PUT', body: JSON.stringify({ avatar: d.url }) }); ME = resp.user; renderProfile(ME, true); toast('تم', 'ok'); }
+    const d = await uploadImage(f);
+    if(d.url){ const resp = await api('/me', { method: 'PUT', body: JSON.stringify({ avatar: d.url }) }); ME = resp.user; loadProfile(); toast('تم تحديث الصورة', 'ok'); }
   } catch(_){ toast('فشل', 'err'); }
   hideLoader(); e.target.value = '';
 };
 
-var coverInput = document.createElement('input');
+const coverInput = document.createElement('input');
 coverInput.type = 'file'; coverInput.accept = 'image/*'; coverInput.style.display = 'none';
 document.body.appendChild(coverInput);
 coverInput.onchange = async function(e){
-  var f = e.target.files[0]; if(!f) return;
+  const f = e.target.files[0]; if(!f) return;
   if(f.size > 4 * 1024 * 1024) return toast('الحد 4 ميجا', 'err');
   showLoader();
-  var fd = new FormData(); fd.append('image', f);
   try {
-    var r = await fetch('/upload', { method: 'POST', body: fd });
-    var d = await r.json();
-    if(d.url){ var resp = await api('/me', { method: 'PUT', body: JSON.stringify({ cover: d.url }) }); ME = resp.user; renderProfile(ME, true); toast('تم', 'ok'); }
+    const d = await uploadImage(f);
+    if(d.url){ const resp = await api('/me', { method: 'PUT', body: JSON.stringify({ cover: d.url }) }); ME = resp.user; loadProfile(); toast('تم تحديث الغلاف', 'ok'); }
   } catch(_){ toast('فشل', 'err'); }
   hideLoader(); e.target.value = '';
 };
 
-var postImgInput = document.createElement('input');
+const postImgInput = document.createElement('input');
 postImgInput.type = 'file'; postImgInput.accept = 'image/*'; postImgInput.style.display = 'none';
 document.body.appendChild(postImgInput);
 postImgInput.onchange = async function(e){
-  var f = e.target.files[0]; if(!f) return;
+  const f = e.target.files[0]; if(!f) return;
   if(f.size > 4 * 1024 * 1024) return toast('الحد 4 ميجا', 'err');
   showLoader();
-  var fd = new FormData(); fd.append('image', f);
   try {
-    var r = await fetch('/upload', { method: 'POST', body: fd });
-    var d = await r.json();
-    if(d.url){ pendingImage = d.url; var prev = $('npPreview'); if(prev) prev.innerHTML = '<div style="margin-bottom:12px"><img src="' + d.url + '" style="max-height:180px;border-radius:12px;margin:auto" /></div>'; toast('تم', 'ok'); }
+    const d = await uploadImage(f);
+    if(d.url){
+      pendingPostImage = d.url;
+      const prev = $('npPreview');
+      if(prev) prev.innerHTML = '<div style="margin-bottom:12px"><img src="' + d.url + '" style="max-height:180px;border-radius:12px;margin:auto" /></div>';
+      toast('تم اختيار الصورة', 'ok');
+    }
   } catch(_){ toast('فشل', 'err'); }
   hideLoader(); e.target.value = '';
 };
 
-var ringtoneCtx = null;
-var ringtoneInterval = null;
-function startRingtone(type){
-  stopRingtone();
-  try {
-    var Ctx = window.AudioContext || window.webkitAudioContext;
-    if(!Ctx) return;
-    ringtoneCtx = ringtoneCtx || new Ctx();
-    if(ringtoneCtx.state === 'suspended') ringtoneCtx.resume();
-    var playRing = function(){
-      if(!ringtoneCtx) return;
-      var t = ringtoneCtx.currentTime;
-      var o = ringtoneCtx.createOscillator();
-      var g = ringtoneCtx.createGain();
-      o.connect(g); g.connect(ringtoneCtx.destination);
-      o.type = 'sine';
-      if(type === 'outgoing'){
-        o.frequency.setValueAtTime(440, t);
-        o.frequency.setValueAtTime(480, t + 0.4);
-      } else if(type === 'offline'){
-        o.type = 'square';
-        o.frequency.setValueAtTime(320, t);
-      } else {
-        o.frequency.setValueAtTime(587, t);
-        o.frequency.setValueAtTime(880, t + 0.25);
-      }
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.15, t + 0.05);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
-      o.start(t); o.stop(t + 0.8);
-    };
-    playRing();
-    var interval = type === 'offline' ? 800 : (type === 'outgoing' ? 2000 : 1200);
-    ringtoneInterval = setInterval(playRing, interval);
-  } catch(_){}
-}
-function stopRingtone(){
-  if(ringtoneInterval){ clearInterval(ringtoneInterval); ringtoneInterval = null; }
-}
+/* WebRTC */
+const rtcConfig = { iceServers: [ { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' } ] };
+let localStream = null, currentCall = null, callEnding = false;
 
-var audioCtx = null;
-function playBeep(){
-  try {
-    var Ctx = window.AudioContext || window.webkitAudioContext;
-    if(!Ctx) return;
-    audioCtx = audioCtx || new Ctx();
-    if(audioCtx.state === 'suspended') audioCtx.resume();
-    var t = audioCtx.currentTime;
-    var o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.connect(g); g.connect(audioCtx.destination);
-    o.type = 'sine';
-    o.frequency.setValueAtTime(880, t);
-    o.frequency.exponentialRampToValueAtTime(1320, t + 0.09);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.07, t + 0.012);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-    o.start(t); o.stop(t + 0.24);
-  } catch(_){}
+async function getMic(){
+  if(localStream) return localStream;
+  localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  return localStream;
 }
-
-var rtcConfig = { iceServers: [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun2.l.google.com:19302' },
-  { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-  { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-  { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
-], iceCandidatePoolSize: 10 };
-var localStream = null, currentCall = null;
-
-async function getMic(){ if(localStream) return localStream; localStream = await navigator.mediaDevices.getUserMedia({ audio: true }); return localStream; }
 async function buildPC(peerId){
-  var pc = new RTCPeerConnection(rtcConfig);
-  var stream = await getMic();
-  stream.getTracks().forEach(function(t){ pc.addTrack(t, stream); });
-  var audio = new Audio();
-  audio.autoplay = true; audio.playsInline = true; audio.volume = 1.0;
-  pc.ontrack = function(e){
-    audio.srcObject = e.streams[0];
-    var tryPlay = function(){ audio.play().catch(function(){}); };
-    tryPlay(); setTimeout(tryPlay, 300); setTimeout(tryPlay, 1000);
-  };
+  const pc = new RTCPeerConnection(rtcConfig);
+  const stream = await getMic();
+  stream.getTracks().forEach(function(t2){ pc.addTrack(t2, stream); });
+  const audio = new Audio(); audio.autoplay = true; audio.playsInline = true;
+  pc.ontrack = function(e){ audio.srcObject = e.streams[0]; audio.play().catch(function(){}); };
   pc.onicecandidate = function(e){ if(e.candidate) socket.emit('webrtc-ice', { toId: peerId, candidate: e.candidate }); };
   pc.onconnectionstatechange = function(){
-    if(pc.connectionState === 'connected'){
-      if(!callTimerInterval) startCallTimer();
-      stopRingtone();
-      $('callStatus').textContent = 'متصل';
-    }
-    if(['failed','disconnected','closed'].indexOf(pc.connectionState) !== -1) endCall();
+    if(pc.connectionState === 'failed' || pc.connectionState === 'disconnected') endCall();
   };
   return { pc: pc, audio: audio };
 }
+
 function startCallTimer(){
-  stopCallTimer(); callSeconds = 0;
-  var el = $('callTimer');
+  stopCallTimer();
+  callSeconds = 0;
+  const el = $('callTimer');
   if(el){ el.classList.add('show'); el.textContent = '00:00'; }
   callTimerInterval = setInterval(function(){
     callSeconds++;
-    var m = String(Math.floor(callSeconds / 60)).padStart(2, '0');
-    var s = String(callSeconds % 60).padStart(2, '0');
+    const m = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+    const s = String(callSeconds % 60).padStart(2, '0');
     if(el) el.textContent = m + ':' + s;
   }, 1000);
 }
 function stopCallTimer(){
   if(callTimerInterval) clearInterval(callTimerInterval);
   callTimerInterval = null; callSeconds = 0;
-  var el = $('callTimer'); if(el) el.classList.remove('show');
+  const el = $('callTimer'); if(el) el.classList.remove('show');
 }
+
 async function startCall(peerId, peerName, peerColor, peerAvatar){
   if(ME && peerId === ME.id) return toast('لا يمكنك الاتصال بنفسك', 'err');
-  if(currentCall) return toast('لديك مكالمة', 'err');
+  if(currentCall) return toast('لديك مكالمة جارية', 'err');
   try {
-    var r = await buildPC(peerId);
+    const r = await buildPC(peerId);
     currentCall = { peerId: peerId, peerName: peerName, peerColor: peerColor, peerAvatar: peerAvatar, pc: r.pc, audio: r.audio, isCaller: true };
+    callEnding = false;
     showCallUI(peerName, peerColor, peerAvatar, 'جارٍ الاتصال...', false);
-    startRingtone('outgoing');
     socket.emit('call-start', { targetId: peerId });
-  } catch(e) { toast('لا يمكن الوصول للمايك', 'err'); }
+  } catch(e) { toast('لا يمكن الوصول للمايكروفون', 'err'); }
 }
+
 socket.on('incoming-call', function(data){
   if(currentCall){ socket.emit('call-reject', { toId: data.fromId }); return; }
   currentCall = { peerId: data.fromId, peerName: data.fromName, peerColor: data.fromColor, peerAvatar: data.fromAvatar, incoming: true };
-  showCallUI(data.fromName, data.fromColor, data.fromAvatar, 'مكالمة واردة...', true);
-  startRingtone('incoming');
+  callEnding = false;
+  showCallUI(data.fromName, data.fromColor, data.fromAvatar, 'مكالمة واردة', true);
 });
+
 function showCallUI(name, color, avatar, status, incoming){
   $('callOverlay').classList.add('open');
   $('callAvatar').innerHTML = avatar ? '<img src="' + esc(avatar) + '" />' : initial(name);
@@ -1222,59 +1226,73 @@ function showCallUI(name, color, avatar, status, incoming){
   $('callIncoming').classList.toggle('hide', !incoming);
   $('callActive').classList.toggle('hide', incoming);
 }
+
 $('callAccept').onclick = async function(){
-  var c = currentCall; if(!c) return;
-  stopRingtone();
+  const c = currentCall; if(!c) return;
   try {
-    var r = await buildPC(c.peerId);
+    const r = await buildPC(c.peerId);
     c.pc = r.pc; c.audio = r.audio; c.incoming = false;
     $('callIncoming').classList.add('hide');
     $('callActive').classList.remove('hide');
     $('callStatus').textContent = 'جارٍ الاتصال...';
     socket.emit('call-accept', { toId: c.peerId });
-  } catch(e) { toast('فشل المايك', 'err'); endCall(); }
+  } catch(e) { toast('فشل المايكروفون', 'err'); endCall(); }
 };
-$('callReject').onclick = function(){ stopRingtone(); if(currentCall && currentCall.peerId) socket.emit('call-reject', { toId: currentCall.peerId }); endCall(); };
+
+$('callReject').onclick = function(){
+  if(currentCall && currentCall.peerId) socket.emit('call-reject', { toId: currentCall.peerId });
+  endCall();
+};
 $('endCallBtn').onclick = function(){ endCall(); };
+
 $('muteBtn').onclick = function(){
   if(!localStream) return;
-  var tr = localStream.getAudioTracks()[0];
+  const tr = localStream.getAudioTracks()[0];
   tr.enabled = !tr.enabled;
   $('muteBtn').classList.toggle('on', !tr.enabled);
   $('callStatus').textContent = tr.enabled ? 'متصل' : 'مكتوم';
 };
+
 $('speakerBtn').onclick = function(){
   speakerOn = !speakerOn;
   $('speakerBtn').classList.toggle('speaker-on', speakerOn);
-  document.querySelectorAll('audio').forEach(function(a){ a.volume = speakerOn ? 1.0 : 0.5; });
+  try {
+    document.querySelectorAll('audio').forEach(function(a){
+      a.volume = speakerOn ? 1.0 : 0.5;
+      if(a.setSinkId && speakerOn) a.setSinkId('speaker').catch(function(){});
+    });
+  } catch(_){}
   toast(speakerOn ? 'السبيكر مفعّل' : 'السبيكر معطّل', 'info');
 };
+
 socket.on('call-accepted', async function(data){
   if(!currentCall || currentCall.peerId !== data.fromId) return;
-  stopRingtone();
+  startCallTimer();
   try {
-    var offer = await currentCall.pc.createOffer();
+    const offer = await currentCall.pc.createOffer();
     await currentCall.pc.setLocalDescription(offer);
     socket.emit('webrtc-offer', { toId: data.fromId, offer: offer });
     $('callStatus').textContent = 'متصل';
   } catch(_){}
 });
+
 socket.on('call-rejected', function(data){
-  stopRingtone();
   if(currentCall){
-    var nm = (data && data.fromName) || (currentCall && currentCall.peerName) || 'المستخدم';
+    const nm = (data && data.fromName) || (currentCall && currentCall.peerName) || 'المستخدم';
     $('callStatus').textContent = 'قام ' + nm + ' برفض المكالمة';
     toast('قام ' + nm + ' برفض المكالمة', 'info');
     setTimeout(endCall, 1800);
   }
 });
+
 socket.on('webrtc-offer', async function(data){
   if(!currentCall || currentCall.peerId !== data.fromId || !currentCall.pc) return;
   await currentCall.pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-  var a = await currentCall.pc.createAnswer();
+  const a = await currentCall.pc.createAnswer();
   await currentCall.pc.setLocalDescription(a);
   socket.emit('webrtc-answer', { toId: data.fromId, answer: a });
   $('callStatus').textContent = 'متصل';
+  startCallTimer();
 });
 socket.on('webrtc-answer', async function(data){
   if(!currentCall || currentCall.peerId !== data.fromId || !currentCall.pc) return;
@@ -1284,28 +1302,51 @@ socket.on('webrtc-ice', async function(data){
   if(!currentCall || currentCall.peerId !== data.fromId || !currentCall.pc) return;
   try { await currentCall.pc.addIceCandidate(new RTCIceCandidate(data.candidate)); } catch(_){}
 });
-socket.on('call-ended', function(){ stopRingtone(); endCall(); });
-socket.on('call-peer-left', function(d){ if(currentCall && currentCall.peerId === d.id){ stopRingtone(); endCall(); } });
+socket.on('call-ended', function(){ endCall(); });
+socket.on('call-peer-left', function(d){ if(currentCall && currentCall.peerId === d.id) endCall(); });
+
 function endCall(){
-  stopRingtone();
-  stopCallTimer(); speakerOn = false;
-  if(!currentCall) return;
-  var c = currentCall;
+  if(callEnding) return;
+  callEnding = true;
+  stopCallTimer();
+  speakerOn = false;
+  const c = currentCall;
+  if(!c){ callEnding = false; return; }
   try { if(c.peerId) socket.emit('call-end', { toId: c.peerId }); } catch(_){}
   try { c.pc && c.pc.close(); } catch(_){}
-  try { if(c.audio && c.audio.srcObject) c.audio.srcObject.getTracks().forEach(function(t){ t.stop(); }); } catch(_){}
-  if(localStream){ localStream.getTracks().forEach(function(t){ t.stop(); }); localStream = null; }
+  try { if(c.audio && c.audio.srcObject) c.audio.srcObject.getTracks().forEach(function(t2){ t2.stop(); }); } catch(_){}
+  if(localStream){ localStream.getTracks().forEach(function(t2){ t2.stop(); }); localStream = null; }
   currentCall = null;
   $('callOverlay').classList.remove('open');
+  setTimeout(function(){ callEnding = false; }, 500);
 }
 
-window.addEventListener('beforeunload', function(){ stopRingtone(); });
-window.addEventListener('pagehide', function(){ stopRingtone(); });
+/* BEEP */
+let audioCtx = null;
+function playBeep(){
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return;
+    audioCtx = audioCtx || new Ctx();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const t2 = audioCtx.currentTime;
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine';
+    o.frequency.setValueAtTime(880, t2);
+    o.frequency.exponentialRampToValueAtTime(1320, t2 + 0.09);
+    g.gain.setValueAtTime(0.0001, t2);
+    g.gain.exponentialRampToValueAtTime(0.07, t2 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t2 + 0.22);
+    o.start(t2); o.stop(t2 + 0.24);
+  } catch(_){}
+}
 
-(async function(){
+/* AUTO LOGIN */
+(async function init(){
   if(TOKEN){
     showLoader();
-    try { var r = await api('/me'); enterApp(r.user); } catch(_) { localStorage.removeItem('token'); TOKEN = null; }
+    try { const r = await api('/me'); enterApp(r.user); } catch(_) { localStorage.removeItem('token'); TOKEN = null; }
     hideLoader();
   }
 })();
