@@ -484,6 +484,17 @@ body.light .modal{background:rgba(0,0,0,.4)}
   .bottom-nav{inset-inline:auto;left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 32px))}
   .fab{left:calc(50% - 250px)}
 }
+ /* Reset modal-card styles when showing menu */
+.modal-card.menu-sheet-wrap{
+  background:transparent;
+  padding:0;
+  border:none;
+  border-radius:0;
+  max-height:none;
+  animation:none;
+  box-shadow:none;
+}
+.modal-card.menu-sheet-wrap::before{display:none}
 </style>
 </head>
 <body>
