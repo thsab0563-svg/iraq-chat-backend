@@ -127,10 +127,10 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 .sys-msg{align-self:center;font-size:.74rem;color:var(--muted);background:var(--card);border:1px solid var(--border);padding:5px 14px;border-radius:99px}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .chat-input-row{padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--bg);display:flex;align-items:flex-end;gap:8px}
-.mini-btn{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--card);border:1px solid var(--border);color:var(--text);flex:0 0 auto}
+.mini-btn{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--card);border:1px solid var(--border);color:var(--text);flex:0 0 auto;font-size:1.2rem}
 .mini-btn:active{background:var(--accent);color:#fff}
 #chatInput{flex:1;padding:11px 15px;border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:.92rem;line-height:1.5;max-height:120px;min-height:42px;resize:none}
-.send{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;flex:0 0 auto;box-shadow:0 8px 20px rgba(124,92,255,.35)}
+.send{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;flex:0 0 auto;box-shadow:0 8px 20px rgba(124,92,255,.35);font-size:1.2rem}
 .send:active{transform:scale(.93)}
 .search-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:var(--card);border:1px solid var(--border);margin:12px 16px}
 .search-bar input{flex:1;font-size:.94rem}
@@ -203,7 +203,6 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 #emojiPick.show{display:flex}
 #emojiPick button{font-size:1.6rem;padding:6px;border-radius:10px}
 .empty{padding:60px 30px;text-align:center;color:var(--muted)}
-.empty svg{width:60px;height:60px;opacity:.35;margin:0 auto 16px;stroke:currentColor;fill:none;stroke-width:1.5}
 .empty p{font-size:.9rem;line-height:1.6}
 .sec-title{padding:18px 18px 8px;font-size:.82rem;font-weight:800;color:var(--muted)}
 </style>
@@ -214,7 +213,6 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 <div id="netBanner"><span>⚠️ لا يوجد اتصال</span><button id="netClose">إغلاق</button></div>
 <div id="toasts"></div>
 
-<!-- AUTH -->
 <div id="auth" class="screen active">
   <div class="auth-wrap">
     <div class="auth-logo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 5.94 2 10.8c0 2.7 1.36 5.1 3.5 6.7V22l4.03-2.2c.79.16 1.61.25 2.47.25 5.52 0 10-3.94 10-8.8S17.52 2 12 2z"/></svg></div>
@@ -241,11 +239,10 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
   </div>
 </div>
 
-<!-- APP -->
 <div id="app" class="screen">
   <div class="tab-content">
     <div id="tab-rooms" class="tab active">
-      <header class="app-header"><h1>المحافظات</h1><button class="hbtn" id="btnMenu">☰</button></header>
+      <header class="app-header"><h1>الغرف</h1><button class="hbtn" id="btnMenu">☰</button></header>
       <div class="list-pad" id="roomsList"></div>
     </div>
     <div id="tab-posts" class="tab">
@@ -282,10 +279,9 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
   </nav>
 </div>
 
-<!-- CHAT -->
 <div id="chatView">
   <header class="chat-head">
-    <button class="back" id="chatBack"><svg class="ic" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <button class="back" id="chatBack">←</button>
     <div class="ch-info">
       <div class="avatar" id="chatAvatar" style="display:none">?</div>
       <div class="ch-text">
@@ -293,8 +289,8 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
         <div class="ch-sub" id="chatSub">0 متصل</div>
       </div>
     </div>
-    <button class="hbtn call hide" id="chatCall"><svg class="ic" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
-    <button class="hbtn" id="chatInfo"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
+    <button class="hbtn call hide" id="chatCall">📞</button>
+    <button class="hbtn" id="chatInfo">ⓘ</button>
   </header>
   <div id="pinBar" style="display:none;padding:8px 14px;background:var(--card);border-bottom:1px solid var(--border);font-size:.82rem;align-items:center;gap:8px">
     <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="pinText"></span>
@@ -318,20 +314,19 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 
 <div class="modal" id="modal"><div class="modal-card" id="modalBody"></div></div>
 
-<!-- CALL -->
 <div id="callOverlay">
   <div class="call-avatar-lg" id="callAvatar">؟</div>
   <div class="call-name-lg" id="callName">-</div>
   <div class="call-status-lg" id="callStatus">...</div>
   <div class="call-timer" id="callTimer">00:00</div>
   <div id="callIncoming" class="call-buttons">
-    <button class="call-btn reject" id="callReject"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07"/><line x1="23" y1="1" x2="1" y2="23"/></svg></button>
-    <button class="call-btn accept" id="callAccept"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+    <button class="call-btn reject" id="callReject">📵</button>
+    <button class="call-btn accept" id="callAccept">📞</button>
   </div>
   <div id="callActive" class="call-controls hide">
-    <button class="call-btn mute" id="speakerBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></button>
-    <button class="call-btn mute" id="muteBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg></button>
-    <button class="call-btn reject" id="endCallBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform:rotate(135deg)"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+    <button class="call-btn mute" id="speakerBtn">🔊</button>
+    <button class="call-btn mute" id="muteBtn">🎤</button>
+    <button class="call-btn reject" id="endCallBtn">📵</button>
   </div>
 </div>
 
@@ -343,6 +338,8 @@ var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAl
 var COLORS = ['#f87171','#fb923c','#facc15','#4ade80','#22d3ee','#818cf8','#c084fc','#f472b6','#e11d48','#0ea5e9'];
 var EMOJIS = ['😀','😂','🥰','😎','🤔','😢','😡','👍','👎','❤️','🔥','🎉','✨','🙏','👏','💪','🌹','☕','🍕','⚽','🎵','📚','💡','🚀'];
 var REACTS = ['❤️','😂','👍','😮','😢','🔥'];
+var ROOM_ICONS = {'بغداد':'🏛️','البصرة':'⚓','نينوى':'🕌','أربيل':'🏔️','النجف':'🕋','كربلاء':'🌙','ذي قار':'📜','الأنبار':'🏜️','بابل':'🗿','ديالى':'🍊','واسط':'🌾','ميسان':'🐟','المثنى':'🏜️','القادسية':'🌾','صلاح الدين':'⛰️','كركوك':'🛢️','دهوك':'🏔️','السليمانية':'🌿','حلبجة':'🌸'};
+var ROOMS_LIST = ['بغداد','البصرة','نينوى','أربيل','النجف','كربلاء','ذي قار','الأنبار','بابل','ديالى','واسط','ميسان','المثنى','القادسية','صلاح الدين','كركوك','دهوك','السليمانية','حلبجة'];
 
 var ME = null, TOKEN = localStorage.getItem('token');
 var CURRENT_ROOM = null, CURRENT_DM = null;
@@ -406,12 +403,10 @@ async function api(path, opts){
 
 var socket = io();
 
-/* NET */
 window.addEventListener('online', function(){ $('netBanner').classList.remove('show'); toast('عاد الاتصال', 'ok'); });
 window.addEventListener('offline', function(){ $('netBanner').classList.add('show'); });
 $('netClose').onclick = function(){ $('netBanner').classList.remove('show'); };
 
-/* COLORS */
 var colorRow = $('colorRow');
 COLORS.forEach(function(c, i){
   var b = document.createElement('button');
@@ -424,7 +419,6 @@ COLORS.forEach(function(c, i){
   colorRow.appendChild(b);
 });
 
-/* TABS */
 $('tabLogin').onclick = function(){
   $('tabLogin').classList.add('active'); $('tabRegister').classList.remove('active');
   $('loginForm').classList.remove('hide'); $('regForm').classList.add('hide');
@@ -434,7 +428,6 @@ $('tabRegister').onclick = function(){
   $('regForm').classList.remove('hide'); $('loginForm').classList.add('hide');
 };
 
-/* LOGIN */
 $('btnLogin').onclick = async function(){
   var u = $('liUser').value.trim(), p = $('liPass').value;
   if(!u || !p) return showErr('الرجاء تعبئة الحقول');
@@ -447,7 +440,6 @@ $('btnLogin').onclick = async function(){
   this.disabled = false; hideLoader();
 };
 
-/* REGISTER */
 $('btnRegister').onclick = async function(){
   var name = $('rgName').value.trim(), pass = $('rgPass').value;
   if(!name) return showErr('الاسم مطلوب');
@@ -474,11 +466,10 @@ function enterApp(user){
 }
 function applyTheme(theme){ document.body.classList.toggle('light', theme === 'light'); }
 
-/* SOCKET */
 socket.on('auth-error', function(){ logout(true); });
 socket.on('auth-ok', function(data){ ME = data.user; loadEverything(); });
-socket.on('room-update', function(){ loadRooms(); });
-socket.socket.on('join-error', function(data){ toast(data.message === 'room_not_found' ? 'الغرفة غير موجودة' : data.message === 'not_member' ? 'لم تنضم لهذه الغرفة' : data.message, 'err'); });('joined', function(data){
+socket.on('rooms', function(rooms){ renderRooms(rooms); });
+socket.on('joined', function(data){
   CURRENT_ROOM = data.room; CURRENT_DM = null;
   $('chatName').textContent = data.room;
   $('chatSub').textContent = '0 متصل';
@@ -555,6 +546,7 @@ socket.on('dm-typing', function(d){
     setTimeout(function(){ if(CURRENT_DM) $('chatSub').textContent = 'متصل'; }, 3000);
   }
 });
+socket.on('online-status', function(d){ if(window._onlineCallback) window._onlineCallback(d); });
 
 async function loadEverything(){
   loadRooms(); loadPosts(); loadTrends(); loadNotifs(); loadProfile(); loadSuggestions();
@@ -570,12 +562,11 @@ function switchTab(name){
 }
 $$('.bottom-nav button').forEach(function(b){ b.onclick = function(){ switchTab(b.dataset.tab); }; });
 
-/* ROOMS */
 function loadRooms(){ renderRooms(ROOMS_LIST); }
 function renderRooms(rooms){
   var el = $('roomsList');
   el.innerHTML = rooms.map(function(r){
-    return '<div class="card room-card" data-room="' + esc(r) + '"><div class="rc-ic">' + (ROOM_ICONS[r] || '💬') + '</div><div class="rc-info"><div class="rc-name">' + esc(r) + '</div><div class="rc-sub">' + esc(r) + '</div></div><svg class="ic" viewBox="0 0 24 24" style="color:var(--muted)"><polyline points="9 18 15 12 9 6"/></svg></div>';
+    return '<div class="card room-card" data-room="' + esc(r) + '"><div class="rc-ic">' + (ROOM_ICONS[r] || '💬') + '</div><div class="rc-info"><div class="rc-name">' + esc(r) + '</div><div class="rc-sub">' + esc(r) + '</div></div></div>';
   }).join('');
   el.querySelectorAll('.room-card').forEach(function(c){ c.onclick = function(){ joinRoom(c.dataset.room); }; });
 }
@@ -588,7 +579,6 @@ function joinRoom(room){
   socket.emit('join', { room: room });
 }
 
-/* CHAT RENDER */
 function renderChatMsg(m){
   var el = document.createElement('div');
   if(m.system){ el.className = 'sys-msg'; el.textContent = m.text; $('chatMsgs').appendChild(el); return; }
@@ -648,9 +638,7 @@ function renderChatMsg(m){
     el.classList.toggle('show-actions');
   };
 
-  body.appendChild(meta);
-  body.appendChild(bubble);
-  body.appendChild(rx);
+  body.appendChild(meta); body.appendChild(bubble); body.appendChild(rx);
   if(mine){ var mk = document.createElement('div'); mk.className = 'read-marks'; mk.textContent = '✓'; body.appendChild(mk); }
   el.appendChild(body);
   $('chatMsgs').appendChild(el);
@@ -726,7 +714,6 @@ $('imgInput').onchange = async function(e){
 function clearPendingImage(){ pendingImage = null; $('imgPreview').style.display = 'none'; }
 $('cancelImg').onclick = clearPendingImage;
 
-/* POSTS */
 async function loadPosts(hashtag){
   try { var r = await api('/posts' + (hashtag ? '?hashtag=' + encodeURIComponent(hashtag) : '')); renderPosts(r.posts); } catch(e) { toast(e.message, 'err'); }
 }
@@ -773,7 +760,6 @@ function renderComments(list){
   }).join('');
 }
 
-/* SUGGESTIONS */
 async function loadSuggestions(){
   try {
     var r = await api('/suggestions');
@@ -789,7 +775,6 @@ async function loadSuggestions(){
   } catch(_){}
 }
 
-/* SEARCH */
 var searchTimeout = null;
 $('searchInput').oninput = function(e){
   var q = e.target.value.trim();
@@ -815,7 +800,6 @@ async function loadTrends(){
   } catch(_){}
 }
 
-/* NOTIFS */
 async function loadNotifs(){
   try {
     var r = await api('/friends/requests');
@@ -854,7 +838,6 @@ $$('.tabs-inner button').forEach(function(b){ b.onclick = function(){
   if(nt === 'requests'){ $('requestsList').classList.remove('hide'); loadRequests(); }
 }; });
 
-/* PROFILE */
 async function loadProfile(){
   try { var r = await api('/me'); ME = r.user; renderProfile(r.user, true, { friends: 0, posts: 0, views: 0 }); }
   catch(e) { toast(e.message, 'err'); }
@@ -870,7 +853,7 @@ function renderProfile(u, isMe, stats){
     (u.bio ? '<div class="profile-bio">' + esc(u.bio) + '</div>' : '') +
     '<div class="profile-meta">' + (u.location ? '<span>📍 ' + esc(u.location) + '</span>' : '') + (u.country ? '<span>🌍 ' + esc(u.country) + '</span>' : '') + '</div>' +
     '<div class="profile-stats"><div class="stat"><div class="num">' + stats.friends + '</div><div class="lbl">صديق</div></div><div class="stat"><div class="num">' + stats.posts + '</div><div class="lbl">منشور</div></div><div class="stat"><div class="num">' + stats.views + '</div><div class="lbl">زيارة</div></div></div>' +
-    '<div class="profile-actions">' + (isMe ? '<button class="btn-fill" id="btnEditProfile">✏️ تعديل</button><button class="btn-ghost" id="btnSettings">⚙️ الإعدادات</button>' : '<button class="btn-fill" id="btnMsgUser">💬 رسالة</button>' + (isMe ? '' : '<button class="btn-ghost" id="btnAddFriend">+ صديق</button>')) + '</div>' +
+    '<div class="profile-actions">' + (isMe ? '<button class="btn-fill" id="btnEditProfile">✏️ تعديل</button><button class="btn-ghost" id="btnSettings">⚙️ الإعدادات</button>' : '<button class="btn-fill" id="btnMsgUser">💬 رسالة</button><button class="btn-ghost" id="btnAddFriend">+ صديق</button>') + '</div>' +
   '</div>';
 
   if(isMe){
@@ -878,7 +861,7 @@ function renderProfile(u, isMe, stats){
     $('btnSettings').onclick = function(){ openSettings(); };
     $('profAvatar').onclick = function(){ $('avatarInput').click(); };
     if($('editCover')) $('editCover').onclick = function(e){ e.stopPropagation(); $('coverInput').click(); };
-if($('profCover') && isMe){ $('profCover').onclick = function(){ $('coverInput').click(); }; }
+    if($('profCover')) $('profCover').onclick = function(){ $('coverInput').click(); };
   } else {
     $('btnMsgUser').onclick = function(){ openDM(u); };
     if($('btnAddFriend')) $('btnAddFriend').onclick = async function(){ try { await api('/friends/request/' + u.id, { method: 'POST' }); toast('تم', 'ok'); } catch(e) { toast(e.message, 'err'); } };
@@ -917,13 +900,7 @@ function openEditProfile(u){
   $('epSubmit').onclick = async function(){
     var btn = $('epSubmit'); btn.disabled = true;
     try {
-      var body = {
-        display_name: $('epName').value.trim(),
-        bio: $('epBio').value.trim(),
-        location: $('epLoc').value.trim(),
-        country: $('epCountry').value.trim(),
-        phone: $('epPhone').value.trim()
-      };
+      var body = { display_name: $('epName').value.trim(), bio: $('epBio').value.trim(), location: $('epLoc').value.trim(), country: $('epCountry').value.trim(), phone: $('epPhone').value.trim() };
       var newU = $('epUsername').value.trim().toLowerCase();
       if(newU && newU !== u.username) body.username = newU;
       var r = await api('/me', { method: 'PUT', body: JSON.stringify(body) });
@@ -1002,7 +979,6 @@ function logout(silent){
   location.reload();
 }
 
-/* DM */
 async function openDMById(userId){
   if(ME && userId === ME.id) return toast('لا يمكنك مراسلة نفسك', 'err');
   try { var r = await api('/users/' + userId); openDM(r.user); } catch(e) { toast(e.message, 'err'); }
@@ -1031,14 +1007,12 @@ function renderDMMsg(m){
   var mine = ME && m.from_id === ME.id;
   el.className = 'cmsg ' + (mine ? 'me' : 'other');
   el.dataset.id = m.id;
-
   var u = mine ? ME : (CURRENT_DM ? CURRENT_DM.user : null);
   var av = document.createElement('div');
   av.className = 'cmsg-avatar';
   if(u && u.avatar) av.innerHTML = '<img src="' + esc(u.avatar) + '" />';
   else if(u){ av.style.background = 'linear-gradient(135deg,' + (u.color || '#7c5cff') + ',#5b8cff)'; av.textContent = initial(u.display_name); }
   el.appendChild(av);
-
   var body = document.createElement('div');
   body.className = 'cmsg-body';
   var meta = document.createElement('div'); meta.className = 'cmeta'; meta.innerHTML = '<span>' + fmtTime(m.time) + '</span>';
@@ -1051,13 +1025,11 @@ function renderDMMsg(m){
   $('chatMsgs').appendChild(el);
 }
 
-/* MODAL */
 function showModal(html){ $('modalBody').innerHTML = html; $('modal').classList.add('open'); }
 function closeModal(){ $('modal').classList.remove('open'); }
 $('modal').onclick = function(e){ if(e.target === $('modal')) closeModal(); };
 function openLightbox(src){ showModal('<img src="' + esc(src) + '" style="width:100%;border-radius:14px" />'); }
 
-/* MENU */
 $('btnMenu').onclick = function(){
   showModal('<div class="modal-title">القائمة</div><div class="modal-list"><button class="modal-item" id="mProfile">👤 ملفي<span class="arrow">›</span></button><button class="modal-item" id="mFriends">👥 الأصدقاء<span class="arrow">›</span></button><button class="modal-item" id="mSettings">⚙️ الإعدادات<span class="arrow">›</span></button><button class="modal-item" id="mPrivacy">🛡️ الخصوصية<span class="arrow">›</span></button><button class="modal-item danger" id="mLogout">🚪 تسجيل الخروج</button></div>');
   $('mProfile').onclick = function(){ closeModal(); switchTab('profile'); };
@@ -1067,10 +1039,8 @@ $('btnMenu').onclick = function(){
   $('mLogout').onclick = function(){ closeModal(); logout(); };
 };
 
-/* AVATAR / COVER / POST IMG */
 var avatarInput = document.createElement('input');
 avatarInput.type = 'file'; avatarInput.accept = 'image/*'; avatarInput.style.display = 'none';
-avatarInput.id = 'avatarInput';
 document.body.appendChild(avatarInput);
 avatarInput.onchange = async function(e){
   var f = e.target.files[0]; if(!f) return;
@@ -1087,7 +1057,6 @@ avatarInput.onchange = async function(e){
 
 var coverInput = document.createElement('input');
 coverInput.type = 'file'; coverInput.accept = 'image/*'; coverInput.style.display = 'none';
-coverInput.id = 'coverInput';
 document.body.appendChild(coverInput);
 coverInput.onchange = async function(e){
   var f = e.target.files[0]; if(!f) return;
@@ -1104,7 +1073,6 @@ coverInput.onchange = async function(e){
 
 var postImgInput = document.createElement('input');
 postImgInput.type = 'file'; postImgInput.accept = 'image/*'; postImgInput.style.display = 'none';
-postImgInput.id = 'postImgInput';
 document.body.appendChild(postImgInput);
 postImgInput.onchange = async function(e){
   var f = e.target.files[0]; if(!f) return;
@@ -1119,18 +1087,74 @@ postImgInput.onchange = async function(e){
   hideLoader(); e.target.value = '';
 };
 
-/* CALL */
-var rtcConfig = { 
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' },
-    { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-    { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-    { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
-  ],
-  iceCandidatePoolSize: 10
-};
+var ringtoneCtx = null;
+var ringtoneInterval = null;
+function startRingtone(type){
+  stopRingtone();
+  try {
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return;
+    ringtoneCtx = ringtoneCtx || new Ctx();
+    if(ringtoneCtx.state === 'suspended') ringtoneCtx.resume();
+    var playRing = function(){
+      if(!ringtoneCtx) return;
+      var t = ringtoneCtx.currentTime;
+      var o = ringtoneCtx.createOscillator();
+      var g = ringtoneCtx.createGain();
+      o.connect(g); g.connect(ringtoneCtx.destination);
+      o.type = 'sine';
+      if(type === 'outgoing'){
+        o.frequency.setValueAtTime(440, t);
+        o.frequency.setValueAtTime(480, t + 0.4);
+      } else if(type === 'offline'){
+        o.type = 'square';
+        o.frequency.setValueAtTime(320, t);
+      } else {
+        o.frequency.setValueAtTime(587, t);
+        o.frequency.setValueAtTime(880, t + 0.25);
+      }
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.15, t + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+      o.start(t); o.stop(t + 0.8);
+    };
+    playRing();
+    var interval = type === 'offline' ? 800 : (type === 'outgoing' ? 2000 : 1200);
+    ringtoneInterval = setInterval(playRing, interval);
+  } catch(_){}
+}
+function stopRingtone(){
+  if(ringtoneInterval){ clearInterval(ringtoneInterval); ringtoneInterval = null; }
+}
+
+var audioCtx = null;
+function playBeep(){
+  try {
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return;
+    audioCtx = audioCtx || new Ctx();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    var t = audioCtx.currentTime;
+    var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine';
+    o.frequency.setValueAtTime(880, t);
+    o.frequency.exponentialRampToValueAtTime(1320, t + 0.09);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.07, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    o.start(t); o.stop(t + 0.24);
+  } catch(_){}
+}
+
+var rtcConfig = { iceServers: [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun2.l.google.com:19302' },
+  { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
+], iceCandidatePoolSize: 10 };
 var localStream = null, currentCall = null;
 
 async function getMic(){ if(localStream) return localStream; localStream = await navigator.mediaDevices.getUserMedia({ audio: true }); return localStream; }
@@ -1138,15 +1162,26 @@ async function buildPC(peerId){
   var pc = new RTCPeerConnection(rtcConfig);
   var stream = await getMic();
   stream.getTracks().forEach(function(t){ pc.addTrack(t, stream); });
-  var audio = new Audio(); audio.autoplay = true; audio.playsInline = true;
-  pc.ontrack = function(e){ audio.srcObject = e.streams[0]; audio.play().catch(function(){}); };
+  var audio = new Audio();
+  audio.autoplay = true; audio.playsInline = true; audio.volume = 1.0;
+  pc.ontrack = function(e){
+    audio.srcObject = e.streams[0];
+    var tryPlay = function(){ audio.play().catch(function(){}); };
+    tryPlay(); setTimeout(tryPlay, 300); setTimeout(tryPlay, 1000);
+  };
   pc.onicecandidate = function(e){ if(e.candidate) socket.emit('webrtc-ice', { toId: peerId, candidate: e.candidate }); };
-  pc.onconnectionstatechange = function(){ if(['failed','disconnected','closed'].indexOf(pc.connectionState) !== -1) endCall(); };
+  pc.onconnectionstatechange = function(){
+    if(pc.connectionState === 'connected'){
+      if(!callTimerInterval) startCallTimer();
+      stopRingtone();
+      $('callStatus').textContent = 'متصل';
+    }
+    if(['failed','disconnected','closed'].indexOf(pc.connectionState) !== -1) endCall();
+  };
   return { pc: pc, audio: audio };
 }
 function startCallTimer(){
-  stopCallTimer();
-  callSeconds = 0;
+  stopCallTimer(); callSeconds = 0;
   var el = $('callTimer');
   if(el){ el.classList.add('show'); el.textContent = '00:00'; }
   callTimerInterval = setInterval(function(){
@@ -1168,14 +1203,15 @@ async function startCall(peerId, peerName, peerColor, peerAvatar){
     var r = await buildPC(peerId);
     currentCall = { peerId: peerId, peerName: peerName, peerColor: peerColor, peerAvatar: peerAvatar, pc: r.pc, audio: r.audio, isCaller: true };
     showCallUI(peerName, peerColor, peerAvatar, 'جارٍ الاتصال...', false);
-startRingtone('outgoing');
-socket.emit('call-start', { targetId: peerId });
+    startRingtone('outgoing');
+    socket.emit('call-start', { targetId: peerId });
   } catch(e) { toast('لا يمكن الوصول للمايك', 'err'); }
 }
 socket.on('incoming-call', function(data){
   if(currentCall){ socket.emit('call-reject', { toId: data.fromId }); return; }
   currentCall = { peerId: data.fromId, peerName: data.fromName, peerColor: data.fromColor, peerAvatar: data.fromAvatar, incoming: true };
-  showCallUI(data.fromName, data.fromColor, data.fromAvatar, 'مكالمة واردة', true);
+  showCallUI(data.fromName, data.fromColor, data.fromAvatar, 'مكالمة واردة...', true);
+  startRingtone('incoming');
 });
 function showCallUI(name, color, avatar, status, incoming){
   $('callOverlay').classList.add('open');
@@ -1188,6 +1224,7 @@ function showCallUI(name, color, avatar, status, incoming){
 }
 $('callAccept').onclick = async function(){
   var c = currentCall; if(!c) return;
+  stopRingtone();
   try {
     var r = await buildPC(c.peerId);
     c.pc = r.pc; c.audio = r.audio; c.incoming = false;
@@ -1197,7 +1234,7 @@ $('callAccept').onclick = async function(){
     socket.emit('call-accept', { toId: c.peerId });
   } catch(e) { toast('فشل المايك', 'err'); endCall(); }
 };
-$('callReject').onclick = function(){ if(currentCall && currentCall.peerId) socket.emit('call-reject', { toId: currentCall.peerId }); endCall(); };
+$('callReject').onclick = function(){ stopRingtone(); if(currentCall && currentCall.peerId) socket.emit('call-reject', { toId: currentCall.peerId }); endCall(); };
 $('endCallBtn').onclick = function(){ endCall(); };
 $('muteBtn').onclick = function(){
   if(!localStream) return;
@@ -1214,7 +1251,7 @@ $('speakerBtn').onclick = function(){
 };
 socket.on('call-accepted', async function(data){
   if(!currentCall || currentCall.peerId !== data.fromId) return;
-  startCallTimer();
+  stopRingtone();
   try {
     var offer = await currentCall.pc.createOffer();
     await currentCall.pc.setLocalDescription(offer);
@@ -1223,6 +1260,7 @@ socket.on('call-accepted', async function(data){
   } catch(_){}
 });
 socket.on('call-rejected', function(data){
+  stopRingtone();
   if(currentCall){
     var nm = (data && data.fromName) || (currentCall && currentCall.peerName) || 'المستخدم';
     $('callStatus').textContent = 'قام ' + nm + ' برفض المكالمة';
@@ -1237,7 +1275,6 @@ socket.on('webrtc-offer', async function(data){
   await currentCall.pc.setLocalDescription(a);
   socket.emit('webrtc-answer', { toId: data.fromId, answer: a });
   $('callStatus').textContent = 'متصل';
-  startCallTimer();
 });
 socket.on('webrtc-answer', async function(data){
   if(!currentCall || currentCall.peerId !== data.fromId || !currentCall.pc) return;
@@ -1247,9 +1284,10 @@ socket.on('webrtc-ice', async function(data){
   if(!currentCall || currentCall.peerId !== data.fromId || !currentCall.pc) return;
   try { await currentCall.pc.addIceCandidate(new RTCIceCandidate(data.candidate)); } catch(_){}
 });
-socket.on('call-ended', function(){ endCall(); });
-socket.on('call-peer-left', function(d){ if(currentCall && currentCall.peerId === d.id) endCall(); });
+socket.on('call-ended', function(){ stopRingtone(); endCall(); });
+socket.on('call-peer-left', function(d){ if(currentCall && currentCall.peerId === d.id){ stopRingtone(); endCall(); } });
 function endCall(){
+  stopRingtone();
   stopCallTimer(); speakerOn = false;
   if(!currentCall) return;
   var c = currentCall;
@@ -1261,72 +1299,9 @@ function endCall(){
   $('callOverlay').classList.remove('open');
 }
 
-/* BEEP */
-var ringtoneCtx = null;
-var ringtoneInterval = null;
-function startRingtone(type){
-  stopRingtone();
-  try {
-    var Ctx = window.AudioContext || window.webkitAudioContext;
-    if(!Ctx) return;
-    ringtoneCtx = ringtoneCtx || new Ctx();
-    if(ringtoneCtx.state === 'suspended') ringtoneCtx.resume();
-    var playRing = function(){
-      if(!ringtoneCtx) return;
-      var t = ringtoneCtx.currentTime;
-      var o = ringtoneCtx.createOscillator();
-      var g = ringtoneCtx.createGain();
-      o.connect(g); g.connect(ringtoneCtx.destination);
-      o.type = 'sine';
-      if(type === 'outgoing'){
-        o.frequency.setValueAtTime(440, t);
-        o.frequency.setValueAtTime(480, t + 0.4);
-      } else {
-        o.frequency.setValueAtTime(587, t);
-        o.frequency.setValueAtTime(880, t + 0.25);
-      }
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.15, t + 0.05);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
-      o.start(t); o.stop(t + 0.8);
-    };
-    playRing();
-    ringtoneInterval = setInterval(playRing, type === 'outgoing' ? 2000 : 1200);
-  } catch(_){}
-}
-function stopRingtone(){
-  if(ringtoneInterval){
-    clearInterval(ringtoneInterval);
-    ringtoneInterval = null;
-  }
-  try {
-    if(ringtoneCtx && ringtoneCtx.state !== 'closed'){
-      ringtoneCtx.close().catch(function(){});
-      ringtoneCtx = null;
-    }
-  } catch(_){}
-}
-var audioCtx = null;
-function playBeep(){
-  try {
-    var Ctx = window.AudioContext || window.webkitAudioContext;
-    if(!Ctx) return;
-    audioCtx = audioCtx || new Ctx();
-    if(audioCtx.state === 'suspended') audioCtx.resume();
-    var t = audioCtx.currentTime;
-    var o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.connect(g); g.connect(audioCtx.destination);
-    o.type = 'sine';
-    o.frequency.setValueAtTime(880, t);
-    o.frequency.exponentialRampToValueAtTime(1320, t + 0.09);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.07, t + 0.012);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-    o.start(t); o.stop(t + 0.24);
-  } catch(_){}
-}
+window.addEventListener('beforeunload', function(){ stopRingtone(); });
+window.addEventListener('pagehide', function(){ stopRingtone(); });
 
-/* AUTO LOGIN */
 (async function(){
   if(TOKEN){
     showLoader();
