@@ -12,7 +12,7 @@ const { Server } = require('socket.io');
 
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const COLORS = ['#f87171','#fb923c','#facc15','#4ade80','#22d3ee','#818cf8','#c084fc','#f472b6','#e11d48','#0ea5e9'];
+const COLORS = ['#e8b567','#f4a261','#ff6b8a','#4ecdc4','#7c9cff','#c084fc','#f472b6','#34d399','#22d3ee','#e11d48'];
 const USERNAME_CHANGE_DAYS = 7;
 const MESSAGE_TTL_MS = 48 * 3600 * 1000;
 
@@ -275,26 +275,11 @@ const makeLimit = (opts) => rateLimit({
   ...opts
 });
 
-const limiterLogin = makeLimit({
-  windowMs: 15 * 60 * 1000, max: 10,
-  message: { error: 'too_many_attempts' }
-});
-const limiterRegister = makeLimit({
-  windowMs: 60 * 60 * 1000, max: 5,
-  message: { error: 'too_many_registrations' }
-});
-const limiterAPI = makeLimit({
-  windowMs: 60 * 1000, max: 120,
-  message: { error: 'too_many_requests' }
-});
-const limiterUpload = makeLimit({
-  windowMs: 60 * 60 * 1000, max: 40,
-  message: { error: 'too_many_uploads' }
-});
-const limiterWrite = makeLimit({
-  windowMs: 60 * 1000, max: 30,
-  message: { error: 'too_many_writes' }
-});
+const limiterLogin = makeLimit({ windowMs: 15 * 60 * 1000, max: 10, message: { error: 'too_many_attempts' } });
+const limiterRegister = makeLimit({ windowMs: 60 * 60 * 1000, max: 5, message: { error: 'too_many_registrations' } });
+const limiterAPI = makeLimit({ windowMs: 60 * 1000, max: 120, message: { error: 'too_many_requests' } });
+const limiterUpload = makeLimit({ windowMs: 60 * 60 * 1000, max: 40, message: { error: 'too_many_uploads' } });
+const limiterWrite = makeLimit({ windowMs: 60 * 1000, max: 30, message: { error: 'too_many_writes' } });
 
 app.use('/api/', limiterAPI);
 app.use('/api/login', limiterLogin);
@@ -326,6 +311,7 @@ const S = {
   getPost: db.prepare('SELECT * FROM posts WHERE id = ?'),
   deletePost: db.prepare('UPDATE posts SET deleted = 1, text = ?, image = NULL WHERE id = ?'),
   postsByUser: db.prepare('SELECT * FROM posts WHERE deleted = 0 AND user_id = ? ORDER BY time DESC LIMIT ?'),
+  postsAll: db.prepare('SELECT * FROM posts WHERE deleted = 0 ORDER BY time DESC LIMIT ?'),
 
   getLike: db.prepare('SELECT 1 FROM post_likes WHERE post_id = ? AND user_id = ?'),
   insertLike: db.prepare('INSERT INTO post_likes (post_id, user_id) VALUES (?,?)'),
@@ -392,9 +378,7 @@ function publicUser(u) {
   };
 }
 
-function isBlocked(a, b) {
-  return !!S.findBlock.get(a, b, b, a);
-}
+function isBlocked(a, b) { return !!S.findBlock.get(a, b, b, a); }
 
 function genUsername(name) {
   let base = String(name || 'user').toLowerCase().replace(/[^a-z0-9]/gi, '').slice(0, 10) || 'user';
@@ -455,6 +439,7 @@ app.get('/health', (req, res) => {
   try {
     const userCount = db.prepare('SELECT COUNT(*) AS c FROM users').get().c;
     const dmCount = db.prepare('SELECT COUNT(*) AS c FROM dms').get().c;
+    const postCount = db.prepare('SELECT COUNT(*) AS c FROM posts WHERE deleted = 0').get().c;
 
     let diskFreeMB = null, diskTotalMB = null;
     try {
@@ -476,6 +461,7 @@ app.get('/health', (req, res) => {
       env: NODE_ENV,
       users: userCount,
       online: onlineSockets.size,
+      posts: postCount,
       dms: dmCount,
       disk: { free_mb: diskFreeMB, total_mb: diskTotalMB, wal_mb: walMB },
       data_dir: DATA_DIR,
@@ -656,8 +642,7 @@ app.post('/api/unblock/:id', auth, (req, res) => {
   res.json({ ok: true });
 });
 app.get('/api/blocks', auth, (req, res) => {
-  const rows = S.blocksByUser.all(req.user.id)
-    .map(b => getUser(b.user2)).filter(Boolean);
+  const rows = S.blocksByUser.all(req.user.id).map(b => getUser(b.user2)).filter(Boolean);
   res.json({ blocks: rows.map(publicUser) });
 });
 
@@ -670,8 +655,7 @@ app.get('/api/users/search', auth, (req, res) => {
     SELECT * FROM users
     WHERE id != ? AND (LOWER(username) LIKE ? OR LOWER(display_name) LIKE ?)
     LIMIT 30
-  `).all(req.user.id, lq, lq)
-    .filter(u => !isBlocked(req.user.id, u.id));
+  `).all(req.user.id, lq, lq).filter(u => !isBlocked(req.user.id, u.id));
   res.json({ users: rows.map(publicUser) });
 });
 
@@ -712,7 +696,7 @@ app.post('/api/posts', auth, (req, res) => {
 });
 
 app.get('/api/posts', auth, (req, res) => {
-  const lim = Math.min(parseInt(req.query.limit) || 30, 100);
+  const lim = Math.min(parseInt(req.query.limit) || 50, 100);
   const { username, user_id, hashtag } = req.query;
   let rows;
   if (hashtag) {
@@ -731,11 +715,8 @@ app.get('/api/posts', auth, (req, res) => {
     if (!u) return res.json({ posts: [] });
     rows = S.postsByUser.all(u.id, lim);
   } else {
-    const friendIds = S.friendIdsOf.all(req.user.id, req.user.id, req.user.id).map(r => r.id);
-    const ids = [req.user.id, ...friendIds];
-    const ph = ids.map(() => '?').join(',');
-    rows = db.prepare(`SELECT * FROM posts WHERE deleted = 0 AND user_id IN (${ph}) ORDER BY time DESC LIMIT ?`)
-      .all(...ids, lim);
+    // ✅ الفيد عام: كل منشورات كل المستخدمين
+    rows = S.postsAll.all(lim);
   }
   res.json({ posts: rows.map(p => formatPost(p, req.user.id)) });
 });
@@ -808,9 +789,7 @@ app.post('/api/friends/request/:id', auth, (req, res) => {
   if (exists) return res.status(409).json({ error: 'exists', status: exists.status });
   S.insertFriendship.run(req.user.id, target, 'pending');
   onlineSockets.forEach((uid, sid) => {
-    if (uid === target) {
-      io.to(sid).emit('notification', { type: 'friend_request', from: publicUser(req.user), text: 'طلب صداقة جديد' });
-    }
+    if (uid === target) io.to(sid).emit('notification', { type: 'friend_request', from: publicUser(req.user), text: 'طلب صداقة جديد' });
   });
   res.json({ ok: true });
 });
@@ -915,12 +894,18 @@ io.on('connection', (socket) => {
     if (!t && !img) return;
     const now = Date.now();
     const info = S.insertDM.run(u, toId, encryptText(t), img, now);
-    const out = { id: info.lastInsertRowid, from_id: u, to_id: toId, text: t, image: img, time: now, read: false };
+    const sender = getUser(u);
+    const out = {
+      id: info.lastInsertRowid,
+      from_id: u, to_id: toId,
+      text: t, image: img, time: now, read: false,
+      from_name: sender ? sender.display_name : ''
+    };
     socket.emit('dm-message', out);
     onlineSockets.forEach((uid, sid) => {
       if (uid === toId) {
         io.to(sid).emit('dm-message', out);
-        io.to(sid).emit('notification', { type: 'dm', from: publicUser(getUser(u)), text: t || '📷 صورة' });
+        io.to(sid).emit('notification', { type: 'dm', from: publicUser(sender), text: t || '📷 صورة' });
       }
     });
   });
@@ -992,10 +977,7 @@ setInterval(() => {
 }, 10 * 60 * 1000);
 
 setInterval(() => {
-  try {
-    const cutoff = Date.now() - 30 * 24 * 3600 * 1000;
-    S.deleteOldTokens.run(cutoff);
-  } catch (_){}
+  try { S.deleteOldTokens.run(Date.now() - 30 * 24 * 3600 * 1000); } catch (_){}
 }, 60 * 60 * 1000);
 
 setInterval(() => {
@@ -1019,27 +1001,17 @@ async function shutdown(signal) {
   if (shuttingDown) return;
   shuttingDown = true;
   console.log('\n🛑 إشارة ' + signal + ' — جارٍ الإغلاق...');
-
-  const forceTimeout = setTimeout(() => {
-    console.error('⚠️ تجاوز الوقت — إغلاق قسري');
-    process.exit(1);
-  }, 10000);
+  const forceTimeout = setTimeout(() => { console.error('⚠️ تجاوز الوقت'); process.exit(1); }, 10000);
   forceTimeout.unref();
-
   try {
     await new Promise(resolve => io.close(resolve));
-    console.log('✅ Socket.IO أُغلق');
-
     await new Promise(resolve => server.close(resolve));
-    console.log('✅ HTTP أُغلق');
-
     try { db.pragma('wal_checkpoint(TRUNCATE)'); } catch (_){}
     try { db.close(); } catch (_){}
-    console.log('✅ SQLite أُغلق');
-
+    console.log('✅ تم الإغلاق');
     process.exit(0);
   } catch (e) {
-    console.error('خطأ أثناء الإغلاق:', e);
+    console.error('خطأ:', e);
     process.exit(1);
   }
 }
