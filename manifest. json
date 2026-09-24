@@ -1,0 +1,36 @@
+{
+  "name": "دردشة العراق",
+  "short_name": "دردشة",
+  "description": "تواصل مع أصدقائك في محافظاتك",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07080f",
+  "theme_color": "#07080f",
+  "categories": ["social", "communication"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "الرسائل",
+      "short_name": "رسائل",
+      "url": "/?tab=notifs",
+      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "المنشورات",
+      "short_name": "منشورات",
+      "url": "/?tab=posts",
+      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
+}
