@@ -1344,12 +1344,82 @@ function openLightbox(src){ showModal('<img src="' + esc(src) + '" style="width:
 
 /* MENU */
 $('btnMenu').onclick = function(){
-  showModal('<div class="modal-title">القائمة</div><div class="modal-list">' +
-  '<button class="modal-item" id="mSettings">⚙️ الإعدادات<span class="arrow">›</span></button>' +
-  '<button class="modal-item" id="mPrivacy">🛡️ الخصوصية<span class="arrow">›</span></button>' +
-  '<button class="modal-item danger" id="mLogout">🚪 تسجيل الخروج</button>' +
-  '</div>');
+/* MENU — Redesigned Sheet */
+$('btnMenu').onclick = function(){
+  const u = ME || {};
+  const avatarHTMLStr = u.avatar
+    ? '<div class="avatar" style="background:#333"><img src="' + esc(u.avatar) + '" /></div>'
+    : '<div class="avatar" style="background:linear-gradient(135deg,' + (u.color || '#e8b567') + ',#d4a574)">' + esc(initial(u.display_name)) + '</div>';
+
+  const html =
+    '<div class="menu-sheet" onclick="event.stopPropagation()">' +
+      '<div class="menu-handle"></div>' +
+
+      // Header
+      '<div class="menu-header">' +
+        avatarHTMLStr +
+        '<div class="menu-header-info">' +
+          '<div class="menu-header-name">' + esc(u.display_name || 'مستخدم') +
+            (u.verified ? ' <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e8b567" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : '') +
+          '</div>' +
+          '<div class="menu-header-handle">@' + esc(u.username || 'user') + '</div>' +
+        '</div>' +
+        '<div class="menu-header-badge">معكوس</div>' +
+      '</div>' +
+
+      // Account section
+      '<div class="menu-section-title">الحساب</div>' +
+      '<button class="menu-row" id="mProfile">' +
+        '<div class="menu-icon gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>' +
+        '<div class="mr-info"><div class="mr-title">الملف الشخصي</div><div class="mr-sub">عرض وتعديل معلوماتك</div></div>' +
+        '<svg class="ic ic-sm mr-arrow" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>' +
+      '</button>' +
+      '<button class="menu-row" id="mEditProfile">' +
+        '<div class="menu-icon violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>' +
+        '<div class="mr-info"><div class="mr-title">تعديل الملف</div><div class="mr-sub">الاسم، النبذة، الصورة</div></div>' +
+        '<svg class="ic ic-sm mr-arrow" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>' +
+      '</button>' +
+
+      '<div class="menu-divider"></div>' +
+
+      // Settings section
+      '<div class="menu-section-title">الإعدادات</div>' +
+      '<button class="menu-row" id="mSettings">' +
+        '<div class="menu-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>' +
+        '<div class="mr-info"><div class="mr-title">الإعدادات</div><div class="mr-sub">الثيم، الأصوات، كلمة السر</div></div>' +
+        '<svg class="ic ic-sm mr-arrow" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>' +
+      '</button>' +
+      '<button class="menu-row" id="mBlocks">' +
+        '<div class="menu-icon rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>' +
+        '<div class="mr-info"><div class="mr-title">قائمة الحظر</div><div class="mr-sub">إدارة المستخدمين المحظورين</div></div>' +
+        '<svg class="ic ic-sm mr-arrow" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>' +
+      '</button>' +
+      '<button class="menu-row" id="mPrivacy">' +
+        '<div class="menu-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>' +
+        '<div class="mr-info"><div class="mr-title">سياسة الخصوصية</div><div class="mr-sub">كيف نحمي بياناتك</div></div>' +
+        '<svg class="ic ic-sm mr-arrow" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>' +
+      '</button>' +
+
+      '<div class="menu-divider"></div>' +
+
+      // Logout
+      '<button class="menu-row danger" id="mLogout">' +
+        '<div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>' +
+        '<div class="mr-info"><div class="mr-title">تسجيل الخروج</div><div class="mr-sub">إنهاء الجلسة الحالية</div></div>' +
+      '</button>' +
+
+      '<div class="menu-close-hint">اضغط خارج القائمة للإغلاق</div>' +
+    '</div>';
+
+  $('modalBody').innerHTML = html;
+  $('modalBody').classList.add('menu-sheet-wrap');
+  $('modal').classList.add('open');
+
+  // Actions
+  $('mProfile').onclick = function(){ closeModal(); switchTab('profile'); };
+  $('mEditProfile').onclick = function(){ closeModal(); openEditProfile(ME); };
   $('mSettings').onclick = function(){ closeModal(); openSettings(); };
+  $('mBlocks').onclick = function(){ closeModal(); openBlocksList(); };
   $('mPrivacy').onclick = function(){ closeModal(); openPrivacy(); };
   $('mLogout').onclick = function(){ closeModal(); logout(); };
 };
