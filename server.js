@@ -12,8 +12,8 @@ const ROOMS = ['بغداد','البصرة','نينوى','أربيل','النجف
 const COUNTRIES = ['العراق','مصر','السعودية','الإمارات','الأردن','الكويت','قطر','البحرين','عمان','لبنان','سوريا','فلسطين','اليمن','المغرب','تونس','الجزائر','ليبيا','السودان','تركيا','إيران'];
 const COLORS = ['#f87171','#fb923c','#facc15','#4ade80','#22d3ee','#818cf8','#c084fc','#f472b6','#e11d48','#0ea5e9'];
 const MAX_HISTORY = 200;
+const USERNAME_CHANGE_DAYS = 7;
 
-// ⚡ تعريفات مسبقة - مهمة جداً قبل أي استخدام
 const users = new Map();
 const onlineSockets = new Map();
 
@@ -27,10 +27,11 @@ const io = new Server(server, {
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
 app.get('/health', function(req, res) {
   res.json({ ok: true, time: Date.now() });
 });
-// ============ التشفير ============
+
 const DB_FILE = path.join(__dirname, 'data.json');
 const SECRET_FILE = path.join(__dirname, '.secret');
 
@@ -80,12 +81,11 @@ function verifyPassword(password, stored) {
 }
 function genToken() { return crypto.randomBytes(32).toString('hex'); }
 
-// ============ قاعدة البيانات ============
 const DB = {
   users: [], tokens: [], messages: [], reactions: [], pins: [],
   posts: [], post_likes: [], post_comments: [], hashtags: [],
-  friendships: [], dms: [],
-  nextId: { users: 1, messages: 1, posts: 1, post_comments: 1, dms: 1, hashtags: 1 }
+  friendships: [], dms: [], blocks: [], profile_views: [],
+  nextId: { users: 1, messages: 1, posts: 1, post_comments: 1, dms: 1, hashtags: 1, views: 1 }
 };
 
 if (fs.existsSync(DB_FILE)) {
@@ -102,7 +102,6 @@ function saveDb() {
   }, 500);
 }
 
-// ============ رفع الصور ============
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
@@ -124,7 +123,6 @@ app.post('/upload', upload.single('image'), function(req, res) {
   res.json({ url: '/uploads/' + req.file.filename });
 });
 
-// ============ Auth Middleware ============
 function auth(req, res, next) {
   const h = req.headers.authorization || '';
   const token = h.replace('Bearer ', '') || req.query.token;
@@ -142,9 +140,10 @@ function publicUser(u) {
   return {
     id: u.id, username: u.username, display_name: u.display_name,
     color: u.color, bio: u.bio, location: u.location, country: u.country,
-    verified: !!u.verified, avatar: u.avatar,
+    verified: !!u.verified, avatar: u.avatar, cover: u.cover || '',
     created_at: u.created_at, last_seen: u.last_seen,
     lang: u.lang, theme: u.theme, sound: !!u.sound, notifications: !!u.notifications,
+    username_changed_at: u.username_changed_at || 0,
     phone: u.phone ? (u.phone.slice(0, 3) + '***' + u.phone.slice(-2)) : ''
   };
 }
@@ -161,6 +160,12 @@ function genUsername(name) {
 
 function getUser(id) { return DB.users.find(function(u) { return u.id === id; }); }
 
+function isBlocked(a, b) {
+  return DB.blocks.some(function(x) {
+    return (x.user1 === a && x.user2 === b) || (x.user1 === b && x.user2 === a);
+  });
+}
+
 // ============ API: Register ============
 app.post('/api/register', function(req, res) {
   const body = req.body || {};
@@ -170,15 +175,18 @@ app.post('/api/register', function(req, res) {
   if (pass.length < 4) return res.status(400).json({ error: 'password_too_short' });
   if (DB.users.find(function(u) { return u.display_name === name; })) return res.status(409).json({ error: 'name_taken' });
 
+  const username = genUsername(name);
   const user = {
-    id: DB.nextId.users++, username: genUsername(name), display_name: name,
+    id: DB.nextId.users++, username: username, display_name: name,
     password: hashPassword(pass),
     color: /^#[0-9a-fA-F]{6}$/.test(body.color || '') ? body.color : COLORS[Math.floor(Math.random() * COLORS.length)],
     bio: String(body.bio || '').slice(0, 200),
     location: String(body.location || '').slice(0, 60),
     country: String(body.country || '').slice(0, 40),
     phone: String(body.phone || '').slice(0, 20),
-    verified: 0, avatar: '', created_at: Date.now(), last_seen: Date.now(),
+    verified: 0, avatar: '', cover: '',
+    created_at: Date.now(), last_seen: Date.now(),
+    username_changed_at: Date.now(),
     lang: 'ar', theme: 'dark', sound: 1, notifications: 1
   };
   DB.users.push(user);
@@ -209,6 +217,7 @@ app.get('/api/me', auth, function(req, res) { res.json({ user: publicUser(req.us
 app.put('/api/me', auth, function(req, res) {
   const body = req.body || {};
   const u = req.user;
+
   if (body.display_name !== undefined) {
     const nm = String(body.display_name).trim().slice(0, 30);
     if (!nm) return res.status(400).json({ error: 'name_required' });
@@ -216,6 +225,26 @@ app.put('/api/me', auth, function(req, res) {
     if (dup) return res.status(409).json({ error: 'name_taken' });
     u.display_name = nm;
   }
+
+  if (body.username !== undefined) {
+    const un = String(body.username).trim().toLowerCase().slice(0, 20).replace(/[^a-z0-9_]/g, '');
+    if (un.length < 3) return res.status(400).json({ error: 'username_too_short' });
+    if (un === u.username) {
+      // no change
+    } else {
+      const last = u.username_changed_at || 0;
+      const daysSince = (Date.now() - last) / (1000 * 60 * 60 * 24);
+      if (daysSince < USERNAME_CHANGE_DAYS) {
+        const daysLeft = Math.ceil(USERNAME_CHANGE_DAYS - daysSince);
+        return res.status(429).json({ error: 'username_cooldown', days_left: daysLeft });
+      }
+      const dup = DB.users.find(function(x) { return x.username === un && x.id !== u.id; });
+      if (dup) return res.status(409).json({ error: 'username_taken' });
+      u.username = un;
+      u.username_changed_at = Date.now();
+    }
+  }
+
   if (body.bio !== undefined) u.bio = String(body.bio).slice(0, 200);
   if (body.location !== undefined) u.location = String(body.location).slice(0, 60);
   if (body.country !== undefined) u.country = String(body.country).slice(0, 40);
@@ -224,6 +253,7 @@ app.put('/api/me', auth, function(req, res) {
     if (u.phone.replace(/\D/g, '').length >= 8) u.verified = 1;
   }
   if (body.avatar !== undefined) u.avatar = String(body.avatar).slice(0, 300);
+  if (body.cover !== undefined) u.cover = String(body.cover).slice(0, 300);
   if (body.color !== undefined && /^#[0-9a-fA-F]{6}$/.test(body.color)) u.color = body.color;
   if (body.lang !== undefined && ['ar','en'].indexOf(body.lang) !== -1) u.lang = body.lang;
   if (body.theme !== undefined && ['dark','light'].indexOf(body.theme) !== -1) u.theme = body.theme;
@@ -233,12 +263,69 @@ app.put('/api/me', auth, function(req, res) {
   res.json({ user: publicUser(u) });
 });
 
+// ============ API: تغيير كلمة السر ============
+app.post('/api/change-password', auth, function(req, res) {
+  const body = req.body || {};
+  const oldPass = String(body.old_password || '');
+  const newPass = String(body.new_password || '');
+  if (!oldPass) return res.status(400).json({ error: 'old_required' });
+  if (newPass.length < 4) return res.status(400).json({ error: 'password_too_short' });
+  if (!verifyPassword(oldPass, req.user.password)) return res.status(401).json({ error: 'wrong_old_password' });
+  req.user.password = hashPassword(newPass);
+  saveDb();
+  res.json({ ok: true });
+});
+
+// ============ API: حذف الحساب ============
+app.delete('/api/me', auth, function(req, res) {
+  const uid = req.user.id;
+  DB.tokens = DB.tokens.filter(function(t) { return t.user_id !== uid; });
+  DB.users = DB.users.filter(function(u) { return u.id !== uid; });
+  DB.messages = DB.messages.filter(function(m) { return m.user_id !== uid; });
+  DB.posts = DB.posts.filter(function(p) { return p.user_id !== uid; });
+  DB.dms = DB.dms.filter(function(d) { return d.from_id !== uid && d.to_id !== uid; });
+  DB.friendships = DB.friendships.filter(function(f) { return f.user1 !== uid && f.user2 !== uid; });
+  saveDb();
+  res.json({ ok: true });
+});
+
+// ============ API: Blocks ============
+app.post('/api/block/:id', auth, function(req, res) {
+  const target = parseInt(req.params.id);
+  if (target === req.user.id) return res.status(400).json({ error: 'self' });
+  const u = DB.users.find(function(x) { return x.id === target; });
+  if (!u) return res.status(404).json({ error: 'not_found' });
+  if (isBlocked(req.user.id, target)) return res.json({ ok: true });
+  DB.blocks.push({ user1: req.user.id, user2: target, time: Date.now() });
+  saveDb();
+  res.json({ ok: true });
+});
+
+app.post('/api/unblock/:id', auth, function(req, res) {
+  const target = parseInt(req.params.id);
+  DB.blocks = DB.blocks.filter(function(b) {
+    return !((b.user1 === req.user.id && b.user2 === target) || (b.user2 === req.user.id && b.user1 === target));
+  });
+  saveDb();
+  res.json({ ok: true });
+});
+
+app.get('/api/blocks', auth, function(req, res) {
+  const list = DB.blocks
+    .filter(function(b) { return b.user1 === req.user.id; })
+    .map(function(b) { return DB.users.find(function(u) { return u.id === b.user2; }); })
+    .filter(Boolean);
+  res.json({ blocks: list.map(publicUser) });
+});
+
+// ============ API: Users ============
 app.get('/api/users/search', auth, function(req, res) {
   const q = String(req.query.q || '').trim().slice(0, 40);
   if (!q) return res.json({ users: [] });
   const lq = q.toLowerCase();
   const list = DB.users.filter(function(u) {
-    return u.id !== req.user.id && (u.username.toLowerCase().indexOf(lq) !== -1 || u.display_name.toLowerCase().indexOf(lq) !== -1);
+    return u.id !== req.user.id && !isBlocked(req.user.id, u.id) &&
+      (u.username.toLowerCase().indexOf(lq) !== -1 || u.display_name.toLowerCase().indexOf(lq) !== -1);
   }).slice(0, 30);
   res.json({ users: list.map(publicUser) });
 });
@@ -249,10 +336,30 @@ app.get('/api/users/:id', auth, function(req, res) {
   const isFriend = DB.friendships.some(function(f) {
     return ((f.user1 === req.user.id && f.user2 === u.id) || (f.user2 === req.user.id && f.user1 === u.id)) && f.status === 'accepted';
   });
-  res.json({ user: publicUser(u), isFriend: isFriend });
+  const blocked = isBlocked(req.user.id, u.id);
+
+  // سجل زيارة
+  if (u.id !== req.user.id) {
+    DB.profile_views.push({ viewer_id: req.user.id, viewed_id: u.id, time: Date.now() });
+    if (DB.profile_views.length > 5000) DB.profile_views.shift();
+    saveDb();
+  }
+
+  const friendsCount = DB.friendships.filter(function(f) {
+    return f.status === 'accepted' && (f.user1 === u.id || f.user2 === u.id);
+  }).length;
+  const postsCount = DB.posts.filter(function(p) { return p.user_id === u.id && p.deleted === 0; }).length;
+  const profileViewsCount = DB.profile_views.filter(function(v) { return v.viewed_id === u.id; }).length;
+
+  res.json({
+    user: publicUser(u),
+    isFriend: isFriend,
+    blocked: blocked,
+    stats: { friends: friendsCount, posts: postsCount, views: profileViewsCount }
+  });
 });
 
-// ============ Posts ============
+// ============ API: Posts ============
 function extractHashtags(text) {
   const tags = [];
   const re = /#([\u0600-\u06FF\w_]{1,40})/g;
@@ -290,6 +397,7 @@ app.post('/api/posts', auth, function(req, res) {
 
 app.get('/api/posts', auth, function(req, res) {
   const username = req.query.username;
+  const userId = req.query.user_id;
   const hashtag = req.query.hashtag;
   const lim = Math.min(parseInt(req.query.limit) || 30, 100);
   let posts;
@@ -297,12 +405,20 @@ app.get('/api/posts', auth, function(req, res) {
     const tag = String(hashtag).replace(/^#/, '').toLowerCase();
     const ids = DB.hashtags.filter(function(h) { return h.tag === tag && h.source_type === 'post'; }).map(function(h) { return h.source_id; });
     posts = DB.posts.filter(function(p) { return p.deleted === 0 && ids.indexOf(p.id) !== -1; }).slice(-lim).reverse();
+  } else if (userId) {
+    const uid = parseInt(userId);
+    posts = DB.posts.filter(function(p) { return p.deleted === 0 && p.user_id === uid; }).slice(-lim).reverse();
   } else if (username) {
     const u = DB.users.find(function(x) { return x.username === username; });
     if (!u) return res.json({ posts: [] });
     posts = DB.posts.filter(function(p) { return p.deleted === 0 && p.user_id === u.id; }).slice(-lim).reverse();
   } else {
-    posts = DB.posts.filter(function(p) { return p.deleted === 0; }).slice(-lim).reverse();
+    const myFriends = DB.friendships.filter(function(f) {
+      return f.status === 'accepted' && (f.user1 === req.user.id || f.user2 === req.user.id);
+    }).map(function(f) { return f.user1 === req.user.id ? f.user2 : f.user1; });
+    posts = DB.posts.filter(function(p) {
+      return p.deleted === 0 && (p.user_id === req.user.id || myFriends.indexOf(p.user_id) !== -1);
+    }).slice(-lim).reverse();
   }
   res.json({ posts: posts.map(function(p) { return formatPost(p, req.user.id); }) });
 });
@@ -322,7 +438,7 @@ function mapComments(id) {
     const u = DB.users.find(function(x) { return x.id === c.user_id; });
     return {
       id: c.id, text: decryptText(c.text), time: c.time,
-      user: { username: u.username, display_name: u.display_name, color: u.color, verified: !!u.verified }
+      user: { username: u.username, display_name: u.display_name, color: u.color, verified: !!u.verified, avatar: u.avatar }
     };
   });
 }
@@ -341,6 +457,14 @@ app.post('/api/posts/:id/comment', auth, function(req, res) {
   res.json({ comments: mapComments(id) });
 });
 
+app.delete('/api/posts/:id', auth, function(req, res) {
+  const p = DB.posts.find(function(x) { return x.id === parseInt(req.params.id); });
+  if (!p || p.user_id !== req.user.id) return res.status(403).json({ error: 'forbidden' });
+  p.deleted = 1; p.text = ''; p.image = null;
+  saveDb();
+  res.json({ ok: true });
+});
+
 app.get('/api/trends', auth, function(req, res) {
   const since = Date.now() - 7 * 24 * 3600 * 1000;
   const map = {};
@@ -349,7 +473,26 @@ app.get('/api/trends', auth, function(req, res) {
   res.json({ trends: trends });
 });
 
-// ============ Friends ============
+// ============ API: Suggestions ============
+app.get('/api/suggestions', auth, function(req, res) {
+  const myFriends = DB.friendships.filter(function(f) {
+    return f.status === 'accepted' && (f.user1 === req.user.id || f.user2 === req.user.id);
+  }).map(function(f) { return f.user1 === req.user.id ? f.user2 : f.user1; });
+  const pending = DB.friendships.filter(function(f) {
+    return f.status === 'pending' && (f.user1 === req.user.id || f.user2 === req.user.id);
+  }).map(function(f) { return f.user1 === req.user.id ? f.user2 : f.user1; });
+
+  const list = DB.users.filter(function(u) {
+    return u.id !== req.user.id &&
+      myFriends.indexOf(u.id) === -1 &&
+      pending.indexOf(u.id) === -1 &&
+      !isBlocked(req.user.id, u.id);
+  }).slice(0, 10);
+
+  res.json({ users: list.map(publicUser) });
+});
+
+// ============ API: Friends ============
 app.get('/api/friends', auth, function(req, res) {
   const friends = DB.friendships
     .filter(function(f) { return f.status === 'accepted' && (f.user1 === req.user.id || f.user2 === req.user.id); })
@@ -369,6 +512,7 @@ app.get('/api/friends/requests', auth, function(req, res) {
 app.post('/api/friends/request/:id', auth, function(req, res) {
   const target = parseInt(req.params.id);
   if (target === req.user.id) return res.status(400).json({ error: 'self' });
+  if (isBlocked(req.user.id, target)) return res.status(403).json({ error: 'blocked' });
   const u = DB.users.find(function(x) { return x.id === target; });
   if (!u) return res.status(404).json({ error: 'not_found' });
   const exists = DB.friendships.find(function(f) {
@@ -400,9 +544,20 @@ app.post('/api/friends/reject/:id', auth, function(req, res) {
   res.json({ ok: true });
 });
 
-// ============ DMs ============
+app.delete('/api/friends/:id', auth, function(req, res) {
+  const target = parseInt(req.params.id);
+  DB.friendships = DB.friendships.filter(function(f) {
+    return !((f.user1 === req.user.id && f.user2 === target) || (f.user2 === req.user.id && f.user1 === target));
+  });
+  saveDb();
+  res.json({ ok: true });
+});
+
+// ============ API: DMs ============
 app.get('/api/dms/:userId', auth, function(req, res) {
   const other = parseInt(req.params.userId);
+  if (other === req.user.id) return res.status(400).json({ error: 'self' });
+  if (isBlocked(req.user.id, other)) return res.status(403).json({ error: 'blocked' });
   const msgs = DB.dms.filter(function(m) {
     return (m.from_id === req.user.id && m.to_id === other) || (m.from_id === other && m.to_id === req.user.id);
   }).slice(-100);
@@ -497,7 +652,7 @@ io.on('connection', function(socket) {
       const u = getUser(m.user_id);
       return {
         id: m.id,
-        user: u ? { id: u.id, username: u.username, display_name: u.display_name, color: u.color, verified: !!u.verified } : null,
+        user: u ? { id: u.id, username: u.username, display_name: u.display_name, color: u.color, verified: !!u.verified, avatar: u.avatar } : null,
         text: m.deleted ? '' : decryptText(m.text),
         image: m.deleted ? null : m.image,
         time: m.time, deleted: !!m.deleted,
@@ -584,10 +739,13 @@ io.on('connection', function(socket) {
     socket.to(u.room).emit('typing', { name: user ? user.display_name : '', isTyping: !!isTyping });
   });
 
+  // DM
   socket.on('dm-send', function(data) {
     const u = onlineSockets.get(socket.id);
     if (!u) return;
     const toId = data && data.toId;
+    if (toId === u) return;
+    if (isBlocked(u, toId)) return;
     const t = String((data && data.text) || '').trim().slice(0, 1000);
     const img = (data && data.image) ? String(data.image).slice(0, 300) : null;
     if (!t && !img) return;
@@ -605,23 +763,41 @@ io.on('connection', function(socket) {
     });
   });
 
+  // DM read receipt
+  socket.on('dm-read', function(data) {
+    const u = onlineSockets.get(socket.id);
+    if (!u) return;
+    const fromId = data && data.fromId;
+    DB.dms.forEach(function(m) {
+      if (m.from_id === fromId && m.to_id === u && !m.read) m.read = 1;
+    });
+    saveDb();
+    onlineSockets.forEach(function(uid, sid) {
+      if (uid === fromId) io.to(sid).emit('dm-read-receipt', { byId: u });
+    });
+  });
+
   socket.on('dm-typing', function(data) {
     const u = onlineSockets.get(socket.id);
     if (!u) return;
     const toId = data && data.toId;
+    if (toId === u) return;
     onlineSockets.forEach(function(uid, sid) {
       if (uid === toId) io.to(sid).emit('dm-typing', { fromId: u, isTyping: !!(data && data.isTyping) });
     });
   });
 
+  // Calls (فردية فقط)
   socket.on('call-start', function(data) {
     const u = onlineSockets.get(socket.id);
     if (!u) return;
     const targetId = data && data.targetId;
+    if (targetId === u) return;
+    if (isBlocked(u, targetId)) return;
     const user = getUser(u);
     onlineSockets.forEach(function(uid, sid) {
       if (uid === targetId) {
-        io.to(sid).emit('incoming-call', { fromId: socket.id, fromUserId: u, fromName: user.display_name, fromColor: user.color });
+        io.to(sid).emit('incoming-call', { fromId: socket.id, fromUserId: u, fromName: user.display_name, fromColor: user.color, fromAvatar: user.avatar });
       }
     });
   });
@@ -633,18 +809,17 @@ io.on('connection', function(socket) {
     io.to(data.toId).emit('call-accepted', { fromId: socket.id, fromUserId: u, fromName: user.display_name });
   });
 
-  socket.on('call-reject', function(data) { io.to(data.toId).emit('call-rejected', { fromId: socket.id }); });
+  socket.on('call-reject', function(data) {
+    const u = onlineSockets.get(socket.id);
+    if (!u) return;
+    const user = getUser(u);
+    io.to(data.toId).emit('call-rejected', { fromId: socket.id, fromName: user ? user.display_name : '' });
+  });
+
   socket.on('call-end', function(data) { io.to(data.toId).emit('call-ended', { fromId: socket.id }); });
   socket.on('webrtc-offer', function(data) { io.to(data.toId).emit('webrtc-offer', { fromId: socket.id, offer: data.offer }); });
   socket.on('webrtc-answer', function(data) { io.to(data.toId).emit('webrtc-answer', { fromId: socket.id, answer: data.answer }); });
   socket.on('webrtc-ice', function(data) { io.to(data.toId).emit('webrtc-ice', { fromId: socket.id, candidate: data.candidate }); });
-
-  socket.on('group-call-invite', function() {
-    const u = users.get(socket.id);
-    if (!u) return;
-    const user = getUser(u.userId);
-    socket.to(u.room).emit('group-call-invite', { fromId: socket.id, fromUserId: u.userId, fromName: user.display_name, fromColor: user.color });
-  });
 
   socket.on('disconnect', function() {
     const u = users.get(socket.id);
@@ -658,6 +833,15 @@ io.on('connection', function(socket) {
     onlineSockets.delete(socket.id);
   });
 });
+
+// ============ حذف الرسائل القديمة بعد 48 ساعة ============
+setInterval(function() {
+  const cutoff = Date.now() - 48 * 3600 * 1000;
+  const before = DB.messages.length + DB.dms.length;
+  DB.messages = DB.messages.filter(function(m) { return m.time > cutoff; });
+  DB.dms = DB.dms.filter(function(d) { return d.time > cutoff; });
+  if (DB.messages.length + DB.dms.length !== before) saveDb();
+}, 10 * 60 * 1000);
 
 // ============ التشغيل ============
 server.listen(PORT, '0.0.0.0', function() {
