@@ -1,17 +1,20 @@
 {
   "name": "iraq-chat",
-  "version": "2.0.0",
+  "version": "3.1.0",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
     "socket.io": "^4.7.5",
     "multer": "^1.4.5-lts.1",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
   },
   "engines": {
-    "node": "20.x"
+    "node": ">=20.0.0"
   }
 }
