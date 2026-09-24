@@ -1170,7 +1170,8 @@ async function startCall(peerId, peerName, peerColor, peerAvatar){
     var r = await buildPC(peerId);
     currentCall = { peerId: peerId, peerName: peerName, peerColor: peerColor, peerAvatar: peerAvatar, pc: r.pc, audio: r.audio, isCaller: true };
     showCallUI(peerName, peerColor, peerAvatar, 'جارٍ الاتصال...', false);
-    socket.emit('call-start', { targetId: peerId });
+startRingtone('outgoing');
+socket.emit('call-start', { targetId: peerId });
   } catch(e) { toast('لا يمكن الوصول للمايك', 'err'); }
 }
 socket.on('incoming-call', function(data){
