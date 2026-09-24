@@ -1337,8 +1337,15 @@ async function openDM(user){
   } catch(_){}
 }
 
-function showModal(html){ $('modalBody').innerHTML = html; $('modal').classList.add('open'); }
-function closeModal(){ $('modal').classList.remove('open'); }
+function showModal(html){
+  $('modalBody').innerHTML = html;
+  $('modalBody').classList.remove('menu-sheet-wrap');
+  $('modal').classList.add('open');
+}
+function closeModal(){
+  $('modal').classList.remove('open');
+  $('modalBody').classList.remove('menu-sheet-wrap');
+}
 $('modal').onclick = function(e){ if(e.target === $('modal')) closeModal(); };
 function openLightbox(src){ showModal('<img src="' + esc(src) + '" style="width:100%;max-height:80vh;object-fit:contain;border-radius:14px" />'); }
 
