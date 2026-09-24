@@ -477,7 +477,7 @@ function applyTheme(theme){ document.body.classList.toggle('light', theme === 'l
 /* SOCKET */
 socket.on('auth-error', function(){ logout(true); });
 socket.on('auth-ok', function(data){ ME = data.user; loadEverything(); });
-socket.on('rooms', function(rooms){ renderRooms(rooms); });
+socket.on('room-update', function(){ loadRooms(); });
 socket.on('joined', function(data){
   CURRENT_ROOM = data.room; CURRENT_DM = null;
   $('chatName').textContent = data.room;
