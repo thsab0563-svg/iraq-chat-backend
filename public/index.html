@@ -1263,6 +1263,42 @@ function endCall(){
 }
 
 /* BEEP */
+var ringtoneCtx = null;
+var ringtoneInterval = null;
+function startRingtone(type){
+  stopRingtone();
+  try {
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return;
+    ringtoneCtx = ringtoneCtx || new Ctx();
+    if(ringtoneCtx.state === 'suspended') ringtoneCtx.resume();
+    var playRing = function(){
+      if(!ringtoneCtx) return;
+      var t = ringtoneCtx.currentTime;
+      var o = ringtoneCtx.createOscillator();
+      var g = ringtoneCtx.createGain();
+      o.connect(g); g.connect(ringtoneCtx.destination);
+      o.type = 'sine';
+      if(type === 'outgoing'){
+        o.frequency.setValueAtTime(440, t);
+        o.frequency.setValueAtTime(480, t + 0.4);
+      } else {
+        o.frequency.setValueAtTime(587, t);
+        o.frequency.setValueAtTime(880, t + 0.25);
+      }
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.15, t + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+      o.start(t); o.stop(t + 0.8);
+    };
+    playRing();
+    ringtoneInterval = setInterval(playRing, type === 'outgoing' ? 2000 : 1200);
+  } catch(_){}
+}
+function stopRingtone(){
+  if(ringtoneInterval){ clearInterval(ringtoneInterval); ringtoneInterval = null; }
+}
+
 var audioCtx = null;
 function playBeep(){
   try {
