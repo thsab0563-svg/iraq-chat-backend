@@ -8,34 +8,33 @@ const multer = require('multer');
 const { Server } = require('socket.io');
 
 const PORT = process.env.PORT || 3000;
-const ROOMS = ['بغداد','البصرة','نينوى','أربيل','النجف','كربلاء','ذي قار','الأنبار','بابل','ديالى','واسط','ميسان','المثنى','القادسية','صلاح الدين','كركوك','دهوك','السليمانية','حلبجة'];
-const COUNTRIES = ['العراق','مصر','السعودية','الإمارات','الأردن','الكويت','قطر','البحرين','عمان','لبنان','سوريا','فلسطين','اليمن','المغرب','تونس','الجزائر','ليبيا','السودان','تركيا','إيران'];
 const COLORS = ['#f87171','#fb923c','#facc15','#4ade80','#22d3ee','#818cf8','#c084fc','#f472b6','#e11d48','#0ea5e9'];
-const MAX_HISTORY = 200;
 const USERNAME_CHANGE_DAYS = 7;
+const MESSAGE_TTL_MS = 48 * 3600 * 1000; // 48 ساعة
 
-// GitHub Storage
+// ===== GitHub Storage =====
 const GH_TOKEN = process.env.GH_TOKEN || '';
 const GH_OWNER = process.env.GH_OWNER || '';
-const GH_REPO = process.env.GH_REPO || '';
-const GH_API = 'https://api.github.com';
-const GH_FILE = 'data.json';
+const GH_REPO  = process.env.GH_REPO  || '';
+const GH_API   = 'https://api.github.com';
+const GH_FILE  = 'data.json';
 
-const users = new Map();
-const onlineSockets = new Map();
+const onlineSockets = new Map(); // socketId → userId
 
 const DATA_DIR = fs.existsSync('/data') ? '/data' : __dirname;
 if (!fs.existsSync(DATA_DIR)) { try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch(_){} }
-const DB_FILE = path.join(DATA_DIR, 'data.json');
-const SECRET_FILE = path.join(DATA_DIR, '.secret');
-const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
+const DB_FILE      = path.join(DATA_DIR, 'data.json');
+const SECRET_FILE  = path.join(DATA_DIR, '.secret');
+const UPLOADS_DIR  = path.join(DATA_DIR, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) { try { fs.mkdirSync(UPLOADS_DIR, { recursive: true }); } catch(_){} }
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: '*', methods: ['GET','POST'] },
-  maxHttpBufferSize: 5 * 1024 * 1024
+  maxHttpBufferSize: 5 * 1024 * 1024,
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
 app.use(cors({ origin: '*' }));
@@ -43,10 +42,7 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(UPLOADS_DIR));
 
-app.get('/health', function(req, res) {
-  res.json({ ok: true, time: Date.now(), users: DB.users.length, gh: GH_TOKEN ? 'on' : 'off' });
-});
-
+// ===== SECRET KEY =====
 let SECRET_KEY;
 if (fs.existsSync(SECRET_FILE)) {
   try { SECRET_KEY = Buffer.from(fs.readFileSync(SECRET_FILE, 'utf8'), 'hex'); }
@@ -92,14 +88,15 @@ function verifyPassword(password, stored) {
 }
 function genToken() { return crypto.randomBytes(32).toString('hex'); }
 
+// ===== DB =====
 const DB = {
-  users: [], tokens: [], messages: [], reactions: [], pins: [],
+  users: [], tokens: [],
   posts: [], post_likes: [], post_comments: [], hashtags: [],
   friendships: [], dms: [], blocks: [], profile_views: [],
-  nextId: { users: 1, messages: 1, posts: 1, post_comments: 1, dms: 1, hashtags: 1, views: 1 }
+  nextId: { users: 1, posts: 1, post_comments: 1, dms: 1, hashtags: 1 }
 };
 
-// ============ GitHub Storage ============
+// ===== GitHub Persistence =====
 let ghSha = null;
 let ghReady = false;
 
@@ -130,7 +127,7 @@ async function githubLoad() {
     ghSha = data.sha;
     const content = Buffer.from(data.content, 'base64').toString('utf8');
     const parsed = JSON.parse(content);
-    Object.assign(DB, parsed);
+    mergeDB(parsed);
     console.log('✅ تم تحميل البيانات من GitHub: ' + DB.users.length + ' مستخدم');
     ghReady = true;
   } catch (e) {
@@ -144,13 +141,17 @@ async function githubLoad() {
   }
 }
 
+function mergeDB(parsed) {
+  ['users','tokens','posts','post_likes','post_comments','hashtags','friendships','dms','blocks','profile_views']
+    .forEach(function(k){ if (Array.isArray(parsed[k])) DB[k] = parsed[k]; });
+  if (parsed.nextId) Object.assign(DB.nextId, parsed.nextId);
+}
+
 let ghSaveTimer = null;
 let ghSaving = false;
 
 function saveDb() {
-  // حفظ محلي فوري
   try { fs.writeFileSync(DB_FILE, JSON.stringify(DB)); } catch (_) {}
-  // رفع لـ GitHub مؤجل
   if (!ghReady) return;
   if (ghSaveTimer) return;
   ghSaveTimer = setTimeout(function() {
@@ -165,15 +166,9 @@ async function githubSave() {
   try {
     const content = Buffer.from(JSON.stringify(DB)).toString('base64');
     const url = GH_API + '/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + GH_FILE;
-    const body = {
-      message: 'Update data.json - ' + new Date().toISOString(),
-      content: content
-    };
+    const body = { message: 'Update data.json - ' + new Date().toISOString(), content: content };
     if (ghSha) body.sha = ghSha;
-    const data = await githubFetch(url, {
-      method: 'PUT',
-      body: JSON.stringify(body)
-    });
+    const data = await githubFetch(url, { method: 'PUT', body: JSON.stringify(body) });
     ghSha = data.content.sha;
     console.log('✅ تم الحفظ في GitHub - مستخدمون: ' + DB.users.length);
   } catch (e) {
@@ -182,33 +177,16 @@ async function githubSave() {
   ghSaving = false;
 }
 
-// ============ تحميل محلي مبدئي ============
+// ===== تحميل محلي =====
 if (fs.existsSync(DB_FILE)) {
   try {
     const loaded = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-    Object.assign(DB, loaded);
+    mergeDB(loaded);
     console.log('✅ تم تحميل البيانات المحلية: ' + DB.users.length + ' مستخدم');
   } catch (e) { console.error('DB load error:', e.message); }
 }
 
-// ============ رفع الصور ============
-const storage = multer.diskStorage({
-  destination: UPLOADS_DIR,
-  filename: function(req, file, cb) {
-    const ext = (path.extname(file.originalname) || '.jpg').toLowerCase();
-    cb(null, Date.now() + '_' + Math.random().toString(36).slice(2, 8) + ext);
-  }
-});
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 4 * 1024 * 1024 },
-  fileFilter: function(req, file, cb) { cb(null, /^image\//.test(file.mimetype)); }
-});
-app.post('/upload', upload.single('image'), function(req, res) {
-  if (!req.file) return res.status(400).json({ error: 'invalid' });
-  res.json({ url: '/uploads/' + req.file.filename });
-});
-
+// ===== Middleware =====
 function auth(req, res, next) {
   const h = req.headers.authorization || '';
   const token = h.replace('Bearer ', '') || req.query.token;
@@ -221,6 +199,37 @@ function auth(req, res, next) {
   next();
 }
 
+// ===== Upload (يتطلب توثيق) =====
+const storage = multer.diskStorage({
+  destination: UPLOADS_DIR,
+  filename: function(req, file, cb) {
+    const ext = (path.extname(file.originalname) || '.jpg').toLowerCase().replace(/[^.a-z0-9]/g, '');
+    cb(null, Date.now() + '_' + crypto.randomBytes(4).toString('hex') + ext);
+  }
+});
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 4 * 1024 * 1024 },
+  fileFilter: function(req, file, cb) { cb(null, /^image\//.test(file.mimetype)); }
+});
+
+app.post('/upload', auth, upload.single('image'), function(req, res) {
+  if (!req.file) return res.status(400).json({ error: 'invalid' });
+  res.json({ url: '/uploads/' + req.file.filename });
+});
+
+// ===== Health =====
+app.get('/health', function(req, res) {
+  res.json({
+    ok: true,
+    time: Date.now(),
+    users: DB.users.length,
+    online: onlineSockets.size,
+    gh: GH_TOKEN ? 'on' : 'off'
+  });
+});
+
+// ===== Helpers =====
 function publicUser(u) {
   if (!u) return null;
   return {
@@ -236,7 +245,7 @@ function publicUser(u) {
 
 function genUsername(name) {
   let base = String(name || 'user').toLowerCase().replace(/[^a-z0-9]/gi, '').slice(0, 10) || 'user';
-  let candidate = base; let i = 1;
+  let candidate = base, i = 1;
   while (DB.users.find(function(u) { return u.username === candidate; })) {
     candidate = base + i; i++;
     if (i > 9999) { candidate = 'user' + crypto.randomBytes(3).toString('hex'); break; }
@@ -252,7 +261,37 @@ function isBlocked(a, b) {
   });
 }
 
-// ============ API ============
+function extractHashtags(text) {
+  const tags = [];
+  const re = /#([\u0600-\u06FF\w_]{1,40})/g;
+  let m;
+  while ((m = re.exec(text)) !== null) tags.push(m[1].toLowerCase());
+  return Array.from(new Set(tags));
+}
+
+function formatPost(p, viewerId) {
+  if (!p) return null;
+  const u = getUser(p.user_id);
+  const likes = DB.post_likes.filter(function(x) { return x.post_id === p.id; }).length;
+  const comments = DB.post_comments.filter(function(x) { return x.post_id === p.id; }).length;
+  const liked = viewerId ? DB.post_likes.some(function(x) { return x.post_id === p.id && x.user_id === viewerId; }) : false;
+  return {
+    id: p.id, text: decryptText(p.text), image: p.image, time: p.time,
+    user: publicUser(u), likes: likes, comments: comments, liked: liked
+  };
+}
+
+function mapComments(id) {
+  return DB.post_comments.filter(function(c) { return c.post_id === id; }).map(function(c) {
+    const u = getUser(c.user_id);
+    return {
+      id: c.id, text: decryptText(c.text), time: c.time,
+      user: u ? { username: u.username, display_name: u.display_name, color: u.color, verified: !!u.verified, avatar: u.avatar } : null
+    };
+  });
+}
+
+// ===== AUTH =====
 app.post('/api/register', function(req, res) {
   const body = req.body || {};
   const name = String(body.display_name || '').trim().slice(0, 30);
@@ -298,6 +337,17 @@ app.post('/api/login', function(req, res) {
 });
 
 app.get('/api/me', auth, function(req, res) { res.json({ user: publicUser(req.user) }); });
+
+// ===== /api/me/stats — جديد (يستخدمه العميل) =====
+app.get('/api/me/stats', auth, function(req, res) {
+  const uid = req.user.id;
+  const friends = DB.friendships.filter(function(f) {
+    return f.status === 'accepted' && (f.user1 === uid || f.user2 === uid);
+  }).length;
+  const posts = DB.posts.filter(function(p) { return p.user_id === uid && p.deleted === 0; }).length;
+  const views = DB.profile_views.filter(function(v) { return v.viewed_id === uid; }).length;
+  res.json({ friends: friends, posts: posts, views: views });
+});
 
 app.put('/api/me', auth, function(req, res) {
   const body = req.body || {};
@@ -357,20 +407,24 @@ app.post('/api/change-password', auth, function(req, res) {
 
 app.delete('/api/me', auth, function(req, res) {
   const uid = req.user.id;
-  DB.tokens = DB.tokens.filter(function(t) { return t.user_id !== uid; });
-  DB.users = DB.users.filter(function(u) { return u.id !== uid; });
-  DB.messages = DB.messages.filter(function(m) { return m.user_id !== uid; });
-  DB.posts = DB.posts.filter(function(p) { return p.user_id !== uid; });
-  DB.dms = DB.dms.filter(function(d) { return d.from_id !== uid && d.to_id !== uid; });
+  DB.tokens      = DB.tokens.filter(function(t) { return t.user_id !== uid; });
+  DB.users       = DB.users.filter(function(u) { return u.id !== uid; });
+  DB.posts       = DB.posts.filter(function(p) { return p.user_id !== uid; });
+  DB.post_likes  = DB.post_likes.filter(function(l) { return l.user_id !== uid; });
+  DB.post_comments = DB.post_comments.filter(function(c) { return c.user_id !== uid; });
+  DB.dms         = DB.dms.filter(function(d) { return d.from_id !== uid && d.to_id !== uid; });
   DB.friendships = DB.friendships.filter(function(f) { return f.user1 !== uid && f.user2 !== uid; });
+  DB.blocks      = DB.blocks.filter(function(b) { return b.user1 !== uid && b.user2 !== uid; });
+  DB.profile_views = DB.profile_views.filter(function(v) { return v.viewer_id !== uid && v.viewed_id !== uid; });
   saveDb();
   res.json({ ok: true });
 });
 
+// ===== BLOCKS =====
 app.post('/api/block/:id', auth, function(req, res) {
   const target = parseInt(req.params.id);
   if (target === req.user.id) return res.status(400).json({ error: 'self' });
-  const u = DB.users.find(function(x) { return x.id === target; });
+  const u = getUser(target);
   if (!u) return res.status(404).json({ error: 'not_found' });
   if (isBlocked(req.user.id, target)) return res.json({ ok: true });
   DB.blocks.push({ user1: req.user.id, user2: target, time: Date.now() });
@@ -387,11 +441,12 @@ app.post('/api/unblock/:id', auth, function(req, res) {
 });
 app.get('/api/blocks', auth, function(req, res) {
   const list = DB.blocks.filter(function(b) { return b.user1 === req.user.id; })
-    .map(function(b) { return DB.users.find(function(u) { return u.id === b.user2; }); })
+    .map(function(b) { return getUser(b.user2); })
     .filter(Boolean);
   res.json({ blocks: list.map(publicUser) });
 });
 
+// ===== USERS =====
 app.get('/api/users/search', auth, function(req, res) {
   const q = String(req.query.q || '').trim().slice(0, 40);
   if (!q) return res.json({ users: [] });
@@ -404,7 +459,7 @@ app.get('/api/users/search', auth, function(req, res) {
 });
 
 app.get('/api/users/:id', auth, function(req, res) {
-  const u = DB.users.find(function(x) { return x.id === parseInt(req.params.id); });
+  const u = getUser(parseInt(req.params.id));
   if (!u) return res.status(404).json({ error: 'not_found' });
   const isFriend = DB.friendships.some(function(f) {
     return ((f.user1 === req.user.id && f.user2 === u.id) || (f.user2 === req.user.id && f.user1 === u.id)) && f.status === 'accepted';
@@ -419,29 +474,14 @@ app.get('/api/users/:id', auth, function(req, res) {
     return f.status === 'accepted' && (f.user1 === u.id || f.user2 === u.id);
   }).length;
   const postsCount = DB.posts.filter(function(p) { return p.user_id === u.id && p.deleted === 0; }).length;
-  const profileViewsCount = DB.profile_views.filter(function(v) { return v.viewed_id === u.id; }).length;
+  const viewsCount = DB.profile_views.filter(function(v) { return v.viewed_id === u.id; }).length;
   res.json({
     user: publicUser(u), isFriend: isFriend, blocked: blocked,
-    stats: { friends: friendsCount, posts: postsCount, views: profileViewsCount }
+    stats: { friends: friendsCount, posts: postsCount, views: viewsCount }
   });
 });
 
-function extractHashtags(text) {
-  const tags = [];
-  const re = /#([\u0600-\u06FF\w_]{1,40})/g;
-  let m;
-  while ((m = re.exec(text)) !== null) tags.push(m[1].toLowerCase());
-  return Array.from(new Set(tags));
-}
-function formatPost(p, viewerId) {
-  if (!p) return null;
-  const u = DB.users.find(function(x) { return x.id === p.user_id; });
-  const likes = DB.post_likes.filter(function(x) { return x.post_id === p.id; }).length;
-  const comments = DB.post_comments.filter(function(x) { return x.post_id === p.id; }).length;
-  const liked = viewerId ? DB.post_likes.some(function(x) { return x.post_id === p.id && x.user_id === viewerId; }) : false;
-  return { id: p.id, text: decryptText(p.text), image: p.image, time: p.time, user: publicUser(u), likes: likes, comments: comments, liked: liked };
-}
-
+// ===== POSTS =====
 app.post('/api/posts', auth, function(req, res) {
   const body = req.body || {};
   const t = String(body.text || '').trim().slice(0, 1000);
@@ -495,13 +535,6 @@ app.post('/api/posts/:id/like', auth, function(req, res) {
   res.json({ likes: likes, liked: idx === -1 });
 });
 
-function mapComments(id) {
-  return DB.post_comments.filter(function(c) { return c.post_id === id; }).map(function(c) {
-    const u = DB.users.find(function(x) { return x.id === c.user_id; });
-    return { id: c.id, text: decryptText(c.text), time: c.time,
-      user: { username: u.username, display_name: u.display_name, color: u.color, verified: !!u.verified, avatar: u.avatar } };
-  });
-}
 app.get('/api/posts/:id/comments', auth, function(req, res) { res.json({ comments: mapComments(parseInt(req.params.id)) }); });
 app.post('/api/posts/:id/comment', auth, function(req, res) {
   const id = parseInt(req.params.id);
@@ -520,14 +553,18 @@ app.delete('/api/posts/:id', auth, function(req, res) {
   res.json({ ok: true });
 });
 
+// ===== TRENDS =====
 app.get('/api/trends', auth, function(req, res) {
   const since = Date.now() - 7 * 24 * 3600 * 1000;
   const map = {};
-  DB.hashtags.filter(function(h) { return h.time > since; }).forEach(function(h) { map[h.tag] = (map[h.tag] || 0) + 1; });
-  const trends = Object.keys(map).map(function(tag) { return { tag: tag, c: map[tag] }; }).sort(function(a, b) { return b.c - a.c; }).slice(0, 20);
+  DB.hashtags.filter(function(h) { return h.time > since && h.source_type === 'post'; })
+    .forEach(function(h) { map[h.tag] = (map[h.tag] || 0) + 1; });
+  const trends = Object.keys(map).map(function(tag) { return { tag: tag, c: map[tag] }; })
+    .sort(function(a, b) { return b.c - a.c; }).slice(0, 20);
   res.json({ trends: trends });
 });
 
+// ===== SUGGESTIONS =====
 app.get('/api/suggestions', auth, function(req, res) {
   const myFriends = DB.friendships.filter(function(f) {
     return f.status === 'accepted' && (f.user1 === req.user.id || f.user2 === req.user.id);
@@ -541,25 +578,28 @@ app.get('/api/suggestions', auth, function(req, res) {
   res.json({ users: list.map(publicUser) });
 });
 
+// ===== FRIENDS =====
 app.get('/api/friends', auth, function(req, res) {
   const friends = DB.friendships
     .filter(function(f) { return f.status === 'accepted' && (f.user1 === req.user.id || f.user2 === req.user.id); })
-    .map(function(f) { return DB.users.find(function(u) { return u.id === (f.user1 === req.user.id ? f.user2 : f.user1); }); })
+    .map(function(f) { return getUser(f.user1 === req.user.id ? f.user2 : f.user1); })
     .filter(Boolean);
   res.json({ friends: friends.map(publicUser) });
 });
+
 app.get('/api/friends/requests', auth, function(req, res) {
   const requests = DB.friendships
     .filter(function(f) { return f.status === 'pending' && f.user2 === req.user.id; })
-    .map(function(f) { return DB.users.find(function(u) { return u.id === f.user1; }); })
+    .map(function(f) { return getUser(f.user1); })
     .filter(Boolean);
   res.json({ requests: requests.map(publicUser) });
 });
+
 app.post('/api/friends/request/:id', auth, function(req, res) {
   const target = parseInt(req.params.id);
   if (target === req.user.id) return res.status(400).json({ error: 'self' });
   if (isBlocked(req.user.id, target)) return res.status(403).json({ error: 'blocked' });
-  const u = DB.users.find(function(x) { return x.id === target; });
+  const u = getUser(target);
   if (!u) return res.status(404).json({ error: 'not_found' });
   const exists = DB.friendships.find(function(f) {
     return (f.user1 === req.user.id && f.user2 === target) || (f.user2 === req.user.id && f.user1 === target);
@@ -572,6 +612,7 @@ app.post('/api/friends/request/:id', auth, function(req, res) {
   });
   res.json({ ok: true });
 });
+
 app.post('/api/friends/accept/:id', auth, function(req, res) {
   const fromId = parseInt(req.params.id);
   const f = DB.friendships.find(function(x) { return x.user1 === fromId && x.user2 === req.user.id && x.status === 'pending'; });
@@ -580,6 +621,7 @@ app.post('/api/friends/accept/:id', auth, function(req, res) {
   saveDb();
   res.json({ ok: true });
 });
+
 app.post('/api/friends/reject/:id', auth, function(req, res) {
   const fromId = parseInt(req.params.id);
   const idx = DB.friendships.findIndex(function(x) { return x.user1 === fromId && x.user2 === req.user.id && x.status === 'pending'; });
@@ -587,6 +629,7 @@ app.post('/api/friends/reject/:id', auth, function(req, res) {
   saveDb();
   res.json({ ok: true });
 });
+
 app.delete('/api/friends/:id', auth, function(req, res) {
   const target = parseInt(req.params.id);
   DB.friendships = DB.friendships.filter(function(f) {
@@ -596,6 +639,7 @@ app.delete('/api/friends/:id', auth, function(req, res) {
   res.json({ ok: true });
 });
 
+// ===== DMs =====
 app.get('/api/dms/:userId', auth, function(req, res) {
   const other = parseInt(req.params.userId);
   if (other === req.user.id) return res.status(400).json({ error: 'self' });
@@ -603,12 +647,16 @@ app.get('/api/dms/:userId', auth, function(req, res) {
   const msgs = DB.dms.filter(function(m) {
     return (m.from_id === req.user.id && m.to_id === other) || (m.from_id === other && m.to_id === req.user.id);
   }).slice(-100);
-  msgs.forEach(function(m) { if (m.to_id === req.user.id) m.read = 1; });
-  saveDb();
-  res.json({ messages: msgs.map(function(m) {
-    return { id: m.id, from_id: m.from_id, to_id: m.to_id, text: decryptText(m.text), image: m.image, time: m.time, read: !!m.read };
-  }) });
+  let changed = false;
+  msgs.forEach(function(m) { if (m.to_id === req.user.id && !m.read) { m.read = 1; changed = true; } });
+  if (changed) saveDb();
+  res.json({
+    messages: msgs.map(function(m) {
+      return { id: m.id, from_id: m.from_id, to_id: m.to_id, text: decryptText(m.text), image: m.image, time: m.time, read: !!m.read };
+    })
+  });
 });
+
 app.get('/api/dm-conversations', auth, function(req, res) {
   const otherIds = new Set();
   DB.dms.forEach(function(m) {
@@ -617,7 +665,7 @@ app.get('/api/dm-conversations', auth, function(req, res) {
   });
   const conversations = [];
   otherIds.forEach(function(oid) {
-    const other = DB.users.find(function(u) { return u.id === oid; });
+    const other = getUser(oid);
     if (!other) return;
     const last = DB.dms.filter(function(m) {
       return (m.from_id === req.user.id && m.to_id === oid) || (m.from_id === oid && m.to_id === req.user.id);
@@ -633,29 +681,8 @@ app.get('/api/dm-conversations', auth, function(req, res) {
   res.json({ conversations: conversations });
 });
 
-// ============ Helper ============
-function broadcastUsers(room) {
-  const list = [];
-  const seen = new Set();
-  users.forEach(function(u, sid) {
-    if (u.room === room && !seen.has(u.userId)) {
-      seen.add(u.userId);
-      const user = getUser(u.userId);
-      if (user) list.push(publicUser(user));
-    }
-  });
-  io.to(room).emit('users', list);
-}
-function getReactions(msgId) {
-  const out = {};
-  DB.reactions.filter(function(r) { return r.msgId === msgId; }).forEach(function(r) { out[r.emoji] = (out[r.emoji] || 0) + 1; });
-  return out;
-}
-
-// ============ Socket.IO ============
+// ===== Socket.IO (DM + Calls فقط) =====
 io.on('connection', function(socket) {
-  socket.emit('rooms', ROOMS);
-  socket.emit('countries', COUNTRIES);
 
   socket.on('auth', function(data) {
     const token = data && data.token;
@@ -672,109 +699,6 @@ io.on('connection', function(socket) {
     let online = false;
     onlineSockets.forEach(function(uid) { if (uid === targetId) online = true; });
     socket.emit('online-status', { userId: targetId, online: online });
-  });
-
-  socket.on('join', function(data) {
-    const userId = onlineSockets.get(socket.id);
-    if (!userId) return socket.emit('join-error', { message: 'unauthorized' });
-    let room = data && data.room;
-    if (ROOMS.indexOf(room) === -1) room = ROOMS[0];
-    const user = getUser(userId);
-    const prev = users.get(socket.id);
-    if (prev) {
-      socket.leave(prev.room);
-      socket.to(prev.room).emit('message', { system: true, text: user.display_name + ' غادر الدردشة', time: Date.now() });
-      broadcastUsers(prev.room);
-    }
-    users.set(socket.id, { userId: userId, room: room });
-    socket.join(room);
-    socket.emit('joined', { room: room, user: publicUser(user) });
-    const roomMsgs = DB.messages.filter(function(m) { return m.room === room; }).slice(-MAX_HISTORY);
-    socket.emit('history', roomMsgs.map(function(m) {
-      const u = getUser(m.user_id);
-      return {
-        id: m.id,
-        user: u ? { id: u.id, username: u.username, display_name: u.display_name, color: u.color, verified: !!u.verified, avatar: u.avatar } : null,
-        text: m.deleted ? '' : decryptText(m.text), image: m.deleted ? null : m.image,
-        time: m.time, deleted: !!m.deleted, reactions: getReactions(m.id), sid: null
-      };
-    }));
-    const pin = DB.pins.find(function(p) { return p.room === room; });
-    if (pin) {
-      const pu = getUser(pin.user_id);
-      socket.emit('pin', { msgId: pin.msgId, name: pu ? pu.display_name : '', text: decryptText(pin.text), time: pin.time });
-    } else socket.emit('pin', null);
-    socket.to(room).emit('message', { system: true, text: user.display_name + ' انضم إلى الدردشة', time: Date.now() });
-    broadcastUsers(room);
-  });
-
-  socket.on('message', function(payload) {
-    const u = users.get(socket.id);
-    if (!u) return;
-    const user = getUser(u.userId);
-    const text = String((payload && payload.text) || '').trim().slice(0, 1000);
-    const image = (payload && payload.image) ? String(payload.image).slice(0, 300) : null;
-    if (!text && !image) return;
-    const time = Date.now();
-    const msg = { id: DB.nextId.messages++, room: u.room, user_id: u.userId, text: encryptText(text), image: image, time: time, deleted: 0 };
-    DB.messages.push(msg);
-    extractHashtags(text).forEach(function(tag) {
-      DB.hashtags.push({ id: DB.nextId.hashtags++, tag: tag, source_type: 'message', source_id: msg.id, time: time });
-    });
-    saveDb();
-    io.to(u.room).emit('message', { id: msg.id, sid: socket.id, user: publicUser(user), text: text, image: image, time: time, reactions: {} });
-  });
-
-  socket.on('delete', function(msgId) {
-    const u = users.get(socket.id);
-    if (!u) return;
-    const m = DB.messages.find(function(x) { return x.id === msgId; });
-    if (!m || m.user_id !== u.userId || m.room !== u.room) return;
-    m.deleted = 1; m.text = ''; m.image = null;
-    saveDb();
-    io.to(u.room).emit('deleted', { id: msgId });
-  });
-
-  socket.on('react', function(data) {
-    const u = users.get(socket.id);
-    if (!u) return;
-    const emoji = data && data.emoji;
-    const msgId = data && data.msgId;
-    const allowed = ['❤️','😂','👍','😮','😢','🔥'];
-    if (allowed.indexOf(emoji) === -1) return;
-    const idx = DB.reactions.findIndex(function(r) { return r.msgId === msgId && r.user_id === u.userId && r.emoji === emoji; });
-    if (idx !== -1) DB.reactions.splice(idx, 1);
-    else DB.reactions.push({ msgId: msgId, user_id: u.userId, emoji: emoji });
-    saveDb();
-    io.to(u.room).emit('reaction', { msgId: msgId, reactions: getReactions(msgId) });
-  });
-
-  socket.on('pin', function(msgId) {
-    const u = users.get(socket.id);
-    if (!u) return;
-    const m = DB.messages.find(function(x) { return x.id === msgId && x.room === u.room; });
-    if (!m) return;
-    const idx = DB.pins.findIndex(function(p) { return p.room === u.room; });
-    const pinData = { room: u.room, msgId: msgId, text: m.text || '📷 صورة', user_id: u.userId, time: Date.now() };
-    if (idx !== -1) DB.pins[idx] = pinData; else DB.pins.push(pinData);
-    saveDb();
-    const user = getUser(u.userId);
-    io.to(u.room).emit('pin', { msgId: msgId, text: decryptText(m.text) || '📷 صورة', name: user ? user.display_name : '', time: Date.now() });
-  });
-
-  socket.on('unpin', function() {
-    const u = users.get(socket.id);
-    if (!u) return;
-    DB.pins = DB.pins.filter(function(p) { return p.room !== u.room; });
-    saveDb();
-    io.to(u.room).emit('pin', null);
-  });
-
-  socket.on('typing', function(isTyping) {
-    const u = users.get(socket.id);
-    if (!u) return;
-    const user = getUser(u.userId);
-    socket.to(u.room).emit('typing', { name: user ? user.display_name : '', isTyping: !!isTyping });
   });
 
   socket.on('dm-send', function(data) {
@@ -804,8 +728,9 @@ io.on('connection', function(socket) {
     const u = onlineSockets.get(socket.id);
     if (!u) return;
     const fromId = data && data.fromId;
-    DB.dms.forEach(function(m) { if (m.from_id === fromId && m.to_id === u && !m.read) m.read = 1; });
-    saveDb();
+    let changed = false;
+    DB.dms.forEach(function(m) { if (m.from_id === fromId && m.to_id === u && !m.read) { m.read = 1; changed = true; } });
+    if (changed) saveDb();
     onlineSockets.forEach(function(uid, sid) {
       if (uid === fromId) io.to(sid).emit('dm-read-receipt', { byId: u });
     });
@@ -821,6 +746,7 @@ io.on('connection', function(socket) {
     });
   });
 
+  // ===== WebRTC Signaling =====
   socket.on('call-start', function(data) {
     const u = onlineSockets.get(socket.id);
     if (!u) return;
@@ -830,7 +756,10 @@ io.on('connection', function(socket) {
     const user = getUser(u);
     onlineSockets.forEach(function(uid, sid) {
       if (uid === targetId) {
-        io.to(sid).emit('incoming-call', { fromId: socket.id, fromUserId: u, fromName: user.display_name, fromColor: user.color, fromAvatar: user.avatar });
+        io.to(sid).emit('incoming-call', {
+          fromId: socket.id, fromUserId: u,
+          fromName: user.display_name, fromColor: user.color, fromAvatar: user.avatar
+        });
       }
     });
   });
@@ -849,42 +778,42 @@ io.on('connection', function(socket) {
     io.to(data.toId).emit('call-rejected', { fromId: socket.id, fromName: user ? user.display_name : '' });
   });
 
-  socket.on('call-end', function(data) { io.to(data.toId).emit('call-ended', { fromId: socket.id }); });
-  socket.on('webrtc-offer', function(data) { io.to(data.toId).emit('webrtc-offer', { fromId: socket.id, offer: data.offer }); });
-  socket.on('webrtc-answer', function(data) { io.to(data.toId).emit('webrtc-answer', { fromId: socket.id, answer: data.answer }); });
-  socket.on('webrtc-ice', function(data) { io.to(data.toId).emit('webrtc-ice', { fromId: socket.id, candidate: data.candidate }); });
+  socket.on('call-end', function(data) {
+    io.to(data.toId).emit('call-ended', { fromId: socket.id });
+  });
+
+  socket.on('webrtc-offer', function(data) {
+    io.to(data.toId).emit('webrtc-offer', { fromId: socket.id, offer: data.offer });
+  });
+  socket.on('webrtc-answer', function(data) {
+    io.to(data.toId).emit('webrtc-answer', { fromId: socket.id, answer: data.answer });
+  });
+  socket.on('webrtc-ice', function(data) {
+    io.to(data.toId).emit('webrtc-ice', { fromId: socket.id, candidate: data.candidate });
+  });
 
   socket.on('disconnect', function() {
-    const u = users.get(socket.id);
-    if (u) {
-      const user = getUser(u.userId);
-      socket.to(u.room).emit('message', { system: true, text: (user ? user.display_name : '') + ' غادر الدردشة', time: Date.now() });
-      socket.to(u.room).emit('call-peer-left', { id: socket.id });
-      broadcastUsers(u.room);
-    }
-    users.delete(socket.id);
     onlineSockets.delete(socket.id);
   });
 });
 
-// حذف الرسائل القديمة بعد 48 ساعة
+// ===== حذف الرسائل القديمة بعد 48 ساعة =====
 setInterval(function() {
-  const cutoff = Date.now() - 48 * 3600 * 1000;
-  const before = DB.messages.length + DB.dms.length;
-  DB.messages = DB.messages.filter(function(m) { return m.time > cutoff; });
+  const cutoff = Date.now() - MESSAGE_TTL_MS;
+  const before = DB.dms.length;
   DB.dms = DB.dms.filter(function(d) { return d.time > cutoff; });
-  if (DB.messages.length + DB.dms.length !== before) saveDb();
+  if (DB.dms.length !== before) saveDb();
 }, 10 * 60 * 1000);
 
 // حفظ دوري احتياطي
 setInterval(function() { if (ghReady) githubSave(); }, 5 * 60 * 1000);
 
-// التشغيل
+// ===== التشغيل =====
 async function start() {
   await githubLoad();
   server.listen(PORT, '0.0.0.0', function() {
     console.log('✅ السيرفر يعمل على المنفذ ' + PORT);
-    console.log('📁 ' + ROOMS.length + ' غرفة جاهزة');
+    console.log('💬 دردشة خاصة + مكالمات صوتية');
     console.log('💾 البيانات في: ' + DATA_DIR);
     console.log('☁️ GitHub Storage: ' + (ghReady ? 'مفعّل' : 'معطّل'));
   });
