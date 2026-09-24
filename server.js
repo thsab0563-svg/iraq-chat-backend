@@ -13,6 +13,10 @@ const COUNTRIES = ['العراق','مصر','السعودية','الإمارات'
 const COLORS = ['#f87171','#fb923c','#facc15','#4ade80','#22d3ee','#818cf8','#c084fc','#f472b6','#e11d48','#0ea5e9'];
 const MAX_HISTORY = 200;
 
+// ⚡ تعريفات مسبقة - مهمة جداً قبل أي استخدام
+const users = new Map();
+const onlineSockets = new Map();
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -24,6 +28,7 @@ app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ============ التشفير ============
 const DB_FILE = path.join(__dirname, 'data.json');
 const SECRET_FILE = path.join(__dirname, '.secret');
 
@@ -32,7 +37,7 @@ if (fs.existsSync(SECRET_FILE)) {
   SECRET_KEY = Buffer.from(fs.readFileSync(SECRET_FILE, 'utf8'), 'hex');
 } else {
   SECRET_KEY = crypto.randomBytes(32);
-  fs.writeFileSync(SECRET_FILE, SECRET_KEY.toString('hex'));
+  try { fs.writeFileSync(SECRET_FILE, SECRET_KEY.toString('hex')); } catch(_){}
 }
 
 function encryptText(text) {
@@ -73,6 +78,7 @@ function verifyPassword(password, stored) {
 }
 function genToken() { return crypto.randomBytes(32).toString('hex'); }
 
+// ============ قاعدة البيانات ============
 const DB = {
   users: [], tokens: [], messages: [], reactions: [], pins: [],
   posts: [], post_likes: [], post_comments: [], hashtags: [],
@@ -94,6 +100,7 @@ function saveDb() {
   }, 500);
 }
 
+// ============ رفع الصور ============
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
@@ -115,6 +122,7 @@ app.post('/upload', upload.single('image'), function(req, res) {
   res.json({ url: '/uploads/' + req.file.filename });
 });
 
+// ============ Auth Middleware ============
 function auth(req, res, next) {
   const h = req.headers.authorization || '';
   const token = h.replace('Bearer ', '') || req.query.token;
@@ -149,6 +157,9 @@ function genUsername(name) {
   return candidate;
 }
 
+function getUser(id) { return DB.users.find(function(u) { return u.id === id; }); }
+
+// ============ API: Register ============
 app.post('/api/register', function(req, res) {
   const body = req.body || {};
   const name = String(body.display_name || '').trim().slice(0, 30);
@@ -175,6 +186,7 @@ app.post('/api/register', function(req, res) {
   res.json({ token: token, user: publicUser(user) });
 });
 
+// ============ API: Login ============
 app.post('/api/login', function(req, res) {
   const body = req.body || {};
   const key = String(body.username || '').trim();
@@ -223,10 +235,10 @@ app.get('/api/users/search', auth, function(req, res) {
   const q = String(req.query.q || '').trim().slice(0, 40);
   if (!q) return res.json({ users: [] });
   const lq = q.toLowerCase();
-  const users = DB.users.filter(function(u) {
+  const list = DB.users.filter(function(u) {
     return u.id !== req.user.id && (u.username.toLowerCase().indexOf(lq) !== -1 || u.display_name.toLowerCase().indexOf(lq) !== -1);
   }).slice(0, 30);
-  res.json({ users: users.map(publicUser) });
+  res.json({ users: list.map(publicUser) });
 });
 
 app.get('/api/users/:id', auth, function(req, res) {
@@ -236,6 +248,7 @@ app.get('/api/users/:id', auth, function(req, res) {
     return ((f.user1 === req.user.id && f.user2 === u.id) || (f.user2 === req.user.id && f.user1 === u.id)) && f.status === 'accepted';
   });
   res.json({ user: publicUser(u), isFriend: isFriend });
+});
 
 // ============ Posts ============
 function extractHashtags(text) {
@@ -424,12 +437,7 @@ app.get('/api/dm-conversations', auth, function(req, res) {
   res.json({ conversations: conversations });
 });
 
-// ============ Socket.IO ============
-const users = new Map();
-const onlineSockets = new Map();
-
-function getUser(id) { return DB.users.find(function(u) { return u.id === id; }); }
-
+// ============ Helper Functions ============
 function broadcastUsers(room) {
   const list = [];
   const seen = new Set();
@@ -449,6 +457,7 @@ function getReactions(msgId) {
   return out;
 }
 
+// ============ Socket.IO ============
 io.on('connection', function(socket) {
   socket.emit('rooms', ROOMS);
   socket.emit('countries', COUNTRIES);
@@ -648,8 +657,8 @@ io.on('connection', function(socket) {
   });
 });
 
+// ============ التشغيل ============
 server.listen(PORT, '0.0.0.0', function() {
   console.log('✅ السيرفر يعمل على المنفذ ' + PORT);
   console.log('📁 ' + ROOMS.length + ' غرفة جاهزة');
-});
 });
