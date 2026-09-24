@@ -1297,7 +1297,17 @@ function startRingtone(type){
   } catch(_){}
 }
 function stopRingtone(){
-  if(ringtoneInterval){ clearInterval(ringtoneInterval); ringtoneInterval = null; }
+  if(ringtoneInterval){ 
+    clearInterval(ringtoneInterval); 
+    ringtoneInterval = null; 
+  }
+  try {
+    if(ringtoneCtx && ringtoneCtx.state !== 'closed'){
+      ringtoneCtx.close().catch(function(){});
+      ringtoneCtx = null;
+    }
+  } catch(_){}
+}
 }
 
 var audioCtx = null;
