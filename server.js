@@ -1,3 +1,4 @@
+require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -5,42 +6,26 @@ const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
+const Database = require('better-sqlite3');
+const rateLimit = require('express-rate-limit');
 const { Server } = require('socket.io');
 
 const PORT = process.env.PORT || 3000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
 const COLORS = ['#f87171','#fb923c','#facc15','#4ade80','#22d3ee','#818cf8','#c084fc','#f472b6','#e11d48','#0ea5e9'];
 const USERNAME_CHANGE_DAYS = 7;
-const MESSAGE_TTL_MS = 48 * 3600 * 1000; // 48 ساعة
+const MESSAGE_TTL_MS = 48 * 3600 * 1000;
 
-// ===== GitHub Storage =====
-const GH_TOKEN = process.env.GH_TOKEN || '';
-const GH_OWNER = process.env.GH_OWNER || '';
-const GH_REPO  = process.env.GH_REPO  || '';
-const GH_API   = 'https://api.github.com';
-const GH_FILE  = 'data.json';
-
-const onlineSockets = new Map(); // socketId → userId
-
-const DATA_DIR = fs.existsSync('/data') ? '/data' : __dirname;
+// ===== Data Dir =====
+const DATA_DIR = process.env.DATA_DIR && fs.existsSync(process.env.DATA_DIR)
+  ? process.env.DATA_DIR
+  : (fs.existsSync('/data') ? '/data' : __dirname);
 if (!fs.existsSync(DATA_DIR)) { try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch(_){} }
-const DB_FILE      = path.join(DATA_DIR, 'data.json');
-const SECRET_FILE  = path.join(DATA_DIR, '.secret');
-const UPLOADS_DIR  = path.join(DATA_DIR, 'uploads');
+const DB_FILE     = path.join(DATA_DIR, 'data.db');
+const LEGACY_JSON = path.join(DATA_DIR, 'data.json');
+const SECRET_FILE = path.join(DATA_DIR, '.secret');
+const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) { try { fs.mkdirSync(UPLOADS_DIR, { recursive: true }); } catch(_){} }
-
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: '*', methods: ['GET','POST'] },
-  maxHttpBufferSize: 5 * 1024 * 1024,
-  pingTimeout: 60000,
-  pingInterval: 25000
-});
-
-app.use(cors({ origin: '*' }));
-app.use(express.json({ limit: '1mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(UPLOADS_DIR));
 
 // ===== SECRET KEY =====
 let SECRET_KEY;
@@ -52,6 +37,7 @@ if (fs.existsSync(SECRET_FILE)) {
   try { fs.writeFileSync(SECRET_FILE, SECRET_KEY.toString('hex')); } catch(_){}
 }
 
+// ===== Crypto helpers =====
 function encryptText(text) {
   if (!text) return text;
   try {
@@ -66,9 +52,7 @@ function decryptText(text) {
   if (!text || text.indexOf('enc:') !== 0) return text;
   try {
     const data = Buffer.from(text.slice(4), 'base64');
-    const iv = data.slice(0, 12);
-    const tag = data.slice(12, 28);
-    const enc = data.slice(28);
+    const iv = data.slice(0, 12), tag = data.slice(12, 28), enc = data.slice(28);
     const decipher = crypto.createDecipheriv('aes-256-gcm', SECRET_KEY, iv);
     decipher.setAuthTag(tag);
     return decipher.update(enc, undefined, 'utf8') + decipher.final('utf8');
@@ -88,148 +72,313 @@ function verifyPassword(password, stored) {
 }
 function genToken() { return crypto.randomBytes(32).toString('hex'); }
 
-// ===== DB =====
-const DB = {
-  users: [], tokens: [],
-  posts: [], post_likes: [], post_comments: [], hashtags: [],
-  friendships: [], dms: [], blocks: [], profile_views: [],
-  nextId: { users: 1, posts: 1, post_comments: 1, dms: 1, hashtags: 1 }
-};
+// ===== SQLite Init =====
+const db = new Database(DB_FILE);
+db.pragma('journal_mode = WAL');
+db.pragma('synchronous = NORMAL');
+db.pragma('foreign_keys = ON');
 
-// ===== GitHub Persistence =====
-let ghSha = null;
-let ghReady = false;
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    display_name TEXT NOT NULL,
+    password TEXT NOT NULL,
+    color TEXT,
+    bio TEXT DEFAULT '',
+    location TEXT DEFAULT '',
+    country TEXT DEFAULT '',
+    phone TEXT DEFAULT '',
+    verified INTEGER DEFAULT 0,
+    avatar TEXT DEFAULT '',
+    cover TEXT DEFAULT '',
+    created_at INTEGER,
+    last_seen INTEGER,
+    username_changed_at INTEGER DEFAULT 0,
+    lang TEXT DEFAULT 'ar',
+    theme TEXT DEFAULT 'dark',
+    sound INTEGER DEFAULT 1,
+    notifications INTEGER DEFAULT 1
+  );
 
-async function githubFetch(url, options) {
-  options = options || {};
-  options.headers = Object.assign({
-    'Authorization': 'token ' + GH_TOKEN,
-    'Accept': 'application/vnd.github.v3+json',
-    'User-Agent': 'iraq-chat'
-  }, options.headers || {});
-  const res = await fetch(url, options);
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error('GitHub API ' + res.status + ': ' + txt.slice(0, 200));
-  }
-  return await res.json();
-}
+  CREATE TABLE IF NOT EXISTS tokens (
+    token TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    created_at INTEGER
+  );
 
-async function githubLoad() {
-  if (!GH_TOKEN || !GH_OWNER || !GH_REPO) {
-    console.log('⚠️ GitHub غير مضبوط — سيُستخدم التخزين المحلي فقط');
-    ghReady = false;
+  CREATE TABLE IF NOT EXISTS posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    text TEXT,
+    image TEXT,
+    time INTEGER,
+    deleted INTEGER DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS post_likes (
+    post_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    PRIMARY KEY (post_id, user_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS post_comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    text TEXT,
+    time INTEGER
+  );
+
+  CREATE TABLE IF NOT EXISTS hashtags (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tag TEXT NOT NULL,
+    source_type TEXT,
+    source_id INTEGER,
+    time INTEGER
+  );
+
+  CREATE TABLE IF NOT EXISTS friendships (
+    user1 INTEGER NOT NULL,
+    user2 INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    PRIMARY KEY (user1, user2)
+  );
+
+  CREATE TABLE IF NOT EXISTS dms (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    from_id INTEGER NOT NULL,
+    to_id INTEGER NOT NULL,
+    text TEXT,
+    image TEXT,
+    time INTEGER,
+    read INTEGER DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS blocks (
+    user1 INTEGER NOT NULL,
+    user2 INTEGER NOT NULL,
+    time INTEGER,
+    PRIMARY KEY (user1, user2)
+  );
+
+  CREATE TABLE IF NOT EXISTS profile_views (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    viewer_id INTEGER,
+    viewed_id INTEGER,
+    time INTEGER
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_dms_conv   ON dms(from_id, to_id, time);
+  CREATE INDEX IF NOT EXISTS idx_dms_to     ON dms(to_id, read);
+  CREATE INDEX IF NOT EXISTS idx_dms_ttl    ON dms(time);
+  CREATE INDEX IF NOT EXISTS idx_posts_user ON posts(user_id, time);
+  CREATE INDEX IF NOT EXISTS idx_posts_time ON posts(time);
+  CREATE INDEX IF NOT EXISTS idx_hashtags   ON hashtags(tag, source_type, time);
+  CREATE INDEX IF NOT EXISTS idx_comments   ON post_comments(post_id);
+  CREATE INDEX IF NOT EXISTS idx_views      ON profile_views(viewed_id);
+  CREATE INDEX IF NOT EXISTS idx_tokens_usr ON tokens(user_id);
+`);
+
+// ===== Migration from legacy data.json =====
+function migrateFromJSON() {
+  if (!fs.existsSync(LEGACY_JSON)) return;
+  const userCount = db.prepare('SELECT COUNT(*) AS c FROM users').get().c;
+  if (userCount > 0) {
+    console.log('ℹ️ يوجد بيانات في SQLite — تجاهل data.json');
     return;
   }
   try {
-    const url = GH_API + '/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + GH_FILE;
-    const data = await githubFetch(url);
-    ghSha = data.sha;
-    const content = Buffer.from(data.content, 'base64').toString('utf8');
-    const parsed = JSON.parse(content);
-    mergeDB(parsed);
-    console.log('✅ تم تحميل البيانات من GitHub: ' + DB.users.length + ' مستخدم');
-    ghReady = true;
+    const raw = JSON.parse(fs.readFileSync(LEGACY_JSON, 'utf8'));
+    const trx = db.transaction(() => {
+      (raw.users || []).forEach(u => {
+        db.prepare(`INSERT INTO users (id, username, display_name, password, color, bio, location, country, phone,
+          verified, avatar, cover, created_at, last_seen, username_changed_at, lang, theme, sound, notifications)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+          u.id, u.username, u.display_name, u.password, u.color || COLORS[0],
+          u.bio || '', u.location || '', u.country || '', u.phone || '',
+          u.verified ? 1 : 0, u.avatar || '', u.cover || '',
+          u.created_at || Date.now(), u.last_seen || Date.now(),
+          u.username_changed_at || 0, u.lang || 'ar', u.theme || 'dark',
+          u.sound ? 1 : 0, u.notifications ? 1 : 0
+        );
+      });
+      (raw.tokens || []).forEach(t => {
+        db.prepare('INSERT OR IGNORE INTO tokens (token, user_id, created_at) VALUES (?,?,?)')
+          .run(t.token, t.user_id, t.created_at || Date.now());
+      });
+      (raw.posts || []).forEach(p => {
+        db.prepare('INSERT INTO posts (id, user_id, text, image, time, deleted) VALUES (?,?,?,?,?,?)')
+          .run(p.id, p.user_id, p.text, p.image, p.time, p.deleted || 0);
+      });
+      (raw.post_likes || []).forEach(l => {
+        db.prepare('INSERT OR IGNORE INTO post_likes (post_id, user_id) VALUES (?,?)')
+          .run(l.post_id, l.user_id);
+      });
+      (raw.post_comments || []).forEach(c => {
+        db.prepare('INSERT INTO post_comments (id, post_id, user_id, text, time) VALUES (?,?,?,?,?)')
+          .run(c.id, c.post_id, c.user_id, c.text, c.time);
+      });
+      (raw.hashtags || []).forEach(h => {
+        db.prepare('INSERT INTO hashtags (id, tag, source_type, source_id, time) VALUES (?,?,?,?,?)')
+          .run(h.id, h.tag, h.source_type, h.source_id, h.time);
+      });
+      (raw.friendships || []).forEach(f => {
+        db.prepare('INSERT OR IGNORE INTO friendships (user1, user2, status) VALUES (?,?,?)')
+          .run(f.user1, f.user2, f.status);
+      });
+      (raw.dms || []).forEach(d => {
+        db.prepare('INSERT INTO dms (id, from_id, to_id, text, image, time, read) VALUES (?,?,?,?,?,?,?)')
+          .run(d.id, d.from_id, d.to_id, d.text, d.image, d.time, d.read ? 1 : 0);
+      });
+      (raw.blocks || []).forEach(b => {
+        db.prepare('INSERT OR IGNORE INTO blocks (user1, user2, time) VALUES (?,?,?)')
+          .run(b.user1, b.user2, b.time || Date.now());
+      });
+      (raw.profile_views || []).forEach(v => {
+        db.prepare('INSERT INTO profile_views (viewer_id, viewed_id, time) VALUES (?,?,?)')
+          .run(v.viewer_id, v.viewed_id, v.time || Date.now());
+      });
+    });
+    trx();
+    fs.renameSync(LEGACY_JSON, LEGACY_JSON + '.imported');
+    console.log('✅ تم استيراد data.json إلى SQLite');
   } catch (e) {
-    if (e.message.indexOf('404') !== -1) {
-      console.log('📝 GitHub: لا يوجد ملف data.json بعد — سيُنشأ عند أول حفظ');
-      ghReady = true;
-    } else {
-      console.error('❌ فشل تحميل من GitHub:', e.message);
-      ghReady = false;
-    }
+    console.error('❌ فشل استيراد data.json:', e.message);
   }
 }
+migrateFromJSON();
 
-function mergeDB(parsed) {
-  ['users','tokens','posts','post_likes','post_comments','hashtags','friendships','dms','blocks','profile_views']
-    .forEach(function(k){ if (Array.isArray(parsed[k])) DB[k] = parsed[k]; });
-  if (parsed.nextId) Object.assign(DB.nextId, parsed.nextId);
-}
-
-let ghSaveTimer = null;
-let ghSaving = false;
-
-function saveDb() {
-  try { fs.writeFileSync(DB_FILE, JSON.stringify(DB)); } catch (_) {}
-  if (!ghReady) return;
-  if (ghSaveTimer) return;
-  ghSaveTimer = setTimeout(function() {
-    ghSaveTimer = null;
-    githubSave();
-  }, 3000);
-}
-
-async function githubSave() {
-  if (ghSaving) return;
-  ghSaving = true;
-  try {
-    const content = Buffer.from(JSON.stringify(DB)).toString('base64');
-    const url = GH_API + '/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + GH_FILE;
-    const body = { message: 'Update data.json - ' + new Date().toISOString(), content: content };
-    if (ghSha) body.sha = ghSha;
-    const data = await githubFetch(url, { method: 'PUT', body: JSON.stringify(body) });
-    ghSha = data.content.sha;
-    console.log('✅ تم الحفظ في GitHub - مستخدمون: ' + DB.users.length);
-  } catch (e) {
-    console.error('❌ فشل الحفظ في GitHub:', e.message);
-  }
-  ghSaving = false;
-}
-
-// ===== تحميل محلي =====
-if (fs.existsSync(DB_FILE)) {
-  try {
-    const loaded = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-    mergeDB(loaded);
-    console.log('✅ تم تحميل البيانات المحلية: ' + DB.users.length + ' مستخدم');
-  } catch (e) { console.error('DB load error:', e.message); }
-}
-
-// ===== Middleware =====
-function auth(req, res, next) {
-  const h = req.headers.authorization || '';
-  const token = h.replace('Bearer ', '') || req.query.token;
-  if (!token) return res.status(401).json({ error: 'unauthorized' });
-  const t = DB.tokens.find(function(x) { return x.token === token; });
-  if (!t) return res.status(401).json({ error: 'invalid_token' });
-  const user = DB.users.find(function(x) { return x.id === t.user_id; });
-  if (!user) return res.status(401).json({ error: 'user_not_found' });
-  req.user = user;
-  next();
-}
-
-// ===== Upload (يتطلب توثيق) =====
-const storage = multer.diskStorage({
-  destination: UPLOADS_DIR,
-  filename: function(req, file, cb) {
-    const ext = (path.extname(file.originalname) || '.jpg').toLowerCase().replace(/[^.a-z0-9]/g, '');
-    cb(null, Date.now() + '_' + crypto.randomBytes(4).toString('hex') + ext);
-  }
-});
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 4 * 1024 * 1024 },
-  fileFilter: function(req, file, cb) { cb(null, /^image\//.test(file.mimetype)); }
+// ===== Express =====
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: '*', methods: ['GET','POST'] },
+  maxHttpBufferSize: 5 * 1024 * 1024,
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
-app.post('/upload', auth, upload.single('image'), function(req, res) {
-  if (!req.file) return res.status(400).json({ error: 'invalid' });
-  res.json({ url: '/uploads/' + req.file.filename });
+app.set('trust proxy', 1);
+
+app.use(cors({ origin: '*' }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(UPLOADS_DIR));
+
+// ===== Rate Limiting =====
+const disableRL = process.env.RATE_LIMIT_DISABLED === 'true';
+const makeLimit = (opts) => rateLimit({
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => disableRL,
+  ...opts
 });
 
-// ===== Health =====
-app.get('/health', function(req, res) {
-  res.json({
-    ok: true,
-    time: Date.now(),
-    users: DB.users.length,
-    online: onlineSockets.size,
-    gh: GH_TOKEN ? 'on' : 'off'
-  });
+const limiterLogin = makeLimit({
+  windowMs: 15 * 60 * 1000, max: 10,
+  message: { error: 'too_many_attempts' }
 });
+const limiterRegister = makeLimit({
+  windowMs: 60 * 60 * 1000, max: 5,
+  message: { error: 'too_many_registrations' }
+});
+const limiterAPI = makeLimit({
+  windowMs: 60 * 1000, max: 120,
+  message: { error: 'too_many_requests' }
+});
+const limiterUpload = makeLimit({
+  windowMs: 60 * 60 * 1000, max: 40,
+  message: { error: 'too_many_uploads' }
+});
+const limiterWrite = makeLimit({
+  windowMs: 60 * 1000, max: 30,
+  message: { error: 'too_many_writes' }
+});
+
+app.use('/api/', limiterAPI);
+app.use('/api/login', limiterLogin);
+app.use('/api/register', limiterRegister);
+app.post('/api/posts', limiterWrite);
+app.post('/api/posts/:id/comment', limiterWrite);
+app.post('/upload', limiterUpload);
+
+// ===== Prepared Statements =====
+const S = {
+  findUserByUsername: db.prepare('SELECT * FROM users WHERE username = ?'),
+  findUserByDisplayName: db.prepare('SELECT * FROM users WHERE display_name = ?'),
+  findUserById: db.prepare('SELECT * FROM users WHERE id = ?'),
+  insertUser: db.prepare(`INSERT INTO users
+    (username, display_name, password, color, bio, location, country, phone, verified, created_at, last_seen, username_changed_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`),
+  updateUserField: db.prepare('UPDATE users SET display_name = ?, bio = ?, location = ?, country = ?, phone = ?, avatar = ?, cover = ?, color = ?, lang = ?, theme = ?, sound = ?, notifications = ?, username = ?, username_changed_at = ?, verified = ? WHERE id = ?'),
+  updateLastSeen: db.prepare('UPDATE users SET last_seen = ? WHERE id = ?'),
+  updatePassword: db.prepare('UPDATE users SET password = ? WHERE id = ?'),
+  deleteUser: db.prepare('DELETE FROM users WHERE id = ?'),
+  listUsersExclude: db.prepare('SELECT * FROM users WHERE id != ? LIMIT ?'),
+
+  insertToken: db.prepare('INSERT INTO tokens (token, user_id, created_at) VALUES (?,?,?)'),
+  findToken: db.prepare('SELECT * FROM tokens WHERE token = ?'),
+  deleteTokensByUser: db.prepare('DELETE FROM tokens WHERE user_id = ?'),
+  deleteOldTokens: db.prepare('DELETE FROM tokens WHERE created_at < ?'),
+
+  insertPost: db.prepare('INSERT INTO posts (user_id, text, image, time, deleted) VALUES (?,?,?,?,0)'),
+  getPost: db.prepare('SELECT * FROM posts WHERE id = ?'),
+  deletePost: db.prepare('UPDATE posts SET deleted = 1, text = ?, image = NULL WHERE id = ?'),
+  postsByUser: db.prepare('SELECT * FROM posts WHERE deleted = 0 AND user_id = ? ORDER BY time DESC LIMIT ?'),
+
+  getLike: db.prepare('SELECT 1 FROM post_likes WHERE post_id = ? AND user_id = ?'),
+  insertLike: db.prepare('INSERT INTO post_likes (post_id, user_id) VALUES (?,?)'),
+  deleteLike: db.prepare('DELETE FROM post_likes WHERE post_id = ? AND user_id = ?'),
+  countLikes: db.prepare('SELECT COUNT(*) AS c FROM post_likes WHERE post_id = ?'),
+  countComments: db.prepare('SELECT COUNT(*) AS c FROM post_comments WHERE post_id = ?'),
+
+  insertComment: db.prepare('INSERT INTO post_comments (post_id, user_id, text, time) VALUES (?,?,?,?)'),
+  commentsByPost: db.prepare('SELECT * FROM post_comments WHERE post_id = ? ORDER BY time ASC'),
+
+  insertHashtag: db.prepare('INSERT INTO hashtags (tag, source_type, source_id, time) VALUES (?,?,?,?)'),
+  hashtagsSince: db.prepare('SELECT tag, COUNT(*) AS c FROM hashtags WHERE time > ? AND source_type = ? GROUP BY tag ORDER BY c DESC LIMIT 20'),
+  postIdsByHashtag: db.prepare('SELECT DISTINCT source_id FROM hashtags WHERE tag = ? AND source_type = ?'),
+
+  findFriendship: db.prepare('SELECT * FROM friendships WHERE (user1 = ? AND user2 = ?) OR (user1 = ? AND user2 = ?)'),
+  insertFriendship: db.prepare('INSERT INTO friendships (user1, user2, status) VALUES (?,?,?)'),
+  updateFriendshipStatus: db.prepare('UPDATE friendships SET status = ? WHERE user1 = ? AND user2 = ?'),
+  deleteFriendship: db.prepare('DELETE FROM friendships WHERE (user1 = ? AND user2 = ?) OR (user1 = ? AND user2 = ?)'),
+  pendingRequestsTo: db.prepare('SELECT * FROM friendships WHERE user2 = ? AND status = ?'),
+  friendsOf: db.prepare(`SELECT u.* FROM users u
+    JOIN friendships f ON ((f.user1 = u.id AND f.user2 = ?) OR (f.user2 = u.id AND f.user1 = ?))
+    WHERE f.status = 'accepted'`),
+  friendIdsOf: db.prepare(`SELECT CASE WHEN user1 = ? THEN user2 ELSE user1 END AS id
+    FROM friendships WHERE (user1 = ? OR user2 = ?) AND status = 'accepted'`),
+
+  insertDM: db.prepare('INSERT INTO dms (from_id, to_id, text, image, time, read) VALUES (?,?,?,?,?,0)'),
+  dmsBetween: db.prepare(`SELECT * FROM dms WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?) ORDER BY time ASC LIMIT 100`),
+  markDMsRead: db.prepare('UPDATE dms SET read = 1 WHERE from_id = ? AND to_id = ? AND read = 0'),
+  unreadCount: db.prepare('SELECT COUNT(*) AS c FROM dms WHERE from_id = ? AND to_id = ? AND read = 0'),
+  lastDM: db.prepare(`SELECT * FROM dms WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?) ORDER BY time DESC LIMIT 1`),
+  conversationPartners: db.prepare(`SELECT DISTINCT CASE WHEN from_id = ? THEN to_id ELSE from_id END AS id FROM dms WHERE from_id = ? OR to_id = ?`),
+  deleteDMsByUser: db.prepare('DELETE FROM dms WHERE from_id = ? OR to_id = ?'),
+  purgeOldDMs: db.prepare('DELETE FROM dms WHERE time < ?'),
+
+  findBlock: db.prepare('SELECT 1 FROM blocks WHERE (user1 = ? AND user2 = ?) OR (user1 = ? AND user2 = ?)'),
+  insertBlock: db.prepare('INSERT OR IGNORE INTO blocks (user1, user2, time) VALUES (?,?,?)'),
+  deleteBlock: db.prepare('DELETE FROM blocks WHERE (user1 = ? AND user2 = ?) OR (user1 = ? AND user2 = ?)'),
+  blocksByUser: db.prepare('SELECT * FROM blocks WHERE user1 = ?'),
+  deleteBlocksByUser: db.prepare('DELETE FROM blocks WHERE user1 = ? OR user2 = ?'),
+
+  insertView: db.prepare('INSERT INTO profile_views (viewer_id, viewed_id, time) VALUES (?,?,?)'),
+  countViews: db.prepare('SELECT COUNT(*) AS c FROM profile_views WHERE viewed_id = ?'),
+  deleteViewsByUser: db.prepare('DELETE FROM profile_views WHERE viewer_id = ? OR viewed_id = ?'),
+  trimViews: db.prepare('DELETE FROM profile_views WHERE id NOT IN (SELECT id FROM profile_views ORDER BY id DESC LIMIT 5000)'),
+
+  countFriends: db.prepare(`SELECT COUNT(*) AS c FROM friendships
+    WHERE (user1 = ? OR user2 = ?) AND status = 'accepted'`),
+  countUserPosts: db.prepare('SELECT COUNT(*) AS c FROM posts WHERE user_id = ? AND deleted = 0')
+};
 
 // ===== Helpers =====
+function getUser(id) { return S.findUserById.get(id); }
+
 function publicUser(u) {
   if (!u) return null;
   return {
@@ -243,22 +392,18 @@ function publicUser(u) {
   };
 }
 
+function isBlocked(a, b) {
+  return !!S.findBlock.get(a, b, b, a);
+}
+
 function genUsername(name) {
   let base = String(name || 'user').toLowerCase().replace(/[^a-z0-9]/gi, '').slice(0, 10) || 'user';
   let candidate = base, i = 1;
-  while (DB.users.find(function(u) { return u.username === candidate; })) {
+  while (S.findUserByUsername.get(candidate)) {
     candidate = base + i; i++;
     if (i > 9999) { candidate = 'user' + crypto.randomBytes(3).toString('hex'); break; }
   }
   return candidate;
-}
-
-function getUser(id) { return DB.users.find(function(u) { return u.id === id; }); }
-
-function isBlocked(a, b) {
-  return DB.blocks.some(function(x) {
-    return (x.user1 === a && x.user2 === b) || (x.user1 === b && x.user2 === a);
-  });
 }
 
 function extractHashtags(text) {
@@ -272,17 +417,17 @@ function extractHashtags(text) {
 function formatPost(p, viewerId) {
   if (!p) return null;
   const u = getUser(p.user_id);
-  const likes = DB.post_likes.filter(function(x) { return x.post_id === p.id; }).length;
-  const comments = DB.post_comments.filter(function(x) { return x.post_id === p.id; }).length;
-  const liked = viewerId ? DB.post_likes.some(function(x) { return x.post_id === p.id && x.user_id === viewerId; }) : false;
   return {
     id: p.id, text: decryptText(p.text), image: p.image, time: p.time,
-    user: publicUser(u), likes: likes, comments: comments, liked: liked
+    user: publicUser(u),
+    likes: S.countLikes.get(p.id).c,
+    comments: S.countComments.get(p.id).c,
+    liked: viewerId ? !!S.getLike.get(p.id, viewerId) : false
   };
 }
 
-function mapComments(id) {
-  return DB.post_comments.filter(function(c) { return c.post_id === id; }).map(function(c) {
+function mapComments(postId) {
+  return S.commentsByPost.all(postId).map(c => {
     const u = getUser(c.user_id);
     return {
       id: c.id, text: decryptText(c.text), time: c.time,
@@ -291,402 +436,459 @@ function mapComments(id) {
   });
 }
 
-// ===== AUTH =====
-app.post('/api/register', function(req, res) {
+// ===== Auth middleware =====
+function auth(req, res, next) {
+  const h = req.headers.authorization || '';
+  const token = h.replace('Bearer ', '') || req.query.token;
+  if (!token) return res.status(401).json({ error: 'unauthorized' });
+  const t = S.findToken.get(token);
+  if (!t) return res.status(401).json({ error: 'invalid_token' });
+  const user = getUser(t.user_id);
+  if (!user) return res.status(401).json({ error: 'user_not_found' });
+  req.user = user;
+  next();
+}
+
+// ===== Health =====
+let startTime = Date.now();
+app.get('/health', (req, res) => {
+  try {
+    const userCount = db.prepare('SELECT COUNT(*) AS c FROM users').get().c;
+    const dmCount = db.prepare('SELECT COUNT(*) AS c FROM dms').get().c;
+
+    let diskFreeMB = null, diskTotalMB = null;
+    try {
+      if (fs.statfsSync) {
+        const st = fs.statfsSync(DATA_DIR);
+        diskFreeMB = Math.round((st.bavail * st.bsize) / 1024 / 1024);
+        diskTotalMB = Math.round((st.blocks * st.bsize) / 1024 / 1024);
+      }
+    } catch(_){}
+
+    let walMB = null;
+    try { if (fs.existsSync(DB_FILE + '-wal')) walMB = Math.round(fs.statSync(DB_FILE + '-wal').size / 1024 / 1024 * 100) / 100; } catch(_){}
+
+    const healthy = diskFreeMB === null || diskFreeMB > 10;
+
+    res.status(healthy ? 200 : 503).json({
+      ok: healthy,
+      uptime_s: Math.floor((Date.now() - startTime) / 1000),
+      env: NODE_ENV,
+      users: userCount,
+      online: onlineSockets.size,
+      dms: dmCount,
+      disk: { free_mb: diskFreeMB, total_mb: diskTotalMB, wal_mb: walMB },
+      data_dir: DATA_DIR,
+      time: Date.now()
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// ===== Upload =====
+const storage = multer.diskStorage({
+  destination: UPLOADS_DIR,
+  filename: (req, file, cb) => {
+    const ext = (path.extname(file.originalname) || '.jpg').toLowerCase().replace(/[^.a-z0-9]/g, '');
+    cb(null, Date.now() + '_' + crypto.randomBytes(4).toString('hex') + ext);
+  }
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 4 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype))
+});
+app.post('/upload', auth, upload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'invalid' });
+  res.json({ url: '/uploads/' + req.file.filename });
+});
+
+// ===== AUTH ROUTES =====
+app.post('/api/register', (req, res) => {
   const body = req.body || {};
   const name = String(body.display_name || '').trim().slice(0, 30);
   const pass = String(body.password || '');
   if (!name) return res.status(400).json({ error: 'name_required' });
   if (pass.length < 4) return res.status(400).json({ error: 'password_too_short' });
-  if (DB.users.find(function(u) { return u.display_name === name; })) return res.status(409).json({ error: 'name_taken' });
+  if (S.findUserByDisplayName.get(name)) return res.status(409).json({ error: 'name_taken' });
 
   const username = genUsername(name);
-  const user = {
-    id: DB.nextId.users++, username: username, display_name: name,
-    password: hashPassword(pass),
-    color: /^#[0-9a-fA-F]{6}$/.test(body.color || '') ? body.color : COLORS[Math.floor(Math.random() * COLORS.length)],
-    bio: String(body.bio || '').slice(0, 200),
-    location: String(body.location || '').slice(0, 60),
-    country: String(body.country || '').slice(0, 40),
-    phone: String(body.phone || '').slice(0, 20),
-    verified: 0, avatar: '', cover: '',
-    created_at: Date.now(), last_seen: Date.now(),
-    username_changed_at: Date.now(),
-    lang: 'ar', theme: 'dark', sound: 1, notifications: 1
-  };
-  DB.users.push(user);
+  const color = /^#[0-9a-fA-F]{6}$/.test(body.color || '') ? body.color : COLORS[Math.floor(Math.random() * COLORS.length)];
+  const now = Date.now();
+  const info = S.insertUser.run(
+    username, name, hashPassword(pass), color,
+    String(body.bio || '').slice(0, 200),
+    String(body.location || '').slice(0, 60),
+    String(body.country || '').slice(0, 40),
+    String(body.phone || '').slice(0, 20),
+    0, now, now, now
+  );
+  const user = getUser(info.lastInsertRowid);
   const token = genToken();
-  DB.tokens.push({ token: token, user_id: user.id, created_at: Date.now() });
-  saveDb();
-  res.json({ token: token, user: publicUser(user) });
+  S.insertToken.run(token, user.id, now);
+  res.json({ token, user: publicUser(user) });
 });
 
-app.post('/api/login', function(req, res) {
+app.post('/api/login', (req, res) => {
   const body = req.body || {};
   const key = String(body.username || '').trim();
   const pass = String(body.password || '');
-  let user = DB.users.find(function(u) { return u.username === key.toLowerCase(); });
-  if (!user) user = DB.users.find(function(u) { return u.display_name === key; });
+  let user = S.findUserByUsername.get(key.toLowerCase());
+  if (!user) user = S.findUserByDisplayName.get(key);
   if (!user) return res.status(401).json({ error: 'invalid_credentials' });
   if (!verifyPassword(pass, user.password)) return res.status(401).json({ error: 'invalid_credentials' });
   const token = genToken();
-  DB.tokens.push({ token: token, user_id: user.id, created_at: Date.now() });
-  user.last_seen = Date.now();
-  saveDb();
-  res.json({ token: token, user: publicUser(user) });
+  const now = Date.now();
+  S.insertToken.run(token, user.id, now);
+  S.updateLastSeen.run(now, user.id);
+  res.json({ token, user: publicUser(user) });
 });
 
-app.get('/api/me', auth, function(req, res) { res.json({ user: publicUser(req.user) }); });
+app.get('/api/me', auth, (req, res) => {
+  res.json({ user: publicUser(req.user) });
+});
 
-// ===== /api/me/stats — جديد (يستخدمه العميل) =====
-app.get('/api/me/stats', auth, function(req, res) {
+app.get('/api/me/stats', auth, (req, res) => {
   const uid = req.user.id;
-  const friends = DB.friendships.filter(function(f) {
-    return f.status === 'accepted' && (f.user1 === uid || f.user2 === uid);
-  }).length;
-  const posts = DB.posts.filter(function(p) { return p.user_id === uid && p.deleted === 0; }).length;
-  const views = DB.profile_views.filter(function(v) { return v.viewed_id === uid; }).length;
-  res.json({ friends: friends, posts: posts, views: views });
+  res.json({
+    friends: S.countFriends.get(uid, uid).c,
+    posts: S.countUserPosts.get(uid).c,
+    views: S.countViews.get(uid).c
+  });
 });
 
-app.put('/api/me', auth, function(req, res) {
-  const body = req.body || {};
+app.put('/api/me', auth, (req, res) => {
+  const b = req.body || {};
   const u = req.user;
-  if (body.display_name !== undefined) {
-    const nm = String(body.display_name).trim().slice(0, 30);
+  const next = {
+    display_name: u.display_name, bio: u.bio, location: u.location,
+    country: u.country, phone: u.phone, avatar: u.avatar, cover: u.cover,
+    color: u.color, lang: u.lang, theme: u.theme, sound: u.sound,
+    notifications: u.notifications, username: u.username,
+    username_changed_at: u.username_changed_at, verified: u.verified
+  };
+
+  if (b.display_name !== undefined) {
+    const nm = String(b.display_name).trim().slice(0, 30);
     if (!nm) return res.status(400).json({ error: 'name_required' });
-    const dup = DB.users.find(function(x) { return x.display_name === nm && x.id !== u.id; });
-    if (dup) return res.status(409).json({ error: 'name_taken' });
-    u.display_name = nm;
+    const dup = S.findUserByDisplayName.get(nm);
+    if (dup && dup.id !== u.id) return res.status(409).json({ error: 'name_taken' });
+    next.display_name = nm;
   }
-  if (body.username !== undefined) {
-    const un = String(body.username).trim().toLowerCase().slice(0, 20).replace(/[^a-z0-9_]/g, '');
+  if (b.username !== undefined) {
+    const un = String(b.username).trim().toLowerCase().slice(0, 20).replace(/[^a-z0-9_]/g, '');
     if (un.length < 3) return res.status(400).json({ error: 'username_too_short' });
     if (un !== u.username) {
-      const last = u.username_changed_at || 0;
-      const daysSince = (Date.now() - last) / (1000 * 60 * 60 * 24);
+      const daysSince = (Date.now() - (u.username_changed_at || 0)) / 86400000;
       if (daysSince < USERNAME_CHANGE_DAYS) {
-        const daysLeft = Math.ceil(USERNAME_CHANGE_DAYS - daysSince);
-        return res.status(429).json({ error: 'username_cooldown', days_left: daysLeft });
+        return res.status(429).json({ error: 'username_cooldown', days_left: Math.ceil(USERNAME_CHANGE_DAYS - daysSince) });
       }
-      const dup = DB.users.find(function(x) { return x.username === un && x.id !== u.id; });
-      if (dup) return res.status(409).json({ error: 'username_taken' });
-      u.username = un;
-      u.username_changed_at = Date.now();
+      const dup = S.findUserByUsername.get(un);
+      if (dup && dup.id !== u.id) return res.status(409).json({ error: 'username_taken' });
+      next.username = un;
+      next.username_changed_at = Date.now();
     }
   }
-  if (body.bio !== undefined) u.bio = String(body.bio).slice(0, 200);
-  if (body.location !== undefined) u.location = String(body.location).slice(0, 60);
-  if (body.country !== undefined) u.country = String(body.country).slice(0, 40);
-  if (body.phone !== undefined) {
-    u.phone = String(body.phone).slice(0, 20);
-    if (u.phone.replace(/\D/g, '').length >= 8) u.verified = 1;
+  if (b.bio !== undefined) next.bio = String(b.bio).slice(0, 200);
+  if (b.location !== undefined) next.location = String(b.location).slice(0, 60);
+  if (b.country !== undefined) next.country = String(b.country).slice(0, 40);
+  if (b.phone !== undefined) {
+    next.phone = String(b.phone).slice(0, 20);
+    if (next.phone.replace(/\D/g, '').length >= 8) next.verified = 1;
   }
-  if (body.avatar !== undefined) u.avatar = String(body.avatar).slice(0, 300);
-  if (body.cover !== undefined) u.cover = String(body.cover).slice(0, 300);
-  if (body.color !== undefined && /^#[0-9a-fA-F]{6}$/.test(body.color)) u.color = body.color;
-  if (body.lang !== undefined && ['ar','en'].indexOf(body.lang) !== -1) u.lang = body.lang;
-  if (body.theme !== undefined && ['dark','light'].indexOf(body.theme) !== -1) u.theme = body.theme;
-  if (body.sound !== undefined) u.sound = body.sound ? 1 : 0;
-  if (body.notifications !== undefined) u.notifications = body.notifications ? 1 : 0;
-  saveDb();
-  res.json({ user: publicUser(u) });
+  if (b.avatar !== undefined) next.avatar = String(b.avatar).slice(0, 300);
+  if (b.cover !== undefined) next.cover = String(b.cover).slice(0, 300);
+  if (b.color !== undefined && /^#[0-9a-fA-F]{6}$/.test(b.color)) next.color = b.color;
+  if (b.lang !== undefined && ['ar','en'].includes(b.lang)) next.lang = b.lang;
+  if (b.theme !== undefined && ['dark','light'].includes(b.theme)) next.theme = b.theme;
+  if (b.sound !== undefined) next.sound = b.sound ? 1 : 0;
+  if (b.notifications !== undefined) next.notifications = b.notifications ? 1 : 0;
+
+  S.updateUserField.run(
+    next.display_name, next.bio, next.location, next.country, next.phone,
+    next.avatar, next.cover, next.color, next.lang, next.theme,
+    next.sound, next.notifications, next.username, next.username_changed_at,
+    next.verified, u.id
+  );
+  res.json({ user: publicUser(getUser(u.id)) });
 });
 
-app.post('/api/change-password', auth, function(req, res) {
-  const body = req.body || {};
-  const oldPass = String(body.old_password || '');
-  const newPass = String(body.new_password || '');
+app.post('/api/change-password', auth, (req, res) => {
+  const b = req.body || {};
+  const oldPass = String(b.old_password || '');
+  const newPass = String(b.new_password || '');
   if (!oldPass) return res.status(400).json({ error: 'old_required' });
   if (newPass.length < 4) return res.status(400).json({ error: 'password_too_short' });
   if (!verifyPassword(oldPass, req.user.password)) return res.status(401).json({ error: 'wrong_old_password' });
-  req.user.password = hashPassword(newPass);
-  saveDb();
+  S.updatePassword.run(hashPassword(newPass), req.user.id);
   res.json({ ok: true });
 });
 
-app.delete('/api/me', auth, function(req, res) {
+app.delete('/api/me', auth, (req, res) => {
   const uid = req.user.id;
-  DB.tokens      = DB.tokens.filter(function(t) { return t.user_id !== uid; });
-  DB.users       = DB.users.filter(function(u) { return u.id !== uid; });
-  DB.posts       = DB.posts.filter(function(p) { return p.user_id !== uid; });
-  DB.post_likes  = DB.post_likes.filter(function(l) { return l.user_id !== uid; });
-  DB.post_comments = DB.post_comments.filter(function(c) { return c.user_id !== uid; });
-  DB.dms         = DB.dms.filter(function(d) { return d.from_id !== uid && d.to_id !== uid; });
-  DB.friendships = DB.friendships.filter(function(f) { return f.user1 !== uid && f.user2 !== uid; });
-  DB.blocks      = DB.blocks.filter(function(b) { return b.user1 !== uid && b.user2 !== uid; });
-  DB.profile_views = DB.profile_views.filter(function(v) { return v.viewer_id !== uid && v.viewed_id !== uid; });
-  saveDb();
+  const trx = db.transaction(() => {
+    S.deleteTokensByUser.run(uid);
+    S.deleteDMsByUser.run(uid, uid);
+    S.deleteBlocksByUser.run(uid, uid);
+    S.deleteViewsByUser.run(uid, uid);
+    db.prepare('DELETE FROM post_likes WHERE user_id = ?').run(uid);
+    db.prepare('DELETE FROM post_comments WHERE user_id = ?').run(uid);
+    db.prepare('DELETE FROM posts WHERE user_id = ?').run(uid);
+    db.prepare('DELETE FROM friendships WHERE user1 = ? OR user2 = ?').run(uid, uid);
+    S.deleteUser.run(uid);
+  });
+  trx();
   res.json({ ok: true });
 });
 
 // ===== BLOCKS =====
-app.post('/api/block/:id', auth, function(req, res) {
+app.post('/api/block/:id', auth, (req, res) => {
   const target = parseInt(req.params.id);
   if (target === req.user.id) return res.status(400).json({ error: 'self' });
-  const u = getUser(target);
-  if (!u) return res.status(404).json({ error: 'not_found' });
-  if (isBlocked(req.user.id, target)) return res.json({ ok: true });
-  DB.blocks.push({ user1: req.user.id, user2: target, time: Date.now() });
-  saveDb();
+  if (!getUser(target)) return res.status(404).json({ error: 'not_found' });
+  S.insertBlock.run(req.user.id, target, Date.now());
   res.json({ ok: true });
 });
-app.post('/api/unblock/:id', auth, function(req, res) {
+app.post('/api/unblock/:id', auth, (req, res) => {
   const target = parseInt(req.params.id);
-  DB.blocks = DB.blocks.filter(function(b) {
-    return !((b.user1 === req.user.id && b.user2 === target) || (b.user2 === req.user.id && b.user1 === target));
-  });
-  saveDb();
+  S.deleteBlock.run(req.user.id, target, target, req.user.id);
   res.json({ ok: true });
 });
-app.get('/api/blocks', auth, function(req, res) {
-  const list = DB.blocks.filter(function(b) { return b.user1 === req.user.id; })
-    .map(function(b) { return getUser(b.user2); })
-    .filter(Boolean);
-  res.json({ blocks: list.map(publicUser) });
+app.get('/api/blocks', auth, (req, res) => {
+  const rows = S.blocksByUser.all(req.user.id)
+    .map(b => getUser(b.user2)).filter(Boolean);
+  res.json({ blocks: rows.map(publicUser) });
 });
 
 // ===== USERS =====
-app.get('/api/users/search', auth, function(req, res) {
+app.get('/api/users/search', auth, (req, res) => {
   const q = String(req.query.q || '').trim().slice(0, 40);
   if (!q) return res.json({ users: [] });
-  const lq = q.toLowerCase();
-  const list = DB.users.filter(function(u) {
-    return u.id !== req.user.id && !isBlocked(req.user.id, u.id) &&
-      (u.username.toLowerCase().indexOf(lq) !== -1 || u.display_name.toLowerCase().indexOf(lq) !== -1);
-  }).slice(0, 30);
-  res.json({ users: list.map(publicUser) });
+  const lq = '%' + q.toLowerCase() + '%';
+  const rows = db.prepare(`
+    SELECT * FROM users
+    WHERE id != ? AND (LOWER(username) LIKE ? OR LOWER(display_name) LIKE ?)
+    LIMIT 30
+  `).all(req.user.id, lq, lq)
+    .filter(u => !isBlocked(req.user.id, u.id));
+  res.json({ users: rows.map(publicUser) });
 });
 
-app.get('/api/users/:id', auth, function(req, res) {
+app.get('/api/users/:id', auth, (req, res) => {
   const u = getUser(parseInt(req.params.id));
   if (!u) return res.status(404).json({ error: 'not_found' });
-  const isFriend = DB.friendships.some(function(f) {
-    return ((f.user1 === req.user.id && f.user2 === u.id) || (f.user2 === req.user.id && f.user1 === u.id)) && f.status === 'accepted';
-  });
+  const f = S.findFriendship.get(req.user.id, u.id, u.id, req.user.id);
+  const isFriend = f && f.status === 'accepted';
   const blocked = isBlocked(req.user.id, u.id);
   if (u.id !== req.user.id) {
-    DB.profile_views.push({ viewer_id: req.user.id, viewed_id: u.id, time: Date.now() });
-    if (DB.profile_views.length > 5000) DB.profile_views.shift();
-    saveDb();
+    S.insertView.run(req.user.id, u.id, Date.now());
+    S.trimViews.run();
   }
-  const friendsCount = DB.friendships.filter(function(f) {
-    return f.status === 'accepted' && (f.user1 === u.id || f.user2 === u.id);
-  }).length;
-  const postsCount = DB.posts.filter(function(p) { return p.user_id === u.id && p.deleted === 0; }).length;
-  const viewsCount = DB.profile_views.filter(function(v) { return v.viewed_id === u.id; }).length;
   res.json({
-    user: publicUser(u), isFriend: isFriend, blocked: blocked,
-    stats: { friends: friendsCount, posts: postsCount, views: viewsCount }
+    user: publicUser(u),
+    isFriend,
+    blocked,
+    stats: {
+      friends: S.countFriends.get(u.id, u.id).c,
+      posts: S.countUserPosts.get(u.id).c,
+      views: S.countViews.get(u.id).c
+    }
   });
 });
 
 // ===== POSTS =====
-app.post('/api/posts', auth, function(req, res) {
-  const body = req.body || {};
-  const t = String(body.text || '').trim().slice(0, 1000);
-  const img = body.image ? String(body.image).slice(0, 300) : null;
+app.post('/api/posts', auth, (req, res) => {
+  const b = req.body || {};
+  const t = String(b.text || '').trim().slice(0, 1000);
+  const img = b.image ? String(b.image).slice(0, 300) : null;
   if (!t && !img) return res.status(400).json({ error: 'empty' });
-  const time = Date.now();
-  const post = { id: DB.nextId.posts++, user_id: req.user.id, text: encryptText(t), image: img, time: time, deleted: 0 };
-  DB.posts.push(post);
-  extractHashtags(t).forEach(function(tag) {
-    DB.hashtags.push({ id: DB.nextId.hashtags++, tag: tag, source_type: 'post', source_id: post.id, time: time });
-  });
-  saveDb();
+  const now = Date.now();
+  const info = S.insertPost.run(req.user.id, encryptText(t), img, now);
+  const pid = info.lastInsertRowid;
+  extractHashtags(t).forEach(tag => S.insertHashtag.run(tag, 'post', pid, now));
+  const post = S.getPost.get(pid);
   res.json({ post: formatPost(post, req.user.id) });
 });
 
-app.get('/api/posts', auth, function(req, res) {
-  const username = req.query.username;
-  const userId = req.query.user_id;
-  const hashtag = req.query.hashtag;
+app.get('/api/posts', auth, (req, res) => {
   const lim = Math.min(parseInt(req.query.limit) || 30, 100);
-  let posts;
+  const { username, user_id, hashtag } = req.query;
+  let rows;
   if (hashtag) {
     const tag = String(hashtag).replace(/^#/, '').toLowerCase();
-    const ids = DB.hashtags.filter(function(h) { return h.tag === tag && h.source_type === 'post'; }).map(function(h) { return h.source_id; });
-    posts = DB.posts.filter(function(p) { return p.deleted === 0 && ids.indexOf(p.id) !== -1; }).slice(-lim).reverse();
-  } else if (userId) {
-    const uid = parseInt(userId);
-    posts = DB.posts.filter(function(p) { return p.deleted === 0 && p.user_id === uid; }).slice(-lim).reverse();
+    const ids = S.postIdsByHashtag.all(tag, 'post').map(r => r.source_id);
+    if (!ids.length) rows = [];
+    else {
+      const ph = ids.map(() => '?').join(',');
+      rows = db.prepare(`SELECT * FROM posts WHERE deleted = 0 AND id IN (${ph}) ORDER BY time DESC LIMIT ?`)
+        .all(...ids, lim);
+    }
+  } else if (user_id) {
+    rows = S.postsByUser.all(parseInt(user_id), lim);
   } else if (username) {
-    const u = DB.users.find(function(x) { return x.username === username; });
+    const u = S.findUserByUsername.get(username);
     if (!u) return res.json({ posts: [] });
-    posts = DB.posts.filter(function(p) { return p.deleted === 0 && p.user_id === u.id; }).slice(-lim).reverse();
+    rows = S.postsByUser.all(u.id, lim);
   } else {
-    const myFriends = DB.friendships.filter(function(f) {
-      return f.status === 'accepted' && (f.user1 === req.user.id || f.user2 === req.user.id);
-    }).map(function(f) { return f.user1 === req.user.id ? f.user2 : f.user1; });
-    posts = DB.posts.filter(function(p) {
-      return p.deleted === 0 && (p.user_id === req.user.id || myFriends.indexOf(p.user_id) !== -1);
-    }).slice(-lim).reverse();
+    const friendIds = S.friendIdsOf.all(req.user.id, req.user.id, req.user.id).map(r => r.id);
+    const ids = [req.user.id, ...friendIds];
+    const ph = ids.map(() => '?').join(',');
+    rows = db.prepare(`SELECT * FROM posts WHERE deleted = 0 AND user_id IN (${ph}) ORDER BY time DESC LIMIT ?`)
+      .all(...ids, lim);
   }
-  res.json({ posts: posts.map(function(p) { return formatPost(p, req.user.id); }) });
+  res.json({ posts: rows.map(p => formatPost(p, req.user.id)) });
 });
 
-app.post('/api/posts/:id/like', auth, function(req, res) {
+app.post('/api/posts/:id/like', auth, (req, res) => {
   const id = parseInt(req.params.id);
-  const idx = DB.post_likes.findIndex(function(x) { return x.post_id === id && x.user_id === req.user.id; });
-  if (idx !== -1) DB.post_likes.splice(idx, 1);
-  else DB.post_likes.push({ post_id: id, user_id: req.user.id });
-  saveDb();
-  const likes = DB.post_likes.filter(function(x) { return x.post_id === id; }).length;
-  res.json({ likes: likes, liked: idx === -1 });
+  const liked = !!S.getLike.get(id, req.user.id);
+  if (liked) S.deleteLike.run(id, req.user.id);
+  else S.insertLike.run(id, req.user.id);
+  res.json({ likes: S.countLikes.get(id).c, liked: !liked });
 });
 
-app.get('/api/posts/:id/comments', auth, function(req, res) { res.json({ comments: mapComments(parseInt(req.params.id)) }); });
-app.post('/api/posts/:id/comment', auth, function(req, res) {
+app.get('/api/posts/:id/comments', auth, (req, res) => {
+  res.json({ comments: mapComments(parseInt(req.params.id)) });
+});
+app.post('/api/posts/:id/comment', auth, (req, res) => {
   const id = parseInt(req.params.id);
-  const body = req.body || {};
-  const text = String(body.text || '').trim().slice(0, 500);
+  const text = String((req.body || {}).text || '').trim().slice(0, 500);
   if (!text) return res.status(400).json({ error: 'empty' });
-  DB.post_comments.push({ id: DB.nextId.post_comments++, post_id: id, user_id: req.user.id, text: encryptText(text), time: Date.now() });
-  saveDb();
+  S.insertComment.run(id, req.user.id, encryptText(text), Date.now());
   res.json({ comments: mapComments(id) });
 });
-app.delete('/api/posts/:id', auth, function(req, res) {
-  const p = DB.posts.find(function(x) { return x.id === parseInt(req.params.id); });
+app.delete('/api/posts/:id', auth, (req, res) => {
+  const p = S.getPost.get(parseInt(req.params.id));
   if (!p || p.user_id !== req.user.id) return res.status(403).json({ error: 'forbidden' });
-  p.deleted = 1; p.text = ''; p.image = null;
-  saveDb();
+  S.deletePost.run('', p.id);
   res.json({ ok: true });
 });
 
 // ===== TRENDS =====
-app.get('/api/trends', auth, function(req, res) {
+app.get('/api/trends', auth, (req, res) => {
   const since = Date.now() - 7 * 24 * 3600 * 1000;
-  const map = {};
-  DB.hashtags.filter(function(h) { return h.time > since && h.source_type === 'post'; })
-    .forEach(function(h) { map[h.tag] = (map[h.tag] || 0) + 1; });
-  const trends = Object.keys(map).map(function(tag) { return { tag: tag, c: map[tag] }; })
-    .sort(function(a, b) { return b.c - a.c; }).slice(0, 20);
-  res.json({ trends: trends });
+  const rows = S.hashtagsSince.all(since, 'post');
+  res.json({ trends: rows.map(r => ({ tag: r.tag, c: r.c })) });
 });
 
 // ===== SUGGESTIONS =====
-app.get('/api/suggestions', auth, function(req, res) {
-  const myFriends = DB.friendships.filter(function(f) {
-    return f.status === 'accepted' && (f.user1 === req.user.id || f.user2 === req.user.id);
-  }).map(function(f) { return f.user1 === req.user.id ? f.user2 : f.user1; });
-  const pending = DB.friendships.filter(function(f) {
-    return f.status === 'pending' && (f.user1 === req.user.id || f.user2 === req.user.id);
-  }).map(function(f) { return f.user1 === req.user.id ? f.user2 : f.user1; });
-  const list = DB.users.filter(function(u) {
-    return u.id !== req.user.id && myFriends.indexOf(u.id) === -1 && pending.indexOf(u.id) === -1 && !isBlocked(req.user.id, u.id);
-  }).slice(0, 10);
+app.get('/api/suggestions', auth, (req, res) => {
+  const uid = req.user.id;
+  const friendIds = new Set(S.friendIdsOf.all(uid, uid, uid).map(r => r.id));
+  const pendingRows = db.prepare(`
+    SELECT CASE WHEN user1 = ? THEN user2 ELSE user1 END AS id
+    FROM friendships WHERE (user1 = ? OR user2 = ?) AND status = 'pending'
+  `).all(uid, uid, uid);
+  const pendingIds = new Set(pendingRows.map(r => r.id));
+  const list = S.listUsersExclude.all(uid, 50)
+    .filter(u => !friendIds.has(u.id) && !pendingIds.has(u.id) && !isBlocked(uid, u.id))
+    .slice(0, 10);
   res.json({ users: list.map(publicUser) });
 });
 
 // ===== FRIENDS =====
-app.get('/api/friends', auth, function(req, res) {
-  const friends = DB.friendships
-    .filter(function(f) { return f.status === 'accepted' && (f.user1 === req.user.id || f.user2 === req.user.id); })
-    .map(function(f) { return getUser(f.user1 === req.user.id ? f.user2 : f.user1); })
-    .filter(Boolean);
+app.get('/api/friends', auth, (req, res) => {
+  const friends = S.friendsOf.all(req.user.id, req.user.id);
   res.json({ friends: friends.map(publicUser) });
 });
 
-app.get('/api/friends/requests', auth, function(req, res) {
-  const requests = DB.friendships
-    .filter(function(f) { return f.status === 'pending' && f.user2 === req.user.id; })
-    .map(function(f) { return getUser(f.user1); })
-    .filter(Boolean);
-  res.json({ requests: requests.map(publicUser) });
+app.get('/api/friends/requests', auth, (req, res) => {
+  const rows = S.pendingRequestsTo.all(req.user.id, 'pending');
+  const list = rows.map(f => getUser(f.user1)).filter(Boolean);
+  res.json({ requests: list.map(publicUser) });
 });
 
-app.post('/api/friends/request/:id', auth, function(req, res) {
+app.post('/api/friends/request/:id', auth, (req, res) => {
   const target = parseInt(req.params.id);
   if (target === req.user.id) return res.status(400).json({ error: 'self' });
   if (isBlocked(req.user.id, target)) return res.status(403).json({ error: 'blocked' });
-  const u = getUser(target);
-  if (!u) return res.status(404).json({ error: 'not_found' });
-  const exists = DB.friendships.find(function(f) {
-    return (f.user1 === req.user.id && f.user2 === target) || (f.user2 === req.user.id && f.user1 === target);
-  });
+  if (!getUser(target)) return res.status(404).json({ error: 'not_found' });
+  const exists = S.findFriendship.get(req.user.id, target, target, req.user.id);
   if (exists) return res.status(409).json({ error: 'exists', status: exists.status });
-  DB.friendships.push({ user1: req.user.id, user2: target, status: 'pending' });
-  saveDb();
-  onlineSockets.forEach(function(uid, sid) {
-    if (uid === target) io.to(sid).emit('notification', { type: 'friend_request', from: publicUser(req.user), text: 'طلب صداقة جديد' });
+  S.insertFriendship.run(req.user.id, target, 'pending');
+  onlineSockets.forEach((uid, sid) => {
+    if (uid === target) {
+      io.to(sid).emit('notification', { type: 'friend_request', from: publicUser(req.user), text: 'طلب صداقة جديد' });
+    }
   });
   res.json({ ok: true });
 });
-
-app.post('/api/friends/accept/:id', auth, function(req, res) {
+app.post('/api/friends/accept/:id', auth, (req, res) => {
   const fromId = parseInt(req.params.id);
-  const f = DB.friendships.find(function(x) { return x.user1 === fromId && x.user2 === req.user.id && x.status === 'pending'; });
-  if (!f) return res.status(404).json({ error: 'not_found' });
-  f.status = 'accepted';
-  saveDb();
+  const info = S.updateFriendshipStatus.run('accepted', fromId, req.user.id);
+  if (!info.changes) return res.status(404).json({ error: 'not_found' });
   res.json({ ok: true });
 });
-
-app.post('/api/friends/reject/:id', auth, function(req, res) {
+app.post('/api/friends/reject/:id', auth, (req, res) => {
   const fromId = parseInt(req.params.id);
-  const idx = DB.friendships.findIndex(function(x) { return x.user1 === fromId && x.user2 === req.user.id && x.status === 'pending'; });
-  if (idx !== -1) DB.friendships.splice(idx, 1);
-  saveDb();
+  db.prepare("DELETE FROM friendships WHERE user1 = ? AND user2 = ? AND status = 'pending'")
+    .run(fromId, req.user.id);
   res.json({ ok: true });
 });
-
-app.delete('/api/friends/:id', auth, function(req, res) {
+app.delete('/api/friends/:id', auth, (req, res) => {
   const target = parseInt(req.params.id);
-  DB.friendships = DB.friendships.filter(function(f) {
-    return !((f.user1 === req.user.id && f.user2 === target) || (f.user2 === req.user.id && f.user1 === target));
-  });
-  saveDb();
+  S.deleteFriendship.run(req.user.id, target, target, req.user.id);
   res.json({ ok: true });
 });
 
 // ===== DMs =====
-app.get('/api/dms/:userId', auth, function(req, res) {
+app.get('/api/dms/:userId', auth, (req, res) => {
   const other = parseInt(req.params.userId);
   if (other === req.user.id) return res.status(400).json({ error: 'self' });
   if (isBlocked(req.user.id, other)) return res.status(403).json({ error: 'blocked' });
-  const msgs = DB.dms.filter(function(m) {
-    return (m.from_id === req.user.id && m.to_id === other) || (m.from_id === other && m.to_id === req.user.id);
-  }).slice(-100);
-  let changed = false;
-  msgs.forEach(function(m) { if (m.to_id === req.user.id && !m.read) { m.read = 1; changed = true; } });
-  if (changed) saveDb();
+  const msgs = S.dmsBetween.all(req.user.id, other, other, req.user.id);
+  S.markDMsRead.run(other, req.user.id);
   res.json({
-    messages: msgs.map(function(m) {
-      return { id: m.id, from_id: m.from_id, to_id: m.to_id, text: decryptText(m.text), image: m.image, time: m.time, read: !!m.read };
-    })
+    messages: msgs.map(m => ({
+      id: m.id, from_id: m.from_id, to_id: m.to_id,
+      text: decryptText(m.text), image: m.image, time: m.time, read: !!m.read
+    }))
   });
 });
 
-app.get('/api/dm-conversations', auth, function(req, res) {
-  const otherIds = new Set();
-  DB.dms.forEach(function(m) {
-    if (m.from_id === req.user.id) otherIds.add(m.to_id);
-    else if (m.to_id === req.user.id) otherIds.add(m.from_id);
-  });
+app.get('/api/dm-conversations', auth, (req, res) => {
+  const uid = req.user.id;
+  const partners = S.conversationPartners.all(uid, uid, uid);
   const conversations = [];
-  otherIds.forEach(function(oid) {
-    const other = getUser(oid);
+  partners.forEach(p => {
+    const other = getUser(p.id);
     if (!other) return;
-    const last = DB.dms.filter(function(m) {
-      return (m.from_id === req.user.id && m.to_id === oid) || (m.from_id === oid && m.to_id === req.user.id);
-    }).slice(-1)[0];
-    const unread = DB.dms.filter(function(m) { return m.from_id === oid && m.to_id === req.user.id && !m.read; }).length;
+    const last = S.lastDM.get(uid, p.id, p.id, uid);
+    const unread = S.unreadCount.get(p.id, uid).c;
     conversations.push({
       user: publicUser(other),
       last: last ? { text: decryptText(last.text), image: last.image, time: last.time, from_id: last.from_id } : null,
-      unread: unread
+      unread
     });
   });
-  conversations.sort(function(a, b) { return (b.last ? b.last.time : 0) - (a.last ? a.last.time : 0); });
-  res.json({ conversations: conversations });
+  conversations.sort((a, b) => (b.last?.time || 0) - (a.last?.time || 0));
+  res.json({ conversations });
 });
 
-// ===== Socket.IO (DM + Calls فقط) =====
-io.on('connection', function(socket) {
+// ===== Socket.IO =====
+const onlineSockets = new Map();
 
-  socket.on('auth', function(data) {
+const socketRate = new Map();
+function checkSocketRate(socketId, key, max, windowMs) {
+  const now = Date.now();
+  const id = socketId + ':' + key;
+  const entry = socketRate.get(id) || { count: 0, reset: now + windowMs };
+  if (now > entry.reset) { entry.count = 0; entry.reset = now + windowMs; }
+  entry.count++;
+  socketRate.set(id, entry);
+  return entry.count <= max;
+}
+setInterval(() => {
+  const now = Date.now();
+  socketRate.forEach((v, k) => { if (now > v.reset) socketRate.delete(k); });
+}, 60000);
+
+io.on('connection', (socket) => {
+
+  socket.on('auth', (data) => {
     const token = data && data.token;
-    const t = DB.tokens.find(function(x) { return x.token === token; });
+    const t = S.findToken.get(token);
     if (!t) return socket.emit('auth-error', { error: 'invalid_token' });
     const user = getUser(t.user_id);
     if (!user) return socket.emit('auth-error', { error: 'user_not_found' });
@@ -694,29 +896,28 @@ io.on('connection', function(socket) {
     socket.emit('auth-ok', { user: publicUser(user) });
   });
 
-  socket.on('check-online', function(data) {
+  socket.on('check-online', (data) => {
     const targetId = data && data.userId;
     let online = false;
-    onlineSockets.forEach(function(uid) { if (uid === targetId) online = true; });
-    socket.emit('online-status', { userId: targetId, online: online });
+    onlineSockets.forEach(uid => { if (uid === targetId) online = true; });
+    socket.emit('online-status', { userId: targetId, online });
   });
 
-  socket.on('dm-send', function(data) {
+  socket.on('dm-send', (data) => {
     const u = onlineSockets.get(socket.id);
     if (!u) return;
+    if (!checkSocketRate(socket.id, 'dm', 30, 60000)) return;
     const toId = data && data.toId;
     if (toId === u) return;
     if (isBlocked(u, toId)) return;
     const t = String((data && data.text) || '').trim().slice(0, 1000);
     const img = (data && data.image) ? String(data.image).slice(0, 300) : null;
     if (!t && !img) return;
-    const time = Date.now();
-    const msg = { id: DB.nextId.dms++, from_id: u, to_id: toId, text: encryptText(t), image: img, time: time, read: 0 };
-    DB.dms.push(msg);
-    saveDb();
-    const out = { id: msg.id, from_id: u, to_id: toId, text: t, image: img, time: time, read: false };
+    const now = Date.now();
+    const info = S.insertDM.run(u, toId, encryptText(t), img, now);
+    const out = { id: info.lastInsertRowid, from_id: u, to_id: toId, text: t, image: img, time: now, read: false };
     socket.emit('dm-message', out);
-    onlineSockets.forEach(function(uid, sid) {
+    onlineSockets.forEach((uid, sid) => {
       if (uid === toId) {
         io.to(sid).emit('dm-message', out);
         io.to(sid).emit('notification', { type: 'dm', from: publicUser(getUser(u)), text: t || '📷 صورة' });
@@ -724,37 +925,34 @@ io.on('connection', function(socket) {
     });
   });
 
-  socket.on('dm-read', function(data) {
+  socket.on('dm-read', (data) => {
     const u = onlineSockets.get(socket.id);
     if (!u) return;
     const fromId = data && data.fromId;
-    let changed = false;
-    DB.dms.forEach(function(m) { if (m.from_id === fromId && m.to_id === u && !m.read) { m.read = 1; changed = true; } });
-    if (changed) saveDb();
-    onlineSockets.forEach(function(uid, sid) {
+    S.markDMsRead.run(fromId, u);
+    onlineSockets.forEach((uid, sid) => {
       if (uid === fromId) io.to(sid).emit('dm-read-receipt', { byId: u });
     });
   });
 
-  socket.on('dm-typing', function(data) {
+  socket.on('dm-typing', (data) => {
     const u = onlineSockets.get(socket.id);
     if (!u) return;
     const toId = data && data.toId;
     if (toId === u) return;
-    onlineSockets.forEach(function(uid, sid) {
+    onlineSockets.forEach((uid, sid) => {
       if (uid === toId) io.to(sid).emit('dm-typing', { fromId: u, isTyping: !!(data && data.isTyping) });
     });
   });
 
-  // ===== WebRTC Signaling =====
-  socket.on('call-start', function(data) {
+  socket.on('call-start', (data) => {
     const u = onlineSockets.get(socket.id);
     if (!u) return;
+    if (!checkSocketRate(socket.id, 'call', 5, 60000)) return;
     const targetId = data && data.targetId;
-    if (targetId === u) return;
-    if (isBlocked(u, targetId)) return;
+    if (targetId === u || isBlocked(u, targetId)) return;
     const user = getUser(u);
-    onlineSockets.forEach(function(uid, sid) {
+    onlineSockets.forEach((uid, sid) => {
       if (uid === targetId) {
         io.to(sid).emit('incoming-call', {
           fromId: socket.id, fromUserId: u,
@@ -763,59 +961,91 @@ io.on('connection', function(socket) {
       }
     });
   });
-
-  socket.on('call-accept', function(data) {
+  socket.on('call-accept', (data) => {
     const u = onlineSockets.get(socket.id);
     if (!u) return;
-    const user = getUser(u);
-    io.to(data.toId).emit('call-accepted', { fromId: socket.id, fromUserId: u, fromName: user.display_name });
+    io.to(data.toId).emit('call-accepted', { fromId: socket.id, fromUserId: u, fromName: getUser(u).display_name });
   });
-
-  socket.on('call-reject', function(data) {
+  socket.on('call-reject', (data) => {
     const u = onlineSockets.get(socket.id);
     if (!u) return;
-    const user = getUser(u);
-    io.to(data.toId).emit('call-rejected', { fromId: socket.id, fromName: user ? user.display_name : '' });
+    io.to(data.toId).emit('call-rejected', { fromId: socket.id, fromName: getUser(u).display_name });
   });
+  socket.on('call-end', (data) => io.to(data.toId).emit('call-ended', { fromId: socket.id }));
+  socket.on('webrtc-offer', (data) => io.to(data.toId).emit('webrtc-offer', { fromId: socket.id, offer: data.offer }));
+  socket.on('webrtc-answer', (data) => io.to(data.toId).emit('webrtc-answer', { fromId: socket.id, answer: data.answer }));
+  socket.on('webrtc-ice', (data) => io.to(data.toId).emit('webrtc-ice', { fromId: socket.id, candidate: data.candidate }));
 
-  socket.on('call-end', function(data) {
-    io.to(data.toId).emit('call-ended', { fromId: socket.id });
-  });
-
-  socket.on('webrtc-offer', function(data) {
-    io.to(data.toId).emit('webrtc-offer', { fromId: socket.id, offer: data.offer });
-  });
-  socket.on('webrtc-answer', function(data) {
-    io.to(data.toId).emit('webrtc-answer', { fromId: socket.id, answer: data.answer });
-  });
-  socket.on('webrtc-ice', function(data) {
-    io.to(data.toId).emit('webrtc-ice', { fromId: socket.id, candidate: data.candidate });
-  });
-
-  socket.on('disconnect', function() {
+  socket.on('disconnect', () => {
     onlineSockets.delete(socket.id);
+    socketRate.forEach((v, k) => { if (k.startsWith(socket.id + ':')) socketRate.delete(k); });
   });
 });
 
-// ===== حذف الرسائل القديمة بعد 48 ساعة =====
-setInterval(function() {
-  const cutoff = Date.now() - MESSAGE_TTL_MS;
-  const before = DB.dms.length;
-  DB.dms = DB.dms.filter(function(d) { return d.time > cutoff; });
-  if (DB.dms.length !== before) saveDb();
+// ===== Background jobs =====
+setInterval(() => {
+  try {
+    const cutoff = Date.now() - MESSAGE_TTL_MS;
+    const info = S.purgeOldDMs.run(cutoff);
+    if (info.changes) console.log('🧹 حذف ' + info.changes + ' رسالة قديمة');
+  } catch (e) { console.error('TTL cleanup:', e.message); }
 }, 10 * 60 * 1000);
 
-// حفظ دوري احتياطي
-setInterval(function() { if (ghReady) githubSave(); }, 5 * 60 * 1000);
+setInterval(() => {
+  try {
+    const cutoff = Date.now() - 30 * 24 * 3600 * 1000;
+    S.deleteOldTokens.run(cutoff);
+  } catch (_){}
+}, 60 * 60 * 1000);
 
-// ===== التشغيل =====
+setInterval(() => {
+  try { db.pragma('wal_checkpoint(TRUNCATE)'); } catch (_){}
+}, 30 * 60 * 1000);
+
+// ===== Start =====
 async function start() {
-  await githubLoad();
-  server.listen(PORT, '0.0.0.0', function() {
+  server.listen(PORT, '0.0.0.0', () => {
     console.log('✅ السيرفر يعمل على المنفذ ' + PORT);
-    console.log('💬 دردشة خاصة + مكالمات صوتية');
-    console.log('💾 البيانات في: ' + DATA_DIR);
-    console.log('☁️ GitHub Storage: ' + (ghReady ? 'مفعّل' : 'معطّل'));
+    console.log('📊 قاعدة البيانات: SQLite');
+    console.log('💾 المسار: ' + DB_FILE);
+    console.log('🌍 البيئة: ' + NODE_ENV);
+    console.log('🛡️ Rate limiting: ' + (disableRL ? 'معطّل' : 'مفعّل'));
   });
 }
+
+// ===== Graceful shutdown =====
+let shuttingDown = false;
+async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log('\n🛑 إشارة ' + signal + ' — جارٍ الإغلاق...');
+
+  const forceTimeout = setTimeout(() => {
+    console.error('⚠️ تجاوز الوقت — إغلاق قسري');
+    process.exit(1);
+  }, 10000);
+  forceTimeout.unref();
+
+  try {
+    await new Promise(resolve => io.close(resolve));
+    console.log('✅ Socket.IO أُغلق');
+
+    await new Promise(resolve => server.close(resolve));
+    console.log('✅ HTTP أُغلق');
+
+    try { db.pragma('wal_checkpoint(TRUNCATE)'); } catch (_){}
+    try { db.close(); } catch (_){}
+    console.log('✅ SQLite أُغلق');
+
+    process.exit(0);
+  } catch (e) {
+    console.error('خطأ أثناء الإغلاق:', e);
+    process.exit(1);
+  }
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));
+process.on('uncaughtException', (e) => { console.error('💥 uncaughtException:', e); });
+process.on('unhandledRejection', (e) => { console.error('💥 unhandledRejection:', e); });
+
 start();
