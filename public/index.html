@@ -478,7 +478,7 @@ function applyTheme(theme){ document.body.classList.toggle('light', theme === 'l
 socket.on('auth-error', function(){ logout(true); });
 socket.on('auth-ok', function(data){ ME = data.user; loadEverything(); });
 socket.on('room-update', function(){ loadRooms(); });
-socket.on('joined', function(data){
+socket.socket.on('join-error', function(data){ toast(data.message === 'room_not_found' ? 'الغرفة غير موجودة' : data.message === 'not_member' ? 'لم تنضم لهذه الغرفة' : data.message, 'err'); });('joined', function(data){
   CURRENT_ROOM = data.room; CURRENT_DM = null;
   $('chatName').textContent = data.room;
   $('chatSub').textContent = '0 متصل';
