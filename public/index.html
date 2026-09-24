@@ -1324,9 +1324,14 @@ avatarInput.onchange = async function(e){
   } catch(_){ toast('فشل', 'err'); }
   hideLoader(); e.target.value = '';
 };
-
 const coverInput = document.createElement('input');
 coverInput.type = 'file'; coverInput.accept = 'image/*'; coverInput.style.display = 'none';
+coverInput.id = 'coverInput';
+document.body.appendChild(coverInput);
+coverInput.type = 'file';const coverInput = document.createElement('input');
+coverInput.type = 'file'; coverInput.accept = 'image/*'; coverInput.style.display = 'none';
+coverInput.id = 'coverInput';
+coverInput.accept = 'image/*'; coverInput.style.display = 'none';
 document.body.appendChild(coverInput);
 coverInput.onchange = async function(e){
   const f = e.target.files[0]; if(!f) return;
