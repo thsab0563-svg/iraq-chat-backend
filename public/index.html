@@ -14,7 +14,21 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="/socket.io/socket.io.js"></script>
-
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(function(reg) {
+        console.log('✅ Service Worker مسجّل:', reg.scope);
+        // فحص تحديثات كل ساعة
+        setInterval(function() { reg.update(); }, 3600000);
+      })
+      .catch(function(err) {
+        console.warn('⚠️ فشل تسجيل Service Worker:', err);
+      });
+  });
+}
+</script>
 <script id="app-config" type="application/json">
 {
   "app": { "name_ar": "دردشة العراق", "name_en": "Iraq Chat", "version": "3.1.0" },
