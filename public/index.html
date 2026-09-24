@@ -1071,6 +1071,7 @@ $('btnMenu').onclick = function(){
 /* AVATAR / COVER / POST IMG */
 var avatarInput = document.createElement('input');
 avatarInput.type = 'file'; avatarInput.accept = 'image/*'; avatarInput.style.display = 'none';
+avatarInput.id = 'avatarInput';
 document.body.appendChild(avatarInput);
 avatarInput.onchange = async function(e){
   var f = e.target.files[0]; if(!f) return;
