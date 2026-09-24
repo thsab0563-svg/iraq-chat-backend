@@ -14,8 +14,17 @@ const COLORS = ['#f87171','#fb923c','#facc15','#4ade80','#22d3ee','#818cf8','#c0
 const MAX_HISTORY = 200;
 const USERNAME_CHANGE_DAYS = 7;
 
+// ⚡ تعريفات مسبقة مهمة
 const users = new Map();
 const onlineSockets = new Map();
+
+// ⚡ بيانات دائمة - Volume إذا متاح
+const DATA_DIR = fs.existsSync('/data') ? '/data' : __dirname;
+if (!fs.existsSync(DATA_DIR)) { try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch(_){} }
+const DB_FILE = path.join(DATA_DIR, 'data.json');
+const SECRET_FILE = path.join(DATA_DIR, '.secret');
+const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) { try { fs.mkdirSync(UPLOADS_DIR, { recursive: true }); } catch(_){} }
 
 const app = express();
 const server = http.createServer(app);
@@ -27,17 +36,17 @@ const io = new Server(server, {
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(UPLOADS_DIR));
 
 app.get('/health', function(req, res) {
   res.json({ ok: true, time: Date.now() });
 });
 
-const DATA_DIR = fs.existsSync('/data') ? '/data' : __dirname;
-const DB_FILE = path.join(DATA_DIR, 'data.json');
-
+// ============ مفتاح التشفير ============
 let SECRET_KEY;
 if (fs.existsSync(SECRET_FILE)) {
-  SECRET_KEY = Buffer.from(fs.readFileSync(SECRET_FILE, 'utf8'), 'hex');
+  try { SECRET_KEY = Buffer.from(fs.readFileSync(SECRET_FILE, 'utf8'), 'hex'); }
+  catch(_) { SECRET_KEY = crypto.randomBytes(32); }
 } else {
   SECRET_KEY = crypto.randomBytes(32);
   try { fs.writeFileSync(SECRET_FILE, SECRET_KEY.toString('hex')); } catch(_){}
@@ -81,6 +90,7 @@ function verifyPassword(password, stored) {
 }
 function genToken() { return crypto.randomBytes(32).toString('hex'); }
 
+// ============ قاعدة البيانات ============
 const DB = {
   users: [], tokens: [], messages: [], reactions: [], pins: [],
   posts: [], post_likes: [], post_comments: [], hashtags: [],
@@ -89,8 +99,11 @@ const DB = {
 };
 
 if (fs.existsSync(DB_FILE)) {
-  try { Object.assign(DB, JSON.parse(fs.readFileSync(DB_FILE, 'utf8'))); }
-  catch (e) { console.error('DB load error:', e.message); }
+  try {
+    const loaded = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+    Object.assign(DB, loaded);
+    console.log('✅ تم تحميل البيانات: ' + DB.users.length + ' مستخدم');
+  } catch (e) { console.error('DB load error:', e.message); }
 }
 
 let saveTimer = null;
@@ -102,11 +115,9 @@ function saveDb() {
   }, 500);
 }
 
-const uploadsDir = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-
+// رفع الصور
 const storage = multer.diskStorage({
-  destination: uploadsDir,
+  destination: UPLOADS_DIR,
   filename: function(req, file, cb) {
     const ext = (path.extname(file.originalname) || '.jpg').toLowerCase();
     cb(null, Date.now() + '_' + Math.random().toString(36).slice(2, 8) + ext);
@@ -229,9 +240,7 @@ app.put('/api/me', auth, function(req, res) {
   if (body.username !== undefined) {
     const un = String(body.username).trim().toLowerCase().slice(0, 20).replace(/[^a-z0-9_]/g, '');
     if (un.length < 3) return res.status(400).json({ error: 'username_too_short' });
-    if (un === u.username) {
-      // no change
-    } else {
+    if (un !== u.username) {
       const last = u.username_changed_at || 0;
       const daysSince = (Date.now() - last) / (1000 * 60 * 60 * 24);
       if (daysSince < USERNAME_CHANGE_DAYS) {
@@ -263,7 +272,6 @@ app.put('/api/me', auth, function(req, res) {
   res.json({ user: publicUser(u) });
 });
 
-// ============ API: تغيير كلمة السر ============
 app.post('/api/change-password', auth, function(req, res) {
   const body = req.body || {};
   const oldPass = String(body.old_password || '');
@@ -276,7 +284,6 @@ app.post('/api/change-password', auth, function(req, res) {
   res.json({ ok: true });
 });
 
-// ============ API: حذف الحساب ============
 app.delete('/api/me', auth, function(req, res) {
   const uid = req.user.id;
   DB.tokens = DB.tokens.filter(function(t) { return t.user_id !== uid; });
@@ -289,7 +296,6 @@ app.delete('/api/me', auth, function(req, res) {
   res.json({ ok: true });
 });
 
-// ============ API: Blocks ============
 app.post('/api/block/:id', auth, function(req, res) {
   const target = parseInt(req.params.id);
   if (target === req.user.id) return res.status(400).json({ error: 'self' });
@@ -318,7 +324,6 @@ app.get('/api/blocks', auth, function(req, res) {
   res.json({ blocks: list.map(publicUser) });
 });
 
-// ============ API: Users ============
 app.get('/api/users/search', auth, function(req, res) {
   const q = String(req.query.q || '').trim().slice(0, 40);
   if (!q) return res.json({ users: [] });
@@ -338,7 +343,6 @@ app.get('/api/users/:id', auth, function(req, res) {
   });
   const blocked = isBlocked(req.user.id, u.id);
 
-  // سجل زيارة
   if (u.id !== req.user.id) {
     DB.profile_views.push({ viewer_id: req.user.id, viewed_id: u.id, time: Date.now() });
     if (DB.profile_views.length > 5000) DB.profile_views.shift();
@@ -359,7 +363,6 @@ app.get('/api/users/:id', auth, function(req, res) {
   });
 });
 
-// ============ API: Posts ============
 function extractHashtags(text) {
   const tags = [];
   const re = /#([\u0600-\u06FF\w_]{1,40})/g;
@@ -473,7 +476,6 @@ app.get('/api/trends', auth, function(req, res) {
   res.json({ trends: trends });
 });
 
-// ============ API: Suggestions ============
 app.get('/api/suggestions', auth, function(req, res) {
   const myFriends = DB.friendships.filter(function(f) {
     return f.status === 'accepted' && (f.user1 === req.user.id || f.user2 === req.user.id);
@@ -492,7 +494,6 @@ app.get('/api/suggestions', auth, function(req, res) {
   res.json({ users: list.map(publicUser) });
 });
 
-// ============ API: Friends ============
 app.get('/api/friends', auth, function(req, res) {
   const friends = DB.friendships
     .filter(function(f) { return f.status === 'accepted' && (f.user1 === req.user.id || f.user2 === req.user.id); })
@@ -553,7 +554,6 @@ app.delete('/api/friends/:id', auth, function(req, res) {
   res.json({ ok: true });
 });
 
-// ============ API: DMs ============
 app.get('/api/dms/:userId', auth, function(req, res) {
   const other = parseInt(req.params.userId);
   if (other === req.user.id) return res.status(400).json({ error: 'self' });
@@ -627,6 +627,13 @@ io.on('connection', function(socket) {
     if (!user) return socket.emit('auth-error', { error: 'user_not_found' });
     onlineSockets.set(socket.id, user.id);
     socket.emit('auth-ok', { user: publicUser(user) });
+  });
+
+  socket.on('check-online', function(data) {
+    const targetId = data && data.userId;
+    let online = false;
+    onlineSockets.forEach(function(uid) { if (uid === targetId) online = true; });
+    socket.emit('online-status', { userId: targetId, online: online });
   });
 
   socket.on('join', function(data) {
@@ -739,7 +746,6 @@ io.on('connection', function(socket) {
     socket.to(u.room).emit('typing', { name: user ? user.display_name : '', isTyping: !!isTyping });
   });
 
-  // DM
   socket.on('dm-send', function(data) {
     const u = onlineSockets.get(socket.id);
     if (!u) return;
@@ -763,7 +769,6 @@ io.on('connection', function(socket) {
     });
   });
 
-  // DM read receipt
   socket.on('dm-read', function(data) {
     const u = onlineSockets.get(socket.id);
     if (!u) return;
@@ -787,7 +792,6 @@ io.on('connection', function(socket) {
     });
   });
 
-  // Calls (فردية فقط)
   socket.on('call-start', function(data) {
     const u = onlineSockets.get(socket.id);
     if (!u) return;
@@ -834,7 +838,7 @@ io.on('connection', function(socket) {
   });
 });
 
-// ============ حذف الرسائل القديمة بعد 48 ساعة ============
+// حذف الرسائل القديمة بعد 48 ساعة
 setInterval(function() {
   const cutoff = Date.now() - 48 * 3600 * 1000;
   const before = DB.messages.length + DB.dms.length;
@@ -843,8 +847,9 @@ setInterval(function() {
   if (DB.messages.length + DB.dms.length !== before) saveDb();
 }, 10 * 60 * 1000);
 
-// ============ التشغيل ============
+// التشغيل
 server.listen(PORT, '0.0.0.0', function() {
   console.log('✅ السيرفر يعمل على المنفذ ' + PORT);
   console.log('📁 ' + ROOMS.length + ' غرفة جاهزة');
+  console.log('💾 البيانات في: ' + DATA_DIR);
 });
