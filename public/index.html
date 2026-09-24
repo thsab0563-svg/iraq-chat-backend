@@ -1104,6 +1104,7 @@ coverInput.onchange = async function(e){
 
 var postImgInput = document.createElement('input');
 postImgInput.type = 'file'; postImgInput.accept = 'image/*'; postImgInput.style.display = 'none';
+postImgInput.id = 'postImgInput';
 document.body.appendChild(postImgInput);
 postImgInput.onchange = async function(e){
   var f = e.target.files[0]; if(!f) return;
