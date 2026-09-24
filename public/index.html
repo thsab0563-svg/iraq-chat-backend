@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
 <meta name="theme-color" content="#07080f" />
 <title>دردشة العراق | Iraq Chat</title>
+
+<!-- PWA -->
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="apple-touch-icon" href="/icon.svg">
@@ -12,26 +14,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="دردشة العراق">
 <meta name="mobile-web-app-capable" content="yes">
+
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="/socket.io/socket.io.js"></script>
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(function(reg) {
-        console.log('✅ Service Worker مسجّل:', reg.scope);
-        // فحص تحديثات كل ساعة
-        setInterval(function() { reg.update(); }, 3600000);
-      })
-      .catch(function(err) {
-        console.warn('⚠️ فشل تسجيل Service Worker:', err);
-      });
-  });
-}
-</script>
+
 <script id="app-config" type="application/json">
 {
-  "app": { "name_ar": "دردشة العراق", "name_en": "Iraq Chat", "version": "3.1.0" },
+  "app": { "name_ar": "دردشة العراق", "name_en": "Iraq Chat", "version": "3.2.0" },
   "colors": ["#f87171","#fb923c","#facc15","#4ade80","#22d3ee","#818cf8","#c084fc","#f472b6","#e11d48","#0ea5e9"],
   "emojis": ["😀","😂","🥰","😎","🤔","😢","😡","👍","👎","❤️","🔥","🎉","✨","🙏","👏","💪","🌹","☕","🍕","⚽","🎵","📚","💡","🚀","💯","🤝","🙌","😍"]
 }
@@ -77,7 +66,6 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 .screen{display:none;height:100dvh;width:100%}
 .screen.active{display:flex;flex-direction:column}
 
-/* AUTH */
 #auth{background:radial-gradient(1000px 700px at 100% 0%,rgba(124,92,255,.25),transparent 60%),radial-gradient(900px 700px at 0% 100%,rgba(34,211,238,.18),transparent 60%),var(--bg);overflow-y:auto}
 .auth-wrap{margin:auto;width:100%;max-width:440px;padding:32px 22px}
 .auth-logo{width:80px;height:80px;margin:0 auto 18px;border-radius:24px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent3) 60%,var(--accent2));color:#fff;box-shadow:0 18px 44px rgba(124,92,255,.5)}
@@ -102,7 +90,6 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 .err.show{display:block;animation:shake .4s}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 
-/* APP */
 #app{position:relative;overflow:hidden}
 .tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(72px + env(safe-area-inset-bottom) + 10px);-webkit-overflow-scrolling:touch}
 .tab{display:none}
@@ -119,7 +106,6 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 .bottom-nav button.on .ic{transform:scale(1.12);filter:drop-shadow(0 0 8px rgba(124,92,255,.5))}
 .bottom-nav .badge{position:absolute;top:4px;inset-inline-end:calc(50% - 18px);min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:.65rem;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--bg)}
 
-/* LISTS */
 .list-pad{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;transition:.15s}
 .card:active{transform:scale(.985)}
@@ -132,7 +118,6 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 .user-row .ur-name{font-weight:800;font-size:.94rem;display:flex;align-items:center;gap:6px}
 .user-row .ur-sub{font-size:.76rem;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-/* POSTS */
 .post{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;margin-bottom:12px}
 .post-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .post-head .avatar{width:42px;height:42px;font-size:.95rem}
@@ -148,7 +133,6 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 .post-actions button.liked{color:var(--danger)}
 .post-actions button.liked .ic{fill:currentColor}
 
-/* CHAT (DM only) */
 #chatView{position:fixed;inset:0;z-index:200;background:var(--bg);display:none;flex-direction:column}
 #chatView.open{display:flex}
 .chat-head{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg);backdrop-filter:blur(18px);padding-top:calc(12px + env(safe-area-inset-top))}
@@ -188,7 +172,6 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 .send{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;flex:0 0 auto;box-shadow:0 8px 20px rgba(124,92,255,.35);transition:.15s}
 .send:active{transform:scale(.93)}
 
-/* SEARCH */
 .search-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:var(--card);border:1px solid var(--border);margin:12px 16px}
 .search-bar input{flex:1;font-size:.94rem;background:none}
 .search-bar svg{color:var(--muted)}
@@ -197,7 +180,6 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 .trend-chip:active{background:var(--accent);color:#fff}
 .trend-chip .cnt{color:var(--muted);font-size:.72rem;font-weight:600;margin-inline-start:4px}
 
-/* PROFILE */
 .profile-cover{height:150px;position:relative;background:linear-gradient(135deg,#7c5cff,#5b8cff 50%,#22d3ee);overflow:hidden}
 .profile-cover img{width:100%;height:100%;object-fit:cover}
 .profile-cover .edit-cover{position:absolute;bottom:8px;inset-inline-end:8px;padding:6px 12px;border-radius:10px;background:rgba(0,0,0,.5);color:#fff;font-size:.78rem;font-weight:700;backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.2)}
@@ -222,7 +204,6 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 .tabs-inner button{flex:1;padding:14px;font-weight:800;font-size:.88rem;color:var(--muted);border-bottom:2px solid transparent;transition:.2s}
 .tabs-inner button.on{color:var(--accent);border-bottom-color:var(--accent)}
 
-/* MODAL */
 .modal{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center}
 .modal.open{display:flex;animation:fadeIn .2s}
 .modal.center{align-items:center}
@@ -242,7 +223,6 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 .modal-item.danger svg{color:var(--danger)}
 .modal-item .arrow{margin-inline-start:auto;color:var(--muted)}
 
-/* TOAST */
 #toasts{position:fixed;top:calc(14px + env(safe-area-inset-top));inset-inline:14px;z-index:999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
 .toast{padding:12px 18px;border-radius:14px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:10px;animation:slideDown .25s;max-width:100%;pointer-events:auto}
 .toast.ok{border-color:rgba(52,211,153,.4);color:#7ee7b8}
@@ -260,7 +240,6 @@ a{color:var(--accent3);text-decoration:none;cursor:pointer}
 #netBanner.show{display:flex}
 #netBanner button{background:rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:6px 12px;font-weight:800;font-size:.78rem}
 
-/* CALL */
 #callOverlay{position:fixed;inset:0;z-index:500;background:radial-gradient(circle at 50% 30%,rgba(124,92,255,.3),transparent 60%),linear-gradient(180deg,#0a0d18,#131829);display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px}
 #callOverlay.open{display:flex;animation:fadeIn .25s}
 .call-avatar-lg{width:130px;height:130px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:900;font-size:3rem;background:linear-gradient(135deg,var(--accent),var(--accent3));box-shadow:0 0 0 0 rgba(124,92,255,.6);animation:pulseCall 2s infinite;margin-bottom:24px;overflow:hidden}
@@ -440,8 +419,8 @@ let ME = null, TOKEN = localStorage.getItem('token');
 let CURRENT_DM = null;
 let selectedColor = CFG.colors[0];
 let soundOn = true;
-let pendingChatImage = null;    // صورة الدردشة
-let pendingPostImage = null;    // صورة المنشور (منفصلة!)
+let pendingChatImage = null;
+let pendingPostImage = null;
 let dmTypingTimer = null;
 let callTimerInterval = null, callSeconds = 0, speakerOn = false;
 let dmAlertShown = false;
@@ -502,7 +481,6 @@ async function api(path, opts){
   return data;
 }
 
-/* رفع الصور مع توثيق */
 async function uploadImage(file){
   const fd = new FormData();
   fd.append('image', file);
@@ -632,7 +610,7 @@ function switchTab(name, opts){
 }
 $$('.bottom-nav button').forEach(function(b){ b.onclick = function(){ switchTab(b.dataset.tab); }; });
 
-/* CHAT — DM فقط */
+/* CHAT — DM */
 function scrollChat(instant){
   const el = $('chatMsgs');
   requestAnimationFrame(function(){ el.scrollTo({ top: el.scrollHeight, behavior: instant ? 'auto' : 'smooth' }); });
@@ -756,7 +734,6 @@ function renderPosts(posts){
   el.querySelectorAll('.comment-btn').forEach(function(b){ b.onclick = function(){ openComments(parseInt(b.dataset.pid)); }; });
 }
 
-/* ✅ إصلاح race condition: نروح للتبويب بدون إعادة تحميل المنشورات */
 function searchHashtag(tag){
   switchTab('posts', { skipLoad: true });
   loadPosts(tag);
@@ -883,7 +860,7 @@ $$('.tabs-inner button').forEach(function(b){ b.onclick = function(){
   if(nt === 'requests'){ $('requestsList').classList.remove('hide'); loadRequests(); }
 }; });
 
-/* ✅ إصلاح: جلب إحصائيات الملف الحقيقية */
+/* PROFILE */
 async function loadProfile(){
   try {
     const r = await api('/me');
@@ -892,7 +869,7 @@ async function loadProfile(){
     try {
       const s = await api('/me/stats');
       stats = { friends: s.friends || 0, posts: s.posts || 0, views: s.views || 0 };
-    } catch(_){ /* إذا السيرفر ما يدعم /me/stats نترك الأصفار */ }
+    } catch(_){}
     renderProfile(r.user, true, stats);
   } catch(e) { toast(e.message, 'err'); }
 }
@@ -1236,6 +1213,7 @@ socket.on('incoming-call', function(data){
   currentCall = { peerId: data.fromId, peerName: data.fromName, peerColor: data.fromColor, peerAvatar: data.fromAvatar, incoming: true };
   callEnding = false;
   showCallUI(data.fromName, data.fromColor, data.fromAvatar, 'مكالمة واردة', true);
+  playRingtone();
 });
 
 function showCallUI(name, color, avatar, status, incoming){
@@ -1250,6 +1228,7 @@ function showCallUI(name, color, avatar, status, incoming){
 
 $('callAccept').onclick = async function(){
   const c = currentCall; if(!c) return;
+  stopRingtone();
   try {
     const r = await buildPC(c.peerId);
     c.pc = r.pc; c.audio = r.audio; c.incoming = false;
@@ -1288,6 +1267,7 @@ $('speakerBtn').onclick = function(){
 
 socket.on('call-accepted', async function(data){
   if(!currentCall || currentCall.peerId !== data.fromId) return;
+  stopRingtone();
   startCallTimer();
   try {
     const offer = await currentCall.pc.createOffer();
@@ -1330,6 +1310,7 @@ function endCall(){
   if(callEnding) return;
   callEnding = true;
   stopCallTimer();
+  stopRingtone();
   speakerOn = false;
   const c = currentCall;
   if(!c){ callEnding = false; return; }
@@ -1363,6 +1344,68 @@ function playBeep(){
   } catch(_){}
 }
 
+/* RINGTONE */
+let ringtoneCtx = null;
+let ringtoneTimer = null;
+let ringtonePlaying = false;
+
+function playRingtone() {
+  if (ringtonePlaying) return;
+  ringtonePlaying = true;
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    ringtoneCtx = ringtoneCtx || new Ctx();
+    if (ringtoneCtx.state === 'suspended') ringtoneCtx.resume();
+
+    const pattern = function() {
+      if (!ringtonePlaying || !ringtoneCtx) return;
+      const t0 = ringtoneCtx.currentTime;
+      const playTone = function(freq, start, dur) {
+        const o = ringtoneCtx.createOscillator();
+        const g = ringtoneCtx.createGain();
+        o.connect(g); g.connect(ringtoneCtx.destination);
+        o.type = 'sine';
+        o.frequency.setValueAtTime(freq, t0 + start);
+        g.gain.setValueAtTime(0.0001, t0 + start);
+        g.gain.exponentialRampToValueAtTime(0.12, t0 + start + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + start + dur);
+        o.start(t0 + start);
+        o.stop(t0 + start + dur + 0.02);
+      };
+      playTone(880, 0,    0.35);
+      playTone(1046, 0.35, 0.35);
+      playTone(880, 0.85, 0.35);
+      playTone(1046, 1.20, 0.35);
+    };
+
+    pattern();
+    ringtoneTimer = setInterval(pattern, 3000);
+
+    if (navigator.vibrate) {
+      const vibrateLoop = function() {
+        if (!ringtonePlaying) return;
+        navigator.vibrate([300, 200, 300, 1500]);
+      };
+      vibrateLoop();
+      ringtoneTimer._vib = setInterval(vibrateLoop, 2500);
+    }
+  } catch (e) {
+    console.warn('Ringtone error:', e);
+  }
+}
+
+function stopRingtone() {
+  if (!ringtonePlaying) return;
+  ringtonePlaying = false;
+  if (ringtoneTimer) {
+    clearInterval(ringtoneTimer);
+    if (ringtoneTimer._vib) clearInterval(ringtoneTimer._vib);
+    ringtoneTimer = null;
+  }
+  if (navigator.vibrate) navigator.vibrate(0);
+}
+
 /* AUTO LOGIN */
 (async function init(){
   if(TOKEN){
@@ -1374,5 +1417,22 @@ function playBeep(){
 
 })();
 </script>
+
+<!-- Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(function(reg) {
+        console.log('✅ Service Worker مسجّل:', reg.scope);
+        setInterval(function() { reg.update(); }, 3600000);
+      })
+      .catch(function(err) {
+        console.warn('⚠️ فشل تسجيل Service Worker:', err);
+      });
+  });
+}
+</script>
+
 </body>
-</html>
+  </html>
