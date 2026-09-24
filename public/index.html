@@ -879,7 +879,8 @@ function renderProfile(u, isMe, stats){
     $('btnEditProfile').onclick = function(){ openEditProfile(ME); };
     $('btnSettings').onclick = function(){ openSettings(); };
     $('profAvatar').onclick = function(){ $('avatarInput').click(); };
-    if($('editCover')) $('editCover').onclick = function(){ $('coverInput').click(); };
+    if($('editCover')) $('editCover').onclick = function(e){ e.stopPropagation(); $('coverInput').click(); };
+if($('profCover') && isMe){ $('profCover').onclick = function(){ $('coverInput').click(); }; }
   } else {
     $('btnMsgUser').onclick = function(){ openDM(u); };
     if($('btnAddFriend')) $('btnAddFriend').onclick = async function(){ try { await api('/friends/request/' + u.id, { method: 'POST' }); toast('تم', 'ok'); } catch(e) { toast(e.message, 'err'); } };
