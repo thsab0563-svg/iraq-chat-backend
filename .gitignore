@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+data.json
+data.db
+data.db-journal
+data.db-wal
+data.db-shm
+*.imported
+
+# Secret
+.secret
+
+# Uploads
+uploads/
+public/uploads/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
