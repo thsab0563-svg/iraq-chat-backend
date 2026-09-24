@@ -32,8 +32,8 @@ app.get('/health', function(req, res) {
   res.json({ ok: true, time: Date.now() });
 });
 
-const DB_FILE = path.join(__dirname, 'data.json');
-const SECRET_FILE = path.join(__dirname, '.secret');
+const DATA_DIR = fs.existsSync('/data') ? '/data' : __dirname;
+const DB_FILE = path.join(DATA_DIR, 'data.json');
 
 let SECRET_KEY;
 if (fs.existsSync(SECRET_FILE)) {
