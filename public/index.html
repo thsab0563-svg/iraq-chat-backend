@@ -18,7 +18,7 @@
 
 <script id="app-config" type="application/json">
 {
-  "app": { "name_ar": "دردشة العراق", "version": "4.2.0" },
+  "app": { "name_ar": "دردشة العراق", "version": "4.3.0" },
   "colors": ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399","#22d3ee","#e11d48"],
   "emojis": ["😀","😂","🥰","😎","🤔","😢","😡","👍","👎","❤️","🔥","🎉","✨","🙏","👏","💪","🌹","☕","🍕","⚽","🎵","📚","💡","🚀","💯","🤝","🙌","😍"]
 }
@@ -162,6 +162,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .cmsg .cbubble{padding:11px 15px;border-radius:18px;font-size:.93rem;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
 .cmsg.other .cbubble{background:var(--surface);border:1px solid var(--border-2);border-start-start-radius:5px}
 .cmsg.me .cbubble{background:var(--grad-gold);color:#1a1207;border-start-end-radius:5px;box-shadow:var(--shadow-gold);font-weight:500}
+.cmsg[data-local="1"] .cbubble{opacity:.7}
 .cbubble .htag{color:var(--gold);font-weight:700;cursor:pointer}
 .cmsg.me .cbubble .htag{color:#5c3d10;font-weight:800}
 .cmsg .read-marks{font-size:.75rem;padding:0 10px;display:flex;gap:2px;justify-content:flex-start;font-weight:700;line-height:1}
@@ -215,7 +216,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .modal-item.danger{color:var(--danger)}
 .modal-item .arrow{margin-inline-start:auto;color:var(--muted-2)}
 
-/* MODAL HEADER WITH BACK */
 .modal-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
 .modal-header .back-btn{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:var(--surface-2);color:var(--text);flex:0 0 auto}
 .modal-header .back-btn:active{transform:scale(.92)}
@@ -409,7 +409,6 @@ var chatBadgeCount = 0;
 var notifBadgeCount = 0;
 var onlineUsers = {};
 
-/* NAV STACK for back button */
 var navStack = [];
 var _isPopping = false;
 
@@ -462,8 +461,6 @@ function toast(text, type){
   setTimeout(function(){ el.style.opacity='0'; el.style.transition='.3s'; setTimeout(function(){ el.remove(); }, 300); }, 2800);
 }
 function showErr(text){ var e = $('authErr'); e.textContent = text; e.classList.add('show'); setTimeout(function(){ e.classList.remove('show'); }, 4000); }
-function showLoader(){ $('splash').classList.remove('hide'); }
-function hideLoader(){ $('splash').classList.add('hide'); }
 
 function updateChatBadge(n){
   var b = $('chatBadge');
@@ -553,19 +550,19 @@ $('tabRegister').addEventListener('click', function(){ $('tabRegister').classLis
 $('btnLogin').addEventListener('click', async function(){
   var u = $('liUser').value.trim(), p = $('liPass').value;
   if(!u || !p) return showErr('الرجاء تعبئة الحقول');
-  this.disabled = true; showLoader();
+  this.disabled = true;
   try { var r = await api('/login', { method: 'POST', body: JSON.stringify({ username: u, password: p }) }); TOKEN = r.token; localStorage.setItem('token', TOKEN); enterApp(r.user); }
   catch(e) { showErr(e.message === 'invalid_credentials' ? 'بيانات الدخول غير صحيحة' : e.message); }
-  this.disabled = false; hideLoader();
+  this.disabled = false;
 });
 $('btnRegister').addEventListener('click', async function(){
   var name = $('rgName').value.trim(), pass = $('rgPass').value;
   if(!name) return showErr('الاسم مطلوب');
   if(pass.length < 4) return showErr('كلمة المرور قصيرة');
-  this.disabled = true; showLoader();
+  this.disabled = true;
   try { var r = await api('/register', { method: 'POST', body: JSON.stringify({ display_name: name, password: pass, color: selectedColor, phone: $('rgPhone').value.trim(), location: $('rgLocation').value.trim(), country: 'العراق' }) }); TOKEN = r.token; localStorage.setItem('token', TOKEN); enterApp(r.user); }
   catch(e) { showErr(e.message === 'name_taken' ? 'الاسم مستخدم' : e.message); }
-  this.disabled = false; hideLoader();
+  this.disabled = false;
 });
 
 function enterApp(user){
@@ -616,6 +613,17 @@ socket.on('dm-message', function(m){
   var isCur = CURRENT_DM && (m.from_id === CURRENT_DM.user.id || m.to_id === CURRENT_DM.user.id);
   var isMine = m.from_id === ME.id;
   if(isCur){
+    // Remove local echo if this is our own message confirmation
+    if(isMine && !m._local){
+      var locals = $('chatMsgs').querySelectorAll('.cmsg[data-local="1"]');
+      for(var i = locals.length - 1; i >= 0; i--){
+        var bub = locals[i].querySelector('.cbubble');
+        if(bub && bub.textContent.trim() === String(m.text || '').trim()){
+          locals[i].remove();
+          break;
+        }
+      }
+    }
     renderDMMsg(m); scrollChat();
     if(m.from_id === CURRENT_DM.user.id) socket.emit('dm-read', { fromId: m.from_id });
   } else if(!isMine){
@@ -801,6 +809,7 @@ function renderDMMsg(m){
   var mine = m.from_id === ME.id;
   el.className = 'cmsg ' + (mine ? 'me' : 'other');
   el.dataset.id = m.id;
+  if(m._local) el.dataset.local = '1';
   var other = CURRENT_DM ? CURRENT_DM.user : ME;
   var u = mine ? ME : other;
   var av = document.createElement('div');
@@ -843,11 +852,26 @@ $('chatInput').addEventListener('input', function(){
 });
 $('chatInput').addEventListener('keydown', function(e){ if(e.key === 'Enter' && !e.shiftKey && window.innerWidth > 720){ e.preventDefault(); sendChat(); } });
 $('chatSend').addEventListener('click', sendChat);
+
 function sendChat(){
   var txt = $('chatInput').value.trim();
   if(!txt || !CURRENT_DM) return;
-  socket.emit('dm-send', { toId: CURRENT_DM.user.id, text: txt });
-  socket.emit('dm-typing', { toId: CURRENT_DM.user.id, isTyping: false });
+  var toId = CURRENT_DM.user.id;
+  var now = Date.now();
+  var localMsg = {
+    id: 'local_' + now + '_' + Math.random().toString(36).slice(2),
+    from_id: ME.id,
+    to_id: toId,
+    text: txt,
+    time: now,
+    read: false,
+    delivered: false,
+    _local: true
+  };
+  renderDMMsg(localMsg);
+  scrollChat();
+  socket.emit('dm-send', { toId: toId, text: txt });
+  socket.emit('dm-typing', { toId: toId, isTyping: false });
   clearTimeout(dmTypingTimer);
   $('chatInput').value = ''; autoGrow();
 }
@@ -1061,7 +1085,7 @@ async function openDM(user){
   } catch(_){}
 }
 
-/* ===== MODAL + NAV STACK ===== */
+/* MODAL + NAV */
 function pushNav(type){
   navStack.push(type);
   try { history.pushState({ navType: type, ts: Date.now() }, ''); } catch(_) {}
@@ -1104,9 +1128,6 @@ window.addEventListener('popstate', function(){
   } else if(type === 'crop'){
     $('cropModal').classList.remove('open');
     if(cropperInstance){ try { cropperInstance.destroy(); } catch(_){} cropperInstance = null; }
-  } else if(type === 'menu'){
-    $('modal').classList.remove('open');
-    $('modalBody').classList.remove('menu-sheet-wrap');
   }
   setTimeout(function(){ _isPopping = false; }, 80);
 });
@@ -1169,7 +1190,7 @@ async function openCropModal(file){
     $('cropConfirm').onclick = function(){
       if(!cropperInstance) return;
       var canvas = cropperInstance.getCroppedCanvas({ width: 512, height: 512, imageSmoothingQuality: 'high' });
-      canvas.toBlob(function(blob){ if(!blob){ reject(new Error('crop_failed')); return; } closeCropModal(); resolve(blob); }, 'image/jpeg', 0.92);
+      canvas.toBlob(function(blob){ if(!blob){ reject(new Error('crop_failed')); return; } closeCropModal(); resolve(blob); }, 'image/jpeg', 0.75);
     };
   });
 }
@@ -1189,19 +1210,31 @@ avatarInput.onchange = async function(e){
   e.target.value = '';
   var cropped;
   try { cropped = await openCropModal(f); } catch(_) { return; }
-  showLoader();
+  toast('جارٍ الرفع...', 'info');
   try {
     var d = await uploadImage(cropped, 'avatar.jpg');
-    if(d.url){ var resp = await api('/me', { method: 'PUT', body: JSON.stringify({ avatar: d.url }) }); ME = resp.user; loadProfile(); toast('تم', 'ok'); }
+    if(d.url){
+      var resp = await api('/me', { method: 'PUT', body: JSON.stringify({ avatar: d.url }) });
+      ME = resp.user;
+      loadProfile();
+      toast('تم تحديث الصورة', 'ok');
+    }
   } catch(_){ toast('فشل الرفع', 'err'); }
-  hideLoader();
 };
 coverInput.onchange = async function(e){
   var f = e.target.files[0]; if(!f) return;
   if(f.size > 4 * 1024 * 1024) return toast('الحد 4 ميجا', 'err');
-  showLoader();
-  try { var d = await uploadImage(f); if(d.url){ var resp = await api('/me', { method: 'PUT', body: JSON.stringify({ cover: d.url }) }); ME = resp.user; loadProfile(); toast('تم', 'ok'); } } catch(_){ toast('فشل', 'err'); }
-  hideLoader(); e.target.value = '';
+  e.target.value = '';
+  toast('جارٍ الرفع...', 'info');
+  try {
+    var d = await uploadImage(f);
+    if(d.url){
+      var resp = await api('/me', { method: 'PUT', body: JSON.stringify({ cover: d.url }) });
+      ME = resp.user;
+      loadProfile();
+      toast('تم تحديث الغلاف', 'ok');
+    }
+  } catch(_){ toast('فشل الرفع', 'err'); }
 };
 
 /* BEEP */
@@ -1233,7 +1266,6 @@ function playBeep(){
     } else { await minWait; $('auth').classList.add('active'); }
   } catch(e) { await minWait; $('auth').classList.add('active'); }
   setTimeout(function(){ $('splash').classList.add('hide'); }, 300);
-  // Add initial history state
   try { history.replaceState({ root: true }, ''); } catch(_) {}
 })();
 
