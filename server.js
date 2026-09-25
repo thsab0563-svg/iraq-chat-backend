@@ -24,8 +24,12 @@ const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:admin@example.com';
 const PUSH_ENABLED = !!(VAPID_PUBLIC && VAPID_PRIVATE);
 
 if (PUSH_ENABLED) {
-  webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC, VAPID_PRIVATE);
-  console.log('✅ Push enabled');
+  try {
+    webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC, VAPID_PRIVATE);
+    console.log('✅ Push enabled');
+  } catch (e) {
+    console.error('❌ VAPID error:', e.message);
+  }
 } else {
   console.log('⚠️ Push disabled (no VAPID)');
 }
@@ -37,7 +41,15 @@ if (!TURSO_URL || !TURSO_TOKEN) {
   console.error('❌ TURSO_URL / TURSO_TOKEN missing');
   process.exit(1);
 }
-const db = createClient({ url: TURSO_URL, authToken: TURSO_TOKEN });
+
+let db;
+try {
+  db = createClient({ url: TURSO_URL, authToken: TURSO_TOKEN });
+  console.log('✅ Turso client created');
+} catch (e) {
+  console.error('❌ Turso init error:', e.message);
+  process.exit(1);
+}
 
 // ===== SECRET =====
 let SECRET_KEY;
@@ -201,7 +213,7 @@ const io = new Server(server, {
 
 app.set('trust proxy', 1);
 app.use(cors({ origin: '*' }));
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ===== Rate Limit =====
@@ -234,7 +246,13 @@ async function auth(req, res, next) {
 // ===== Health =====
 const startTime = Date.now();
 app.get('/health', (req, res) => {
-  res.json({ ok: true, uptime_s: Math.floor((Date.now() - startTime)/1000), env: NODE_ENV, online: onlineSockets.size, push: PUSH_ENABLED });
+  res.json({
+    ok: true,
+    uptime_s: Math.floor((Date.now() - startTime)/1000),
+    env: NODE_ENV,
+    online: onlineSockets.size,
+    push: PUSH_ENABLED
+  });
 });
 
 // ===== VAPID public key =====
@@ -242,48 +260,26 @@ app.get('/api/vapid-public', (req, res) => {
   res.json({ key: VAPID_PUBLIC });
 });
 
-// ===== UPLOAD — Supabase Storage =====
+// ===== UPLOAD — Base64 إلى DB مباشرة =====
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 4 * 1024 * 1024 },
+  limits: { fileSize: 3 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype))
 });
+
 app.post('/upload', auth, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'invalid' });
-  if (!SUPABASE_ENABLED) return res.status(500).json({ error: 'storage_not_configured' });
-
   try {
-    const ext = (req.file.originalname.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5);
-    const filename = req.user.id + '_' + Date.now() + '_' + crypto.randomBytes(4).toString('hex') + '.' + ext;
-
-    // رفع مباشر عبر REST API
-    const uploadUrl = SUPABASE_URL + '/storage/v1/object/' + SUPABASE_BUCKET + '/' + filename;
-    const r = await fetch(uploadUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': req.file.mimetype,
-        'x-upsert': 'false',
-        'cache-control': '31536000'
-      },
-      body: req.file.buffer
-    });
-
-    if (!r.ok) {
-      const errText = await r.text();
-      console.error('Supabase upload failed:', r.status, errText);
-      return res.status(500).json({ error: 'upload_failed', status: r.status });
-    }
-
-    // الرابط العام
-    const publicUrl = SUPABASE_URL + '/storage/v1/object/public/' + SUPABASE_BUCKET + '/' + filename;
-    res.json({ url: publicUrl });
-
+    const mime = req.file.mimetype || 'image/jpeg';
+    const b64 = req.file.buffer.toString('base64');
+    const dataUrl = 'data:' + mime + ';base64,' + b64;
+    res.json({ url: dataUrl });
   } catch (e) {
     console.error('Upload error:', e);
-    res.status(500).json({ error: 'upload_failed', message: e.message });
+    res.status(500).json({ error: 'upload_failed' });
   }
 });
+
 // ===== AUTH =====
 app.post('/api/register', async (req, res) => {
   try {
@@ -300,7 +296,7 @@ app.post('/api/register', async (req, res) => {
     const r = await run(`INSERT INTO users (username, display_name, password, color, bio, location, country, phone, verified, created_at, last_seen, username_changed_at)
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
       [username, name, hashPassword(pass), color, String(b.bio||'').slice(0,200), String(b.location||'').slice(0,60),
-       String(b.country||'').slice(0,40), String(b.phone||'').slice(0,20), 0, now, now, now]);
+       String(b.country||'').slice(0,40), String(b.phone||'').slice(0,20), 0, now, now, 0]);
     const user = await q1('SELECT * FROM users WHERE id = ?', [r.lastInsertRowid]);
     const token = genToken();
     await run('INSERT INTO tokens (token, user_id, created_at) VALUES (?,?,?)', [token, user.id, now]);
@@ -370,8 +366,8 @@ app.put('/api/me', auth, async (req, res) => {
       fields.push('phone = ?'); args.push(p);
       if (p.replace(/\D/g, '').length >= 8) { fields.push('verified = ?'); args.push(1); }
     }
-    if (b.avatar !== undefined) { fields.push('avatar = ?'); args.push(String(b.avatar).slice(0, 500)); }
-    if (b.cover !== undefined) { fields.push('cover = ?'); args.push(String(b.cover).slice(0, 500)); }
+    if (b.avatar !== undefined) { fields.push('avatar = ?'); args.push(String(b.avatar)); }
+    if (b.cover !== undefined) { fields.push('cover = ?'); args.push(String(b.cover)); }
     if (b.color !== undefined && /^#[0-9a-fA-F]{6}$/.test(b.color)) { fields.push('color = ?'); args.push(b.color); }
     if (b.lang !== undefined && ['ar','en'].includes(b.lang)) { fields.push('lang = ?'); args.push(b.lang); }
     if (b.theme !== undefined && ['dark','light'].includes(b.theme)) { fields.push('theme = ?'); args.push(b.theme); }
@@ -809,12 +805,16 @@ setInterval(async () => {
 
 // ===== Start =====
 async function start() {
-  await initDB();
+  try {
+    await initDB();
+  } catch (e) {
+    console.error('❌ initDB error:', e.message);
+  }
   server.listen(PORT, '0.0.0.0', () => {
     console.log('✅ Server running on port ' + PORT);
     console.log('🌍 Env: ' + NODE_ENV);
     console.log('📊 DB: Turso');
-    console.log('🖼️ Storage: ' + (SUPABASE_ENABLED ? 'Supabase (REST)' : 'NOT configured'));
+    console.log('🖼️ Storage: Base64 in DB');
     console.log('🔔 Push: ' + (PUSH_ENABLED ? 'ON' : 'OFF'));
   });
 }
@@ -838,4 +838,3 @@ process.on('uncaughtException', e => console.error('💥', e));
 process.on('unhandledRejection', e => console.error('💥', e));
 
 start();
-
