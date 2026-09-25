@@ -1,36 +1,23 @@
 {
   "name": "دردشة العراق",
-  "short_name": "دردشة",
-  "description": "تواصل مع أصدقائك في محافظاتك",
-  "lang": "ar",
-  "dir": "rtl",
+  "short_name": "دردشة العراق",
+  "description": "تواصل عراقي بامتياز",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#07080f",
-  "theme_color": "#07080f",
-  "categories": ["social", "communication"],
+  "background_color": "#ffffff",
+  "theme_color": "#1a73e8",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "الرسائل",
-      "short_name": "رسائل",
-      "url": "/?tab=notifs",
-      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
     },
     {
-      "name": "المنشورات",
-      "short_name": "منشورات",
-      "url": "/?tab=posts",
-      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "src": "/icons.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }
