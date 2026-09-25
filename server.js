@@ -9,7 +9,7 @@ const multer = require('multer');
 const rateLimit = require('express-rate-limit');
 const { Server } = require('socket.io');
 const { createClient } = require('@libsql/client');
-const cloudinary = require('cloudinary').v2;
+const { createClient: createSupabase } = require('@supabase/supabase-js');
 const webpush = require('web-push');
 
 const PORT = process.env.PORT || 3000;
@@ -26,29 +26,30 @@ const PUSH_ENABLED = !!(VAPID_PUBLIC && VAPID_PRIVATE);
 
 if (PUSH_ENABLED) {
   webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC, VAPID_PRIVATE);
-  console.log('✅ Push notifications enabled');
+  console.log('✅ Push enabled');
 } else {
-  console.log('⚠️ Push notifications disabled (no VAPID keys)');
+  console.log('⚠️ Push disabled (no VAPID)');
 }
 
-// ===== Turso DB =====
+// ===== Turso =====
 const TURSO_URL = process.env.TURSO_URL || '';
 const TURSO_TOKEN = process.env.TURSO_TOKEN || '';
-
 if (!TURSO_URL || !TURSO_TOKEN) {
   console.error('❌ TURSO_URL / TURSO_TOKEN missing');
   process.exit(1);
 }
-
 const db = createClient({ url: TURSO_URL, authToken: TURSO_TOKEN });
 
-// ===== Cloudinary =====
-if (process.env.CLOUDINARY_CLOUD) {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD,
-    api_key: process.env.CLOUDINARY_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET
-  });
+// ===== Supabase Storage =====
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
+const SUPABASE_BUCKET = process.env.SUPABASE_BUCKET || 'avatars';
+let supabase = null;
+if (SUPABASE_URL && SUPABASE_KEY) {
+  supabase = createSupabase(SUPABASE_URL, SUPABASE_KEY);
+  console.log('✅ Supabase Storage enabled');
+} else {
+  console.log('⚠️ Supabase not configured');
 }
 
 // ===== SECRET =====
@@ -224,15 +225,10 @@ app.use('/api/login', mkLimit({ windowMs: 15*60000, max: 10 }));
 app.use('/api/register', mkLimit({ windowMs: 3600000, max: 5 }));
 
 // ===== Online tracking =====
-const onlineSockets = new Map(); // socket.id -> userId
+const onlineSockets = new Map();
 function isUserOnline(userId) {
   for (const uid of onlineSockets.values()) if (uid === userId) return true;
   return false;
-}
-function getOnlineCount(userId) {
-  let c = 0;
-  for (const uid of onlineSockets.values()) if (uid === userId) c++;
-  return c;
 }
 
 // ===== Auth middleware =====
@@ -254,9 +250,37 @@ app.get('/health', (req, res) => {
   res.json({ ok: true, uptime_s: Math.floor((Date.now() - startTime)/1000), env: NODE_ENV, online: onlineSockets.size, push: PUSH_ENABLED });
 });
 
-// ===== VAPID public key endpoint =====
+// ===== VAPID public key =====
 app.get('/api/vapid-public', (req, res) => {
   res.json({ key: VAPID_PUBLIC });
+});
+
+// ===== UPLOAD — Supabase Storage =====
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 4 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype))
+});
+
+app.post('/upload', auth, upload.single('image'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'invalid' });
+  if (!supabase) return res.status(500).json({ error: 'storage_not_configured' });
+  try {
+    const ext = (req.file.originalname.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5);
+    const filename = req.user.id + '_' + Date.now() + '_' + crypto.randomBytes(4).toString('hex') + '.' + ext;
+    const { error } = await supabase.storage
+      .from(SUPABASE_BUCKET)
+      .upload(filename, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: false
+      });
+    if (error) throw error;
+    const { data: urlData } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(filename);
+    res.json({ url: urlData.publicUrl });
+  } catch (e) {
+    console.error('Upload error:', e);
+    res.status(500).json({ error: 'upload_failed', message: e.message });
+  }
 });
 
 // ===== AUTH =====
@@ -345,8 +369,8 @@ app.put('/api/me', auth, async (req, res) => {
       fields.push('phone = ?'); args.push(p);
       if (p.replace(/\D/g, '').length >= 8) { fields.push('verified = ?'); args.push(1); }
     }
-    if (b.avatar !== undefined) { fields.push('avatar = ?'); args.push(String(b.avatar).slice(0, 300)); }
-    if (b.cover !== undefined) { fields.push('cover = ?'); args.push(String(b.cover).slice(0, 300)); }
+    if (b.avatar !== undefined) { fields.push('avatar = ?'); args.push(String(b.avatar).slice(0, 500)); }
+    if (b.cover !== undefined) { fields.push('cover = ?'); args.push(String(b.cover).slice(0, 500)); }
     if (b.color !== undefined && /^#[0-9a-fA-F]{6}$/.test(b.color)) { fields.push('color = ?'); args.push(b.color); }
     if (b.lang !== undefined && ['ar','en'].includes(b.lang)) { fields.push('lang = ?'); args.push(b.lang); }
     if (b.theme !== undefined && ['dark','light'].includes(b.theme)) { fields.push('theme = ?'); args.push(b.theme); }
@@ -386,7 +410,7 @@ app.delete('/api/me', auth, async (req, res) => {
   res.json({ ok: true });
 });
 
-// ===== PUSH SUBSCRIBE =====
+// ===== PUSH =====
 app.post('/api/push/subscribe', auth, async (req, res) => {
   try {
     const sub = req.body;
@@ -444,7 +468,7 @@ app.get('/api/users/:id', auth, async (req, res) => {
   res.json({ user: publicUser(u), isFriend, blocked, stats: { friends, posts, views } });
 });
 
-// ===== POSTS (بدون صور) =====
+// ===== POSTS =====
 app.post('/api/posts', auth, async (req, res) => {
   const t = String((req.body || {}).text || '').trim().slice(0, 1000);
   if (!t) return res.status(400).json({ error: 'empty' });
@@ -496,7 +520,6 @@ app.post('/api/posts/:id/like', auth, async (req, res) => {
   if (existing) { await run('DELETE FROM post_likes WHERE post_id = ? AND user_id = ?', [id, req.user.id]); liked = false; }
   else {
     await run('INSERT INTO post_likes (post_id, user_id) VALUES (?,?)', [id, req.user.id]); liked = true;
-    // ✅ Notification to post owner
     const post = await q1('SELECT user_id FROM posts WHERE id = ?', [id]);
     if (post && post.user_id !== req.user.id) {
       const me = await q1('SELECT * FROM users WHERE id = ?', [req.user.id]);
@@ -525,7 +548,6 @@ app.post('/api/posts/:id/comment', auth, async (req, res) => {
   const text = String((req.body || {}).text || '').trim().slice(0, 500);
   if (!text) return res.status(400).json({ error: 'empty' });
   await run('INSERT INTO post_comments (post_id, user_id, text, time) VALUES (?,?,?,?)', [id, req.user.id, encryptText(text), Date.now()]);
-  // ✅ Notify post owner
   const post = await q1('SELECT user_id FROM posts WHERE id = ?', [id]);
   if (post && post.user_id !== req.user.id) {
     const me = await q1('SELECT * FROM users WHERE id = ?', [req.user.id]);
@@ -606,7 +628,6 @@ app.post('/api/friends/accept/:id', auth, async (req, res) => {
   const from = parseInt(req.params.id);
   const r = await run(`UPDATE friendships SET status = 'accepted' WHERE user1 = ? AND user2 = ? AND status = 'pending'`, [from, req.user.id]);
   if (!r.rowsAffected) return res.status(404).json({ error: 'not_found' });
-  // ✅ Notify original sender
   const me = await q1('SELECT * FROM users WHERE id = ?', [req.user.id]);
   const notif = { type: 'friend_accept', from: publicUser(me), text: me.display_name + ' قبل طلب صداقتك' };
   onlineSockets.forEach((uid, sid) => { if (uid === from) io.to(sid).emit('notification', notif); });
@@ -625,7 +646,7 @@ app.delete('/api/friends/:id', auth, async (req, res) => {
   res.json({ ok: true });
 });
 
-// ===== DMs (بدون صور) =====
+// ===== DMs =====
 app.get('/api/dms/:userId', auth, async (req, res) => {
   const other = parseInt(req.params.userId);
   if (other === req.user.id) return res.status(400).json({ error: 'self' });
@@ -633,7 +654,6 @@ app.get('/api/dms/:userId', auth, async (req, res) => {
   const msgs = await q(`SELECT * FROM dms WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?) ORDER BY time ASC LIMIT 100`,
     [req.user.id, other, other, req.user.id]);
   await run('UPDATE dms SET read = 1 WHERE from_id = ? AND to_id = ? AND read = 0', [other, req.user.id]);
-  // Notify sender that msgs are read
   onlineSockets.forEach((uid, sid) => { if (uid === other) io.to(sid).emit('dm-read-receipt', { byId: req.user.id }); });
   res.json({
     messages: msgs.map(m => ({
@@ -686,10 +706,8 @@ io.on('connection', (socket) => {
       onlineSockets.set(socket.id, user.id);
       socket.emit('auth-ok', { user: publicUser(user) });
 
-      // Mark all pending DMs to this user as delivered
       await run('UPDATE dms SET delivered = 1 WHERE to_id = ? AND delivered = 0', [user.id]);
 
-      // Notify senders
       const senders = await q('SELECT DISTINCT from_id FROM dms WHERE to_id = ? AND delivered = 1', [user.id]);
       senders.forEach(s => {
         onlineSockets.forEach((uid, sid) => {
@@ -697,7 +715,6 @@ io.on('connection', (socket) => {
         });
       });
 
-      // Broadcast online status
       io.emit('user-online', { userId: user.id });
     } catch (e) { console.error('Auth socket error:', e); }
   });
@@ -739,7 +756,6 @@ io.on('connection', (socket) => {
         io.to(sid).emit('notification', { type: 'dm', from: publicUser(sender), text: t.slice(0, 80) });
       }
     });
-    // Push notification
     sendPushToUser(toId, {
       title: sender.display_name,
       body: t.slice(0, 80),
@@ -796,7 +812,8 @@ async function start() {
   server.listen(PORT, '0.0.0.0', () => {
     console.log('✅ Server running on port ' + PORT);
     console.log('🌍 Env: ' + NODE_ENV);
-    console.log('📊 DB: Turso (libsql)');
+    console.log('📊 DB: Turso');
+    console.log('🖼️ Storage: ' + (supabase ? 'Supabase' : 'NOT configured'));
     console.log('🔔 Push: ' + (PUSH_ENABLED ? 'ON' : 'OFF'));
   });
 }
