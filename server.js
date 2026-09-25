@@ -40,17 +40,16 @@ if (!TURSO_URL || !TURSO_TOKEN) {
 const db = createClient({ url: TURSO_URL, authToken: TURSO_TOKEN });
 
 // ===== Supabase Storage =====
+// ===== Supabase Storage (REST API مباشر) =====
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
 const SUPABASE_BUCKET = process.env.SUPABASE_BUCKET || 'avatars';
-let supabase = null;
-if (SUPABASE_URL && SUPABASE_KEY) {
-  supabase = createSupabase(SUPABASE_URL, SUPABASE_KEY);
-  console.log('✅ Supabase Storage enabled');
+const SUPABASE_ENABLED = !!(SUPABASE_URL && SUPABASE_KEY);
+if (SUPABASE_ENABLED) {
+  console.log('✅ Supabase Storage enabled (REST API)');
 } else {
   console.log('⚠️ Supabase not configured');
 }
-
 // ===== SECRET =====
 let SECRET_KEY;
 const SECRET_FILE = path.join(process.env.DATA_DIR || __dirname, '.secret');
