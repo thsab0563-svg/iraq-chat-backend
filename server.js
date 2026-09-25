@@ -9,7 +9,6 @@ const multer = require('multer');
 const rateLimit = require('express-rate-limit');
 const { Server } = require('socket.io');
 const { createClient } = require('@libsql/client');
-const { createClient: createSupabase } = require('@supabase/supabase-js');
 const webpush = require('web-push');
 
 const PORT = process.env.PORT || 3000;
