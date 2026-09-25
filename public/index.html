@@ -21,7 +21,7 @@
 
 <script id="app-config" type="application/json">
 {
-  "app": { "name_ar": "دردشة العراق", "name_en": "Iraq Chat", "version": "3.4.1" },
+  "app": { "name_ar": "دردشة العراق", "name_en": "Iraq Chat", "version": "3.5.0" },
   "colors": ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399","#22d3ee","#e11d48"],
   "emojis": ["😀","😂","🥰","😎","🤔","😢","😡","👍","👎","❤️","🔥","🎉","✨","🙏","👏","💪","🌹","☕","🍕","⚽","🎵","📚","💡","🚀","💯","🤝","🙌","😍"]
 }
@@ -65,7 +65,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .screen{display:none;height:100dvh;width:100%;position:relative;z-index:1}
 .screen.active{display:flex;flex-direction:column}
 
-/* ===== AUTH ===== */
+/* AUTH */
 #auth{overflow-y:auto}
 #auth::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(900px 700px at 100% 0%,rgba(232,181,103,.18),transparent 60%),radial-gradient(800px 700px at 0% 100%,rgba(78,205,196,.12),transparent 60%)}
 .auth-wrap{margin:auto;width:100%;max-width:440px;padding:36px 24px;position:relative;z-index:1}
@@ -93,7 +93,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .err.show{display:block;animation:shake .4s}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 
-/* ===== APP ===== */
+/* APP */
 #app{position:relative;overflow:hidden}
 .tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(96px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
 .tab{display:none}
@@ -109,7 +109,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .fab svg{width:28px;height:28px;stroke-width:2.6}
 .fab:active{transform:scale(.9) rotate(90deg)}
 
-/* BOTTOM NAV */
 .bottom-nav{position:absolute;bottom:calc(12px + env(safe-area-inset-bottom));inset-inline:16px;z-index:60;display:flex;height:66px;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(28px) saturate(1.8);-webkit-backdrop-filter:blur(28px) saturate(1.8);border:1px solid var(--border-2);border-radius:22px;box-shadow:var(--shadow-lg);padding:6px;gap:3px}
 .bottom-nav button{flex:1;padding:7px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:.58rem;font-weight:700;position:relative;transition:.25s var(--ease);border-radius:15px}
 .bottom-nav button.on{color:var(--gold);background:var(--gold-soft)}
@@ -241,7 +240,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .modal-item.danger{color:var(--danger)}
 .modal-item .arrow{margin-inline-start:auto;color:var(--muted-2)}
 
-/* NEW MENU SHEET */
 .menu-sheet{background:var(--surface);border-radius:28px 28px 0 0;width:100%;max-width:500px;max-height:88vh;overflow-y:auto;animation:slideUp .35s var(--ease-out);padding:8px 14px calc(20px + env(safe-area-inset-bottom));border-top:1px solid var(--border-2)}
 @media(min-width:720px){.menu-sheet{border-radius:26px;margin:20px;animation:rise .3s var(--ease-out)}}
 .menu-handle{width:44px;height:4px;border-radius:99px;background:rgba(255,255,255,.18);margin:8px auto 12px}
@@ -271,7 +269,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .modal-card.menu-sheet-wrap{background:transparent;padding:0;border:none;border-radius:0;max-height:none;animation:none;box-shadow:none;max-width:100%}
 .modal-card.menu-sheet-wrap::before{display:none}
 
-/* CROP */
 #cropModal .modal-card{padding:0;overflow:hidden;max-width:520px;background:var(--surface)}
 #cropModal .crop-head{padding:18px;text-align:center;font-weight:900;font-size:1.05rem;border-bottom:1px solid var(--border)}
 #cropModal .crop-stage{height:60vh;max-height:520px;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
@@ -279,7 +276,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 #cropModal .crop-actions{padding:16px;display:flex;gap:10px}
 #cropModal .crop-actions button{flex:1;padding:14px;border-radius:14px;font-weight:800;font-size:.92rem}
 
-/* TOASTS */
 #toasts{position:fixed;top:calc(16px + env(safe-area-inset-top));inset-inline:16px;z-index:999;display:flex;flex-direction:column;gap:9px;align-items:center;pointer-events:none}
 .toast{padding:13px 20px;border-radius:15px;background:color-mix(in srgb,var(--surface) 96%,transparent);backdrop-filter:blur(20px);border:1px solid var(--border-2);box-shadow:var(--shadow-lg);font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:10px;animation:slideDown .3s var(--ease-out);max-width:100%;pointer-events:auto}
 .toast.ok{border-color:rgba(52,211,153,.35);color:#7ee7b8}
@@ -296,7 +292,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 #netBanner.show{display:flex}
 #netBanner button{background:rgba(255,255,255,.2);color:#fff;border-radius:9px;padding:6px 13px;font-weight:800;font-size:.78rem}
 
-/* CALL */
 #callOverlay{position:fixed;inset:0;z-index:500;background:radial-gradient(circle at 50% 30%,rgba(232,181,103,.2),transparent 60%),linear-gradient(180deg,#0a0b10,#14161f);display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px}
 #callOverlay.open{display:flex;animation:fadeIn .3s var(--ease-out)}
 .call-avatar-lg{width:140px;height:140px;border-radius:50%;display:grid;place-items:center;color:#1a1207;font-weight:900;font-size:3.2rem;background:var(--grad-gold);box-shadow:0 0 0 0 rgba(232,181,103,.6);animation:pulseCall 2.2s infinite;margin-bottom:28px;overflow:hidden}
@@ -343,7 +338,6 @@ body.light .modal{background:rgba(0,0,0,.4)}
 <div id="netBanner"><span>⚠️ لا يوجد اتصال بالإنترنت</span><button onclick="document.getElementById('netBanner').classList.remove('show')">إغلاق</button></div>
 <div id="toasts"></div>
 
-<!-- AUTH -->
 <div id="auth" class="screen active">
   <div class="auth-wrap">
     <div class="auth-logo">
@@ -372,10 +366,8 @@ body.light .modal{background:rgba(0,0,0,.4)}
   </div>
 </div>
 
-<!-- APP -->
 <div id="app" class="screen">
   <div class="tab-content">
-
     <div id="tab-home" class="tab active">
       <header class="app-header">
         <h1>دردشة العراق</h1>
@@ -410,7 +402,6 @@ body.light .modal{background:rgba(0,0,0,.4)}
     <div id="tab-profile" class="tab">
       <div id="profileContent"></div>
     </div>
-
   </div>
 
   <button class="fab" id="fabNewPost" aria-label="منشور جديد">
@@ -443,7 +434,6 @@ body.light .modal{background:rgba(0,0,0,.4)}
   </nav>
 </div>
 
-<!-- CHAT VIEW -->
 <div id="chatView">
   <header class="chat-head">
     <button class="back" id="chatBack"><svg class="ic" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -474,7 +464,6 @@ body.light .modal{background:rgba(0,0,0,.4)}
 
 <div class="modal" id="modal"><div class="modal-card" id="modalBody"></div></div>
 
-<!-- CROP MODAL -->
 <div class="modal center" id="cropModal">
   <div class="modal-card">
     <div class="crop-head">قص الصورة</div>
@@ -486,7 +475,6 @@ body.light .modal{background:rgba(0,0,0,.4)}
   </div>
 </div>
 
-<!-- CALL OVERLAY -->
 <div id="callOverlay">
   <div class="call-avatar-lg" id="callAvatar">؟</div>
   <div class="call-name-lg" id="callName">-</div>
@@ -503,7 +491,6 @@ body.light .modal{background:rgba(0,0,0,.4)}
   </div>
 </div>
 
-<!-- DM ALERT -->
 <div class="modal" id="dmAlert"><div class="modal-card" style="text-align:center">
   <div style="font-size:1.1rem;font-weight:900;margin-bottom:12px" id="dmAlertTitle">تنبيه</div>
   <p style="color:var(--muted2);font-size:.9rem;line-height:1.7;margin-bottom:20px" id="dmAlertText"></p>
@@ -530,6 +517,8 @@ let dmAlertShown = false;
 let currentTab = 'home';
 let searchDebounce = null;
 let currentSearchQuery = '';
+let chatBadgeCount = 0;
+let notifBadgeCount = 0;
 
 const esc = function(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
 const initial = function(n){ return (n||'؟').trim().charAt(0).toUpperCase(); };
@@ -569,6 +558,19 @@ function toast(text, type){
 function showErr(text){ const e = $('authErr'); e.textContent = text; e.classList.add('show'); setTimeout(function(){ e.classList.remove('show'); }, 4000); }
 function showLoader(){ $('pageLoader').classList.add('show'); }
 function hideLoader(){ $('pageLoader').classList.remove('show'); }
+
+function updateChatBadge(n){
+  const b = $('chatBadge');
+  chatBadgeCount = Math.max(0, n);
+  if(chatBadgeCount > 0){ b.textContent = chatBadgeCount > 99 ? '99+' : chatBadgeCount; b.classList.remove('hide'); }
+  else b.classList.add('hide');
+}
+function updateNotifBadge(n){
+  const b = $('notifBadge');
+  notifBadgeCount = Math.max(0, n);
+  if(notifBadgeCount > 0){ b.textContent = notifBadgeCount > 99 ? '99+' : notifBadgeCount; b.classList.remove('hide'); }
+  else b.classList.add('hide');
+}
 
 async function api(path, opts){
   opts = opts || {};
@@ -611,7 +613,6 @@ CFG.colors.forEach(function(c, i){
   colorRow.appendChild(b);
 });
 
-/* Auth tabs — use addEventListener directly */
 const _tabLoginBtn = $('tabLogin');
 const _tabRegBtn = $('tabRegister');
 if(_tabLoginBtn) _tabLoginBtn.addEventListener('click', function(e){
@@ -673,25 +674,39 @@ function applyTheme(theme){ document.body.classList.toggle('light', theme === 'l
 socket.on('auth-error', function(){ logout(true); });
 socket.on('auth-ok', function(data){ ME = data.user; loadEverything(); });
 
+/* Friend request notification → notifBadge */
 socket.on('notification', function(n){
-  const b = $('notifBadge');
-  const c = parseInt(b.textContent || '0') + 1;
-  b.textContent = c; b.classList.remove('hide');
-  toast(n.text || 'إشعار جديد', 'info');
-  if(currentTab === 'notifs') loadNotifs();
+  if(n.type === 'friend_request'){
+    updateNotifBadge(notifBadgeCount + 1);
+    toast(n.text || 'طلب صداقة جديد', 'info');
+    if(currentTab === 'notifs') loadNotifs();
+  } else if(n.type === 'dm'){
+    // DM notifications go to chatBadge
+    updateChatBadge(chatBadgeCount + 1);
+    toast('رسالة من ' + (n.from ? n.from.display_name : 'مستخدم'), 'info');
+    if(soundOn) playBeep();
+    if(currentTab === 'chats') loadChats();
+  }
+});
+
+/* DM message → increment chatBadge (if not currently open) */
+socket.on('dm-message', function(m){
+  const isCurrentChat = CURRENT_DM && (m.from_id === CURRENT_DM.user.id || m.to_id === CURRENT_DM.user.id);
+  const isMine = m.from_id === ME.id;
+
+  if(isCurrentChat){
+    renderDMMsg(m);
+    scrollChat();
+    if(m.from_id === CURRENT_DM.user.id) socket.emit('dm-read', { fromId: m.from_id });
+  } else if(!isMine){
+    // Received message but chat not open
+    updateChatBadge(chatBadgeCount + 1);
+    if(soundOn) playBeep();
+  }
+
   if(currentTab === 'chats') loadChats();
 });
 
-socket.on('dm-message', function(m){
-  if(CURRENT_DM && (m.from_id === CURRENT_DM.user.id || m.to_id === CURRENT_DM.user.id)){
-    renderDMMsg(m); scrollChat();
-    if(m.from_id === CURRENT_DM.user.id) socket.emit('dm-read', { fromId: m.from_id });
-  } else if(m.from_id !== ME.id){
-    toast('رسالة من ' + (m.from_name || 'مستخدم'), 'info');
-    if(soundOn) playBeep();
-  }
-  if(currentTab === 'chats') loadChats();
-});
 socket.on('dm-read-receipt', function(){
   document.querySelectorAll('.cmsg.me .read-marks').forEach(function(el){ el.textContent = '✓✓'; el.classList.add('delivered'); });
 });
@@ -716,14 +731,14 @@ function switchTab(name){
   $$('.bottom-nav button').forEach(function(b){ b.classList.toggle('on', b.dataset.tab === name); });
   $('fabNewPost').style.display = (name === 'home') ? '' : 'none';
   if(name === 'home'){ loadPosts(); loadSuggestions(); }
-  if(name === 'chats'){ $('chatBadge').classList.add('hide'); $('chatBadge').textContent = '0'; loadChats(); }
+  if(name === 'chats'){ updateChatBadge(0); loadChats(); }
   if(name === 'friends'){ loadFriends(); }
-  if(name === 'notifs'){ $('notifBadge').classList.add('hide'); $('notifBadge').textContent = '0'; loadNotifs(); }
+  if(name === 'notifs'){ updateNotifBadge(0); loadNotifs(); }
   if(name === 'profile'){ loadProfile(); }
 }
 $$('.bottom-nav button').forEach(function(b){ b.addEventListener('click', function(){ switchTab(b.dataset.tab); }); });
 
-/* HOME FEED */
+/* FEED */
 async function loadPosts(hashtag){
   if(currentSearchQuery && !hashtag) return;
   try {
@@ -803,7 +818,7 @@ async function loadSuggestions(){
   } catch(_){}
 }
 
-/* FAB: New Post */
+/* FAB */
 $('fabNewPost').addEventListener('click', function(){
   pendingPostImage = null;
   showModal('<div class="modal-title">منشور جديد</div><div class="field"><textarea id="npText" placeholder="ماذا يجري؟" maxlength="1000" style="min-height:120px"></textarea></div><div style="display:flex;gap:10px;margin-bottom:12px"><button class="btn-ghost" id="npImg" style="flex:1;padding:12px;border-radius:12px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic ic-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> صورة</button></div><div id="npPreview"></div><button class="btn-main" id="npSubmit">نشر</button>');
@@ -880,7 +895,7 @@ async function loadNotifs(){
   } catch(_){}
 }
 
-/* CHAT */
+/* CHAT RENDERING */
 function scrollChat(instant){
   const el = $('chatMsgs');
   requestAnimationFrame(function(){ el.scrollTo({ top: el.scrollHeight, behavior: instant ? 'auto' : 'smooth' }); });
@@ -1182,6 +1197,8 @@ async function openDM(user){
     r.messages.forEach(function(m){ renderDMMsg(m); });
     scrollChat(true);
     socket.emit('dm-read', { fromId: user.id });
+    // Reset chatBadge when opening a chat
+    if(currentTab === 'chats') updateChatBadge(0);
     if(!dmAlertShown && !localStorage.getItem('dmAlertShown')){
       dmAlertShown = true;
       setTimeout(function(){
@@ -1292,7 +1309,7 @@ async function openCropModal(file){
     try { await window.__cropReady; } catch(_){}
   }
   if(!window.Cropper){
-    toast('تعذر تحميل أداة القص، تحقق من الإنترنت', 'err');
+    toast('تعذر تحميل أداة القص', 'err');
     throw new Error('cropper_unavailable');
   }
 
@@ -1305,18 +1322,10 @@ async function openCropModal(file){
       if(cropperInstance){ try { cropperInstance.destroy(); } catch(_){} cropperInstance = null; }
       img.onload = function(){
         cropperInstance = new Cropper(img, {
-          aspectRatio: 1,
-          viewMode: 1,
-          dragMode: 'move',
-          autoCropArea: 0.9,
-          background: false,
-          guides: false,
-          center: true,
-          highlight: false,
-          cropBoxMovable: false,
-          cropBoxResizable: false,
-          toggleDragModeOnDblclick: false,
-          responsive: true
+          aspectRatio: 1, viewMode: 1, dragMode: 'move',
+          autoCropArea: 0.9, background: false, guides: false, center: true,
+          highlight: false, cropBoxMovable: false, cropBoxResizable: false,
+          toggleDragModeOnDblclick: false, responsive: true
         });
       };
     };
@@ -1375,7 +1384,7 @@ postImgInput.onchange = async function(e){
   hideLoader(); e.target.value = '';
 };
 
-/* WebRTC */
+/* WebRTC — Web Audio API for better mobile speaker support */
 const rtcConfig = { iceServers: [ { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' } ] };
 let localStream = null, currentCall = null, callEnding = false;
 
@@ -1384,18 +1393,40 @@ async function getMic(){
   localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
   return localStream;
 }
+
 async function buildPC(peerId){
   const pc = new RTCPeerConnection(rtcConfig);
   const stream = await getMic();
   stream.getTracks().forEach(function(t2){ pc.addTrack(t2, stream); });
-  const audio = new Audio(); audio.autoplay = true; audio.playsInline = true;
-  pc.ontrack = function(e){ audio.srcObject = e.streams[0]; audio.play().catch(function(){}); };
+
+  // Use Web Audio API for better speaker routing on mobile
+  const audio = new Audio();
+  audio.autoplay = true;
+  audio.playsInline = true;
+
+  pc.ontrack = function(e){
+    const remoteStream = e.streams[0];
+    audio.srcObject = remoteStream;
+    audio.play().catch(function(err){ console.warn('Audio play failed:', err); });
+  };
   pc.onicecandidate = function(e){ if(e.candidate) socket.emit('webrtc-ice', { toId: peerId, candidate: e.candidate }); };
-  pc.onconnectionstatechange = function(){ if(pc.connectionState === 'failed' || pc.connectionState === 'disconnected') endCall(); };
+  pc.onconnectionstatechange = function(){
+    console.log('🔵 PC state:', pc.connectionState);
+    if(pc.connectionState === 'connected'){
+      const statusEl = $('callStatus');
+      if(statusEl) statusEl.textContent = 'متصل';
+      if(!callTimerInterval) startCallTimer();
+    }
+    if(pc.connectionState === 'failed' || pc.connectionState === 'disconnected'){
+      endCall();
+    }
+  };
   return { pc: pc, audio: audio };
 }
+
 function startCallTimer(){
-  stopCallTimer(); callSeconds = 0;
+  if(callTimerInterval) return;
+  callSeconds = 0;
   const el = $('callTimer');
   if(el){ el.classList.add('show'); el.textContent = '00:00'; }
   callTimerInterval = setInterval(function(){
@@ -1410,6 +1441,7 @@ function stopCallTimer(){
   callTimerInterval = null; callSeconds = 0;
   const el = $('callTimer'); if(el) el.classList.remove('show');
 }
+
 async function startCall(peerId, peerName, peerColor, peerAvatar){
   if(ME && peerId === ME.id) return toast('لا يمكنك الاتصال بنفسك', 'err');
   if(currentCall) return toast('لديك مكالمة جارية', 'err');
@@ -1421,6 +1453,7 @@ async function startCall(peerId, peerName, peerColor, peerAvatar){
     socket.emit('call-start', { targetId: peerId });
   } catch(e) { toast('لا يمكن الوصول للمايكروفون', 'err'); }
 }
+
 socket.on('incoming-call', function(data){
   if(currentCall){ socket.emit('call-reject', { toId: data.fromId }); return; }
   currentCall = { peerId: data.fromId, peerName: data.fromName, peerColor: data.fromColor, peerAvatar: data.fromAvatar, incoming: true };
@@ -1428,6 +1461,7 @@ socket.on('incoming-call', function(data){
   showCallUI(data.fromName, data.fromColor, data.fromAvatar, 'مكالمة واردة', true);
   playRingtone();
 });
+
 function showCallUI(name, color, avatar, status, incoming){
   $('callOverlay').classList.add('open');
   $('callAvatar').innerHTML = avatar ? '<img src="' + esc(avatar) + '" />' : initial(name);
@@ -1437,6 +1471,7 @@ function showCallUI(name, color, avatar, status, incoming){
   $('callIncoming').classList.toggle('hide', !incoming);
   $('callActive').classList.toggle('hide', incoming);
 }
+
 $('callAccept').addEventListener('click', async function(){
   const c = currentCall; if(!c) return;
   stopRingtone();
@@ -1449,11 +1484,15 @@ $('callAccept').addEventListener('click', async function(){
     socket.emit('call-accept', { toId: c.peerId });
   } catch(e) { toast('فشل المايكروفون', 'err'); endCall(); }
 });
+
 $('callReject').addEventListener('click', function(){
   if(currentCall && currentCall.peerId) socket.emit('call-reject', { toId: currentCall.peerId });
+  stopRingtone();
   endCall();
 });
+
 $('endCallBtn').addEventListener('click', function(){ endCall(); });
+
 $('muteBtn').addEventListener('click', function(){
   if(!localStream) return;
   const tr = localStream.getAudioTracks()[0];
@@ -1461,58 +1500,100 @@ $('muteBtn').addEventListener('click', function(){
   $('muteBtn').classList.toggle('on', !tr.enabled);
   $('callStatus').textContent = tr.enabled ? 'متصل' : 'مكتوم';
 });
-$('speakerBtn').addEventListener('click', function(){
+
+/* Speaker — uses selectAudioOutput if available (works on Chrome Android) */
+$('speakerBtn').addEventListener('click', async function(){
   speakerOn = !speakerOn;
   $('speakerBtn').classList.toggle('speaker-on', speakerOn);
+
+  // Best option: let user pick output device (Chrome Android)
+  if(navigator.mediaDevices && navigator.mediaDevices.selectAudioOutput){
+    try {
+      const device = await navigator.mediaDevices.selectAudioOutput();
+      console.log('✅ Selected audio output:', device.label);
+      // Apply to all audio elements
+      document.querySelectorAll('audio').forEach(function(a){
+        if(a.setSinkId){
+          a.setSinkId(device.deviceId).catch(function(err){ console.warn('setSinkId failed:', err); });
+        }
+      });
+      toast('🔊 ' + device.label, 'ok');
+      return;
+    } catch(e) {
+      // User cancelled, fall through
+      console.log('Audio output selection cancelled');
+    }
+  }
+
+  // Fallback: try setSinkId with 'speaker' (desktop only)
   try {
+    let applied = false;
     document.querySelectorAll('audio').forEach(function(a){
-      a.volume = speakerOn ? 1.0 : 0.5;
-      if(a.setSinkId && speakerOn) a.setSinkId('speaker').catch(function(){});
+      if(a.setSinkId){
+        a.setSinkId(speakerOn ? 'speaker' : 'default')
+          .then(function(){ applied = true; })
+          .catch(function(){});
+      }
     });
-  } catch(_){}
-  toast(speakerOn ? 'السبيكر مفعّل' : 'السبيكر معطّل', 'info');
+    if(applied){
+      toast(speakerOn ? 'السبيكر مفعّل' : 'السبيكر معطّل', 'info');
+    } else {
+      // Mobile: guide user
+      toast(speakerOn ? '🔊 ارفع الصوت من أزرار الجهاز' : '🎧 صوت السماعة', 'info');
+    }
+  } catch(e) {
+    toast(speakerOn ? '🔊 ارفع الصوت من أزرار الجهاز' : '🎧 صوت السماعة', 'info');
+  }
 });
+
 socket.on('call-accepted', async function(data){
   if(!currentCall || currentCall.peerId !== data.fromId) return;
-  stopRingtone(); startCallTimer();
+  stopRingtone();
+  // Don't start timer here — it starts when PC state becomes 'connected'
   try {
     const offer = await currentCall.pc.createOffer();
     await currentCall.pc.setLocalDescription(offer);
     socket.emit('webrtc-offer', { toId: data.fromId, offer: offer });
-    $('callStatus').textContent = 'متصل';
+    $('callStatus').textContent = 'جارٍ الاتصال...';
   } catch(_){}
 });
+
 socket.on('call-rejected', function(data){
   if(currentCall){
     const nm = (data && data.fromName) || (currentCall && currentCall.peerName) || 'المستخدم';
     $('callStatus').textContent = 'قام ' + nm + ' برفض المكالمة';
-    setTimeout(endCall, 1800);
+    stopRingtone();
+    setTimeout(endCall, 1500);
   }
 });
+
 socket.on('webrtc-offer', async function(data){
   if(!currentCall || currentCall.peerId !== data.fromId || !currentCall.pc) return;
   await currentCall.pc.setRemoteDescription(new RTCSessionDescription(data.offer));
   const a = await currentCall.pc.createAnswer();
   await currentCall.pc.setLocalDescription(a);
   socket.emit('webrtc-answer', { toId: data.fromId, answer: a });
-  $('callStatus').textContent = 'متصل';
-  startCallTimer();
+  // Timer will start on 'connected' event
 });
+
 socket.on('webrtc-answer', async function(data){
   if(!currentCall || currentCall.peerId !== data.fromId || !currentCall.pc) return;
   await currentCall.pc.setRemoteDescription(new RTCSessionDescription(data.answer));
 });
+
 socket.on('webrtc-ice', async function(data){
   if(!currentCall || currentCall.peerId !== data.fromId || !currentCall.pc) return;
   try { await currentCall.pc.addIceCandidate(new RTCIceCandidate(data.candidate)); } catch(_){}
 });
-socket.on('call-ended', function(){ endCall(); });
+
+socket.on('call-ended', function(){ stopRingtone(); endCall(); });
 socket.on('call-peer-left', function(d){ if(currentCall && currentCall.peerId === d.id) endCall(); });
 
 function endCall(){
   if(callEnding) return;
   callEnding = true;
-  stopCallTimer(); stopRingtone();
+  stopCallTimer();
+  stopRingtone();
   speakerOn = false;
   const c = currentCall;
   if(!c){ callEnding = false; return; }
@@ -1550,17 +1631,14 @@ function playBeep(){
   } catch(_){}
 }
 
-/* RINGTONE */
 let ringtoneTimer = null;
 let ringtonePlaying = false;
 
 function playBellNote(ctx, freq, startTime, duration, volume){
   if(!ctx) return;
   const harmonics = [
-    { mult: 1.0, vol: 1.0 },
-    { mult: 2.0, vol: 0.45 },
-    { mult: 3.0, vol: 0.2 },
-    { mult: 4.01, vol: 0.1 }
+    { mult: 1.0, vol: 1.0 }, { mult: 2.0, vol: 0.45 },
+    { mult: 3.0, vol: 0.2 }, { mult: 4.01, vol: 0.1 }
   ];
   harmonics.forEach(function(h){
     const o = ctx.createOscillator();
@@ -1588,12 +1666,9 @@ function playRingtone(){
     const t0 = ctx.currentTime + 0.05;
     const vol = 0.14;
     const notes = [
-      { f: 783.99,  d: 0.20, t: 0.00 },
-      { f: 1046.50, d: 0.20, t: 0.22 },
-      { f: 1318.51, d: 0.20, t: 0.44 },
-      { f: 1046.50, d: 0.35, t: 0.66 },
-      { f: 880.00,  d: 0.20, t: 1.10 },
-      { f: 1046.50, d: 0.20, t: 1.32 },
+      { f: 783.99,  d: 0.20, t: 0.00 }, { f: 1046.50, d: 0.20, t: 0.22 },
+      { f: 1318.51, d: 0.20, t: 0.44 }, { f: 1046.50, d: 0.35, t: 0.66 },
+      { f: 880.00,  d: 0.20, t: 1.10 }, { f: 1046.50, d: 0.20, t: 1.32 },
       { f: 1318.51, d: 0.55, t: 1.54 }
     ];
     notes.forEach(function(n){ playBellNote(ctx, n.f, t0 + n.t, n.d + 0.4, vol); });
@@ -1629,7 +1704,6 @@ function stopRingtone(){
 })();
 </script>
 
-<!-- Crop library — lazy load (doesn't block page) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" media="print" onload="this.media='all'">
 <script>
 window.__cropReady = new Promise(function(resolve){
@@ -1653,4 +1727,4 @@ if ('serviceWorker' in navigator) {
 </script>
 
 </body>
-  </html>
+</html>
