@@ -14,7 +14,7 @@
 
 <script id="app-config" type="application/json">
 {
-  "app": { "name_ar": "دردشة العراق", "version": "5.3.0" },
+  "app": { "name_ar": "دردشة العراق", "version": "5.4.0" },
   "colors": ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399","#22d3ee","#e11d48"],
   "emojis": ["😀","😂","🥰","😎","🤔","😢","😡","👍","👎","❤️","🔥","🎉","✨","🙏","👏","💪","🌹","☕","🍕","⚽","🎵","📚","💡","🚀","💯","🤝","🙌","😍"]
 }
@@ -67,6 +67,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .field label{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:9px;padding-inline-start:6px}
 .field input,.field textarea{width:100%;padding:15px 17px;border-radius:15px;background:var(--surface);border:1.5px solid var(--border-2);color:var(--text);font-size:.95rem}
 .field input:focus,.field textarea:focus{border-color:var(--gold);box-shadow:0 0 0 4px var(--gold-soft)}
+.field small{display:block;font-size:.72rem;color:var(--muted-2);margin-top:6px;padding-inline-start:6px}
 .color-row{display:flex;gap:12px;flex-wrap:wrap;padding:4px 0}
 .color-row button{width:38px;height:38px;border-radius:50%;border:2.5px solid transparent}
 .color-row button.on{border-color:var(--text);transform:scale(1.15)}
@@ -329,7 +330,11 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
     </div>
     <div id="regForm" class="hide">
       <div class="field"><label>الاسم الظاهر</label><input id="rgName" placeholder="مثال: أحمد" maxlength="30" /></div>
-      <div class="field"><label>كلمة المرور (4 أحرف على الأقل)</label><input id="rgPass" type="password" placeholder="••••••" /></div>
+      <div class="field">
+        <label>كلمة المرور</label>
+        <input id="rgPass" type="password" placeholder="••••••" />
+        <small>8 أحرف على الأقل، تحتوي على حروف وأرقام</small>
+      </div>
       <div class="field"><label>رقم الهاتف (اختياري)</label><input id="rgPhone" type="tel" placeholder="+964..." /></div>
       <div class="field"><label>المحافظة</label><input id="rgLocation" placeholder="بغداد" /></div>
       <div class="field"><label>لون اسمك</label><div class="color-row" id="colorRow"></div></div>
@@ -488,7 +493,12 @@ function toast(text, type){
   c.appendChild(el);
   setTimeout(function(){ el.style.opacity='0'; el.style.transition='.3s'; setTimeout(function(){ el.remove(); }, 300); }, 2800);
 }
-function showErr(text){ var e = $('authErr'); e.textContent = text; e.classList.add('show'); setTimeout(function(){ e.classList.remove('show'); }, 4000); }
+function showErr(text){
+  var e = $('authErr');
+  e.textContent = text;
+  e.classList.add('show');
+  setTimeout(function(){ e.classList.remove('show'); }, 5000);
+}
 
 function updateChatBadge(n){
   var b = $('chatBadge');
@@ -514,6 +524,7 @@ async function api(path, opts){
   if(!res.ok) {
     var err = new Error((data && data.error) || ('http_' + res.status));
     if(data && data.days_left) err.days_left = data.days_left;
+    if(data && data.minutes_left) err.minutes_left = data.minutes_left;
     throw err;
   }
   return data;
@@ -526,6 +537,29 @@ async function uploadImage(fileOrBlob, filename){
   var res = await fetch('/upload', { method: 'POST', body: fd, headers: headers });
   if(!res.ok) throw new Error('upload_failed');
   return res.json();
+}
+
+function handleApiError(e){
+  if(e.message === 'token_expired' || e.message === 'invalid_token'){
+    toast('انتهت الجلسة. الرجاء تسجيل الدخول مجدداً', 'err');
+    localStorage.removeItem('token');
+    TOKEN = null;
+    setTimeout(function(){ location.reload(); }, 1500);
+    return true;
+  }
+  if(e.message === 'account_locked'){
+    showErr('الحساب مقفل مؤقتاً. حاول بعد ' + (e.minutes_left || 15) + ' دقيقة');
+    return true;
+  }
+  if(e.message === 'password_too_weak'){
+    showErr('كلمة المرور ضعيفة. استخدم حروف وأرقام');
+    return true;
+  }
+  if(e.message === 'password_too_short'){
+    showErr('كلمة المرور قصيرة (8 أحرف على الأقل)');
+    return true;
+  }
+  return false;
 }
 
 function urlBase64ToUint8Array(b64){
@@ -578,17 +612,36 @@ $('btnLogin').addEventListener('click', async function(){
   var u = $('liUser').value.trim(), p = $('liPass').value;
   if(!u || !p) return showErr('الرجاء تعبئة الحقول');
   this.disabled = true;
-  try { var r = await api('/login', { method: 'POST', body: JSON.stringify({ username: u, password: p }) }); TOKEN = r.token; localStorage.setItem('token', TOKEN); enterApp(r.user); }
-  catch(e) { showErr(e.message === 'invalid_credentials' ? 'بيانات الدخول غير صحيحة' : e.message); }
+  try {
+    var r = await api('/login', { method: 'POST', body: JSON.stringify({ username: u, password: p }) });
+    TOKEN = r.token; localStorage.setItem('token', TOKEN);
+    enterApp(r.user);
+  } catch(e) {
+    if(!handleApiError(e)){
+      showErr(e.message === 'invalid_credentials' ? 'بيانات الدخول غير صحيحة' : e.message);
+    }
+  }
   this.disabled = false;
 });
 $('btnRegister').addEventListener('click', async function(){
   var name = $('rgName').value.trim(), pass = $('rgPass').value;
   if(!name) return showErr('الاسم مطلوب');
-  if(pass.length < 4) return showErr('كلمة المرور قصيرة');
+  if(pass.length < 8) return showErr('كلمة المرور قصيرة (8 أحرف على الأقل)');
+  if(!/[a-zA-Z\u0600-\u06FF]/.test(pass)) return showErr('كلمة المرور يجب أن تحتوي على حرف واحد على الأقل');
+  if(!/\d/.test(pass)) return showErr('كلمة المرور يجب أن تحتوي على رقم واحد على الأقل');
   this.disabled = true;
-  try { var r = await api('/register', { method: 'POST', body: JSON.stringify({ display_name: name, password: pass, color: selectedColor, phone: $('rgPhone').value.trim(), location: $('rgLocation').value.trim(), country: 'العراق' }) }); TOKEN = r.token; localStorage.setItem('token', TOKEN); enterApp(r.user); }
-  catch(e) { showErr(e.message === 'name_taken' ? 'الاسم مستخدم' : e.message); }
+  try {
+    var r = await api('/register', { method: 'POST', body: JSON.stringify({
+      display_name: name, password: pass, color: selectedColor,
+      phone: $('rgPhone').value.trim(), location: $('rgLocation').value.trim(), country: 'العراق'
+    }) });
+    TOKEN = r.token; localStorage.setItem('token', TOKEN);
+    enterApp(r.user);
+  } catch(e) {
+    if(!handleApiError(e)){
+      showErr(e.message === 'name_taken' ? 'الاسم مستخدم' : e.message);
+    }
+  }
   this.disabled = false;
 });
 
@@ -605,7 +658,15 @@ function enterApp(user){
 function applyTheme(theme){ document.body.classList.toggle('light', theme === 'light'); }
 
 /* SOCKET */
-socket.on('auth-error', function(){ logout(true); });
+socket.on('auth-error', function(data){
+  var err = data && data.error;
+  if(err === 'token_expired' || err === 'invalid_token'){
+    toast('انتهت الجلسة. الرجاء تسجيل الدخول مجدداً', 'err');
+    localStorage.removeItem('token');
+    TOKEN = null;
+    setTimeout(function(){ location.reload(); }, 1500);
+  }
+});
 socket.on('auth-ok', function(data){ ME = data.user; loadEverything(); });
 
 socket.on('user-online', function(d){ onlineUsers[d.userId] = true; refreshStatuses(); });
@@ -627,9 +688,7 @@ socket.on('notification', function(n){
   if(n.type === 'dm'){
     if(soundOn) playBeep();
     if(currentTab === 'chats') loadChats();
-    if(CURRENT_DM && n.from && CURRENT_DM.user.id === n.from.id){
-      pollCurrentChat();
-    }
+    if(CURRENT_DM && n.from && CURRENT_DM.user.id === n.from.id) pollCurrentChat();
   } else {
     updateNotifBadge(notifBadgeCount + 1);
     toast(n.text || 'إشعار جديد', 'info');
@@ -680,7 +739,7 @@ socket.on('dm-typing', function(d){
   }
 });
 
-/* ===== GLOBAL FAST POLL — يعمل على الطرفين في كل الشاشات ===== */
+/* GLOBAL FAST POLL */
 async function pollCurrentChat(){
   if(!CURRENT_DM) return;
   var userId = CURRENT_DM.user.id;
@@ -723,8 +782,6 @@ async function globalPoll(){
     var totalUnread = 0;
     r.conversations.forEach(function(c){ totalUnread += (c.unread || 0); });
     updateChatBadge(totalUnread);
-    
-    // كشف الرسائل الجديدة (للتشغيل الصوتي)
     if(lastConvData){
       var prevUnread = 0;
       lastConvData.forEach(function(c){ prevUnread += (c.unread || 0); });
@@ -735,8 +792,6 @@ async function globalPoll(){
       }
     }
     lastConvData = r.conversations;
-    
-    // تحديث قائمة المحادثات إذا كان في تبويب الرسائل
     if(currentTab === 'chats'){
       var el = $('chatsList');
       if(el){
@@ -747,10 +802,10 @@ async function globalPoll(){
         el.querySelectorAll('[data-dmuid]').forEach(function(r2){ r2.addEventListener('click', function(){ openDMById(parseInt(r2.dataset.dmuid)); }); });
       }
     }
-    
-    // إذا في دردشة مفتوحة، اسحب الرسائل الجديدة
     if(CURRENT_DM) await pollCurrentChat();
-  } catch(_){}
+  } catch(e){
+    if(!handleApiError(e)) { /* silent */ }
+  }
 }
 
 async function loadEverything(){
@@ -777,7 +832,7 @@ $$('.bottom-nav button').forEach(function(b){ b.addEventListener('click', functi
 async function loadPosts(hashtag){
   if(currentSearchQuery && !hashtag) return;
   try { var q = hashtag ? '?hashtag=' + encodeURIComponent(hashtag) : ''; var r = await api('/posts' + q); renderPosts(r.posts); }
-  catch(e) { toast(e.message, 'err'); }
+  catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
 }
 function renderPosts(posts){
   var el = $('homeFeed');
@@ -795,7 +850,7 @@ function renderPosts(posts){
   el.querySelectorAll('.ph-info').forEach(function(b){ b.addEventListener('click', function(){ openUserById(parseInt(b.dataset.uid)); }); });
   el.querySelectorAll('.post-menu-btn').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); openPostMenu(parseInt(b.dataset.menuPid)); }); });
   el.querySelectorAll('.like-btn').forEach(function(b){ b.addEventListener('click', async function(){
-    try { var r = await api('/posts/' + b.dataset.pid + '/like', { method: 'POST' }); b.classList.toggle('liked', r.liked); b.querySelector('span').textContent = r.likes; } catch(e) { toast(e.message, 'err'); }
+    try { var r = await api('/posts/' + b.dataset.pid + '/like', { method: 'POST' }); b.classList.toggle('liked', r.liked); b.querySelector('span').textContent = r.likes; } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
   }); });
   el.querySelectorAll('.comment-btn').forEach(function(b){ b.addEventListener('click', function(){ openComments(parseInt(b.dataset.pid)); }); });
 }
@@ -830,7 +885,7 @@ function openPostMenuSheet(p){
     showConfirm({
       icon: 'trash', title: 'حذف المنشور', text: 'هل أنت متأكد؟ لا يمكن استرجاع المنشور.', confirmText: 'حذف', danger: true,
       onConfirm: async function(){
-        try { await api('/posts/' + p.id, { method: 'DELETE' }); loadPosts(); loadProfile(); toast('تم الحذف', 'ok'); } catch(e){ toast(e.message, 'err'); }
+        try { await api('/posts/' + p.id, { method: 'DELETE' }); loadPosts(); loadProfile(); toast('تم الحذف', 'ok'); } catch(e){ if(!handleApiError(e)) toast(e.message, 'err'); }
       }
     });
   });
@@ -1114,7 +1169,7 @@ async function loadProfile(){
     try { var mp = await api('/posts?user_id=' + ME.id + '&limit=100'); myPosts = mp.posts || []; } catch(_){}
     lastProfilePosts = myPosts;
     renderProfile(r.user, true, stats, myPosts);
-  } catch(e) { toast(e.message, 'err'); }
+  } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
 }
 function renderProfile(u, isMe, stats, myPosts){
   var el = $('profileContent');
@@ -1201,7 +1256,7 @@ function renderProfileTabContent(myPosts){
 
 async function openUserById(id){
   if(ME && id === ME.id){ switchTab('profile'); return; }
-  try { var r = await api('/users/' + id); openUserModal(r.user, r.isFriend, r.blocked, r.stats); } catch(e) { toast(e.message, 'err'); }
+  try { var r = await api('/users/' + id); openUserModal(r.user, r.isFriend, r.blocked, r.stats); } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
 }
 function openUserModal(u, isFriend, blocked, stats){
   stats = stats || { friends: 0, posts: 0, views: 0 };
@@ -1258,7 +1313,7 @@ function openEditProfile(u){
       else if(e.message === 'username_taken') toast('اسم المستخدم مستخدم', 'err');
       else if(e.message === 'username_too_short') toast('اسم المستخدم قصير جداً', 'err');
       else if(e.message === 'name_taken') toast('الاسم مستخدم', 'err');
-      else toast(e.message || 'خطأ', 'err');
+      else if(!handleApiError(e)) toast(e.message || 'خطأ', 'err');
       btn.disabled = false; btn.textContent = 'حفظ';
     }
   });
@@ -1287,17 +1342,26 @@ function openSettings(){
 function showChangePassword(){
   showModal('<div class="modal-header"><button class="back-btn" id="cpBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">تغيير كلمة السر</div><div class="spacer"></div></div>' +
   '<div class="field"><label>كلمة السر الحالية</label><input id="cpOld" type="password" /></div>' +
-  '<div class="field"><label>كلمة السر الجديدة</label><input id="cpNew" type="password" /></div>' +
+  '<div class="field"><label>كلمة السر الجديدة</label><input id="cpNew" type="password" /><small>8 أحرف على الأقل، حروف وأرقام</small></div>' +
   '<div class="field"><label>تأكيد الجديدة</label><input id="cpConfirm" type="password" /></div>' +
   '<button class="btn-main" id="cpSubmit">حفظ</button>');
   $('cpBack').addEventListener('click', function(){ closeModal(); setTimeout(openSettings, 150); });
   $('cpSubmit').addEventListener('click', async function(){
     var oldP = $('cpOld').value, newP = $('cpNew').value, confP = $('cpConfirm').value;
     if(!oldP) return toast('أدخل كلمة السر الحالية', 'err');
-    if(newP.length < 4) return toast('كلمة السر قصيرة', 'err');
+    if(newP.length < 8) return toast('كلمة السر قصيرة (8 على الأقل)', 'err');
+    if(!/[a-zA-Z\u0600-\u06FF]/.test(newP)) return toast('يجب أن تحتوي على حرف', 'err');
+    if(!/\d/.test(newP)) return toast('يجب أن تحتوي على رقم', 'err');
     if(newP !== confP) return toast('غير متطابقتين', 'err');
-    try { await api('/change-password', { method: 'POST', body: JSON.stringify({ old_password: oldP, new_password: newP }) }); closeModal(); toast('تم التغيير', 'ok'); }
-    catch(e) { toast(e.message === 'wrong_old_password' ? 'كلمة السر الحالية خاطئة' : e.message, 'err'); }
+    try {
+      var r = await api('/change-password', { method: 'POST', body: JSON.stringify({ old_password: oldP, new_password: newP }) });
+      if(r.token){ TOKEN = r.token; localStorage.setItem('token', TOKEN); }
+      closeModal(); toast('تم التغيير', 'ok');
+    } catch(e) {
+      if(!handleApiError(e)){
+        toast(e.message === 'wrong_old_password' ? 'كلمة السر الحالية خاطئة' : e.message, 'err');
+      }
+    }
   });
 }
 function showDeleteAccount(){
@@ -1341,8 +1405,8 @@ function showPrivacy(){
   showModal('<div class="modal-header"><button class="back-btn" id="pvBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">سياسة الخصوصية</div><div class="spacer"></div></div>' +
   '<div class="privacy-content">' +
     '<div class="privacy-item"><div class="p-icon">' + lockSvg + '</div><div class="p-info"><div class="p-title">تشفير الرسائل</div><div class="p-desc">جميع الرسائل الخاصة مشفرة بـ AES-256-GCM قبل حفظها في قاعدة البيانات.</div></div></div>' +
-    '<div class="privacy-item"><div class="p-icon">' + shieldSvg + '</div><div class="p-info"><div class="p-title">حماية الحساب</div><div class="p-desc">كلمات المرور محفوظة بتشفير scrypt مع salt فريد لكل مستخدم.</div></div></div>' +
-    '<div class="privacy-item"><div class="p-icon">' + dbSvg + '</div><div class="p-info"><div class="p-title">الحذف التلقائي</div><div class="p-desc">يتم حذف الرسائل تلقائياً بعد 48 ساعة من إرسالها.</div></div></div>' +
+    '<div class="privacy-item"><div class="p-icon">' + shieldSvg + '</div><div class="p-info"><div class="p-title">حماية الحساب</div><div class="p-desc">كلمات المرور محفوظة بتشفير scrypt مع salt فريد لكل مستخدم. الحساب يُقفل بعد 5 محاولات فاشلة.</div></div></div>' +
+    '<div class="privacy-item"><div class="p-icon">' + dbSvg + '</div><div class="p-info"><div class="p-title">الحذف التلقائي</div><div class="p-desc">يتم حذف الرسائل تلقائياً بعد 48 ساعة من إرسالها. الجلسة تنتهي بعد 7 أيام.</div></div></div>' +
     '<div class="privacy-item"><div class="p-icon">' + userSvg + '</div><div class="p-info"><div class="p-title">حقوقك</div><div class="p-desc">يمكنك حذف حسابك وبياناتك في أي وقت من الإعدادات.</div></div></div>' +
   '</div>');
   $('pvBack').addEventListener('click', function(){ closeModal(); setTimeout(openSettings, 150); });
@@ -1360,7 +1424,7 @@ function logout(silent){
 
 async function openDMById(userId){
   if(ME && userId === ME.id) return toast('لا يمكنك مراسلة نفسك', 'err');
-  try { var r = await api('/users/' + userId); openDM(r.user); } catch(e) { toast(e.message, 'err'); }
+  try { var r = await api('/users/' + userId); openDM(r.user); } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
 }
 async function openDM(user){
   if(ME && user.id === ME.id) return toast('لا يمكنك مراسلة نفسك', 'err');
