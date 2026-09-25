@@ -1063,11 +1063,59 @@ async function openDM(user){
     }
   } catch(_){}
 }
+/* ===== HISTORY / BACK BUTTON SUPPORT ===== */
+var navStack = [];
+var _isPopping = false;
 
-function showModal(html){ $('modalBody').innerHTML = html; $('modalBody').classList.remove('menu-sheet-wrap'); $('modal').classList.add('open'); }
-function closeModal(){ $('modal').classList.remove('open'); $('modalBody').classList.remove('menu-sheet-wrap'); }
+function pushNav(type){
+  navStack.push(type);
+  try { history.pushState({ navType: type }, ''); } catch(_) {}
+}
+
+function closeModal(){
+  if(!$('modal').classList.contains('open')) return;
+  $('modal').classList.remove('open');
+  $('modalBody').classList.remove('menu-sheet-wrap');
+  if(!_isPopping){
+    var idx = navStack.lastIndexOf('modal');
+    if(idx !== -1){ navStack.splice(idx, 1); try { history.back(); } catch(_) {} }
+  }
+}
+
+function showModal(html){
+  $('modalBody').innerHTML = html;
+  $('modalBody').classList.remove('menu-sheet-wrap');
+  $('modal').classList.add('open');
+  pushNav('modal');
+}
+
+function closeChatView(){
+  if(!$('chatView').classList.contains('open')) return;
+  $('chatView').classList.remove('open');
+  CURRENT_DM = null;
+  if(!_isPopping){
+    var idx = navStack.lastIndexOf('chat');
+    if(idx !== -1){ navStack.splice(idx, 1); try { history.back(); } catch(_) {} }
+  }
+}
+
 $('modal').addEventListener('click', function(e){ if(e.target === $('modal')) closeModal(); });
 
+window.addEventListener('popstate', function(){
+  _isPopping = true;
+  var type = navStack.pop();
+  if(type === 'modal'){
+    $('modal').classList.remove('open');
+    $('modalBody').classList.remove('menu-sheet-wrap');
+  } else if(type === 'chat'){
+    $('chatView').classList.remove('open');
+    CURRENT_DM = null;
+  } else if(type === 'crop'){
+    $('cropModal').classList.remove('open');
+    if(cropperInstance){ try { cropperInstance.destroy(); } catch(_){} cropperInstance = null; }
+  }
+  setTimeout(function(){ _isPopping = false; }, 80);
+});
 /* MENU */
 $('btnMenu').addEventListener('click', function(){
   var u = ME || {};
