@@ -1049,6 +1049,7 @@ async function openDM(user){
   $('chatAvatar').innerHTML = user.avatar ? '<img src="' + esc(user.avatar) + '" />' : initial(user.display_name);
   $('chatAvatar').style.background = 'linear-gradient(135deg,' + (user.color || '#e8b567') + ',#d4a574)';
   $('chatView').classList.add('open');
+pushNav('chat');
   $('chatMsgs').innerHTML = '';
   try {
     var r = await api('/dms/' + user.id);
