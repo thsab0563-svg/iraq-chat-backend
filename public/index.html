@@ -438,8 +438,14 @@ if ('serviceWorker' in navigator) {
 (function(){
 'use strict';
 var CFG = JSON.parse(document.getElementById('app-config').textContent);
-var socket = io({ transports: ['websocket', 'polling'] });
-var $ = function(id){ return document.getElementById(id); };
+var socket = io({
+  transports: ['polling'],
+  upgrade: false,
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionAttempts: Infinity,
+  timeout: 20000
+});
 var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
 
 var ME = null, TOKEN = localStorage.getItem('token');
