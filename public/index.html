@@ -1161,6 +1161,7 @@ async function openCropModal(file){
       var img = $('cropImage');
       img.src = e.target.result;
       $('cropModal').classList.add('open');
+pushNav('crop');
       if(cropperInstance){ try { cropperInstance.destroy(); } catch(_){} cropperInstance = null; }
       img.onload = function(){
         cropperInstance = new Cropper(img, { aspectRatio: 1, viewMode: 1, dragMode: 'move', autoCropArea: 0.9, background: false, guides: false, center: true, highlight: false, cropBoxMovable: false, cropBoxResizable: false, responsive: true });
