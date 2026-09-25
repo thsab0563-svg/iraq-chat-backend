@@ -14,7 +14,7 @@
 
 <script id="app-config" type="application/json">
 {
-  "app": { "name_ar": "دردشة العراق", "version": "5.1.0" },
+  "app": { "name_ar": "دردشة العراق", "version": "5.2.0" },
   "colors": ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399","#22d3ee","#e11d48"],
   "emojis": ["😀","😂","🥰","😎","🤔","😢","😡","👍","👎","❤️","🔥","🎉","✨","🙏","👏","💪","🌹","☕","🍕","⚽","🎵","📚","💡","🚀","💯","🤝","🙌","😍"]
 }
@@ -437,6 +437,8 @@ var notifBadgeCount = 0;
 var onlineUsers = {};
 var currentProfileTab = 'info';
 var lastProfilePosts = [];
+var fastPollInterval = null;
+var listPollInterval = null;
 
 var esc = function(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
 var initial = function(n){ return (n||'؟').trim().charAt(0).toUpperCase(); };
@@ -626,6 +628,10 @@ socket.on('notification', function(n){
     toast('رسالة من ' + (n.from ? n.from.display_name : 'مستخدم'), 'info');
     if(soundOn) playBeep();
     if(currentTab === 'chats') loadChats();
+    // إذا كانت الصفحة في دردشة مع المرسل، جلب الرسائل
+    if(CURRENT_DM && n.from && CURRENT_DM.user.id === n.from.id){
+      pollCurrentChat();
+    }
   } else {
     updateNotifBadge(notifBadgeCount + 1);
     toast(n.text || 'إشعار جديد', 'info');
@@ -677,7 +683,65 @@ socket.on('dm-typing', function(d){
   }
 });
 
-async function loadEverything(){ loadPosts(); loadSuggestions(); loadChats(); loadFriends(); loadNotifs(); loadProfile(); }
+/* ===== Fast Poll — الرسائل اللحظية ===== */
+function startFastPoll(userId){
+  stopFastPoll();
+  fastPollInterval = setInterval(function(){
+    if(!CURRENT_DM || CURRENT_DM.user.id !== userId) return;
+    if(document.hidden) return;
+    pollCurrentChat();
+  }, 2000);
+}
+function stopFastPoll(){
+  if(fastPollInterval){ clearInterval(fastPollInterval); fastPollInterval = null; }
+}
+async function pollCurrentChat(){
+  if(!CURRENT_DM) return;
+  var userId = CURRENT_DM.user.id;
+  try {
+    var r = await api('/dms/' + userId);
+    var myMessages = r.messages || [];
+    myMessages.forEach(function(m){
+      var exists = $('chatMsgs').querySelector('.cmsg[data-id="' + m.id + '"]');
+      if(!exists){
+        // إزالة local echo مطابق
+        if(m.from_id === ME.id){
+          var locals = $('chatMsgs').querySelectorAll('.cmsg[data-local="1"]');
+          for(var i = locals.length - 1; i >= 0; i--){
+            var bub = locals[i].querySelector('.cbubble');
+            if(bub && bub.textContent.trim() === String(m.text || '').trim()){
+              locals[i].remove();
+              break;
+            }
+          }
+        }
+        renderDMMsg(m);
+        scrollChat();
+        if(m.from_id !== ME.id && soundOn) playBeep();
+      } else {
+        // تحديث حالة علامات القراءة
+        var existing = $('chatMsgs').querySelector('.cmsg[data-id="' + m.id + '"]');
+        var markEl = existing ? existing.querySelector('.read-marks') : null;
+        if(markEl){
+          if(m.read){ markEl.textContent = '✓✓'; markEl.classList.remove('sent','delivered'); markEl.classList.add('read'); }
+          else if(m.delivered){ markEl.textContent = '✓✓'; markEl.classList.remove('sent','read'); markEl.classList.add('delivered'); }
+        }
+      }
+    });
+  } catch(_){}
+}
+
+async function loadEverything(){
+  loadPosts(); loadSuggestions(); loadChats(); loadFriends(); loadNotifs(); loadProfile();
+  // Fast poll للقائمة — يحدّث عدد الرسائل
+  if(listPollInterval) clearInterval(listPollInterval);
+  listPollInterval = setInterval(function(){
+    if(!ME) return;
+    if(document.hidden) return;
+    if(currentTab === 'chats') loadChats();
+    if(currentTab === 'notifs') loadNotifs();
+  }, 5000);
+}
 
 function switchTab(name){
   currentTab = name;
@@ -748,10 +812,7 @@ function openPostMenuSheet(p){
   sheet.querySelector('#asDelete').addEventListener('click', function(){
     close();
     showConfirm({
-      icon: 'trash',
-      title: 'حذف المنشور',
-      text: 'هل أنت متأكد؟ لا يمكن استرجاع المنشور.',
-      confirmText: 'حذف', danger: true,
+      icon: 'trash', title: 'حذف المنشور', text: 'هل أنت متأكد؟ لا يمكن استرجاع المنشور.', confirmText: 'حذف', danger: true,
       onConfirm: async function(){
         try { await api('/posts/' + p.id, { method: 'DELETE' }); loadPosts(); loadProfile(); toast('تم الحذف', 'ok'); } catch(e){ toast(e.message, 'err'); }
       }
@@ -772,10 +833,8 @@ function openEditPostModal(postId, currentText){
     var btn = $('epmSave');
     btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div>';
     btn.disabled = true;
-    try {
-      await api('/posts/' + postId, { method: 'PUT', body: JSON.stringify({ text: txt }) });
-      closeModal(); loadPosts(); loadProfile(); toast('تم التعديل', 'ok');
-    } catch(e){ toast(e.message, 'err'); btn.disabled = false; btn.textContent = 'حفظ التعديل'; }
+    try { await api('/posts/' + postId, { method: 'PUT', body: JSON.stringify({ text: txt }) }); closeModal(); loadPosts(); loadProfile(); toast('تم التعديل', 'ok'); }
+    catch(e){ toast(e.message, 'err'); btn.disabled = false; btn.textContent = 'حفظ التعديل'; }
   });
 }
 function showConfirm(opts){
@@ -989,7 +1048,11 @@ function renderDMMsg(m){
   $('chatMsgs').appendChild(el);
 }
 
-$('chatBack').addEventListener('click', function(){ $('chatView').classList.remove('open'); CURRENT_DM = null; });
+$('chatBack').addEventListener('click', function(){
+  $('chatView').classList.remove('open');
+  CURRENT_DM = null;
+  stopFastPoll();
+});
 $('chatInfo').addEventListener('click', function(){ if(CURRENT_DM) openUserById(CURRENT_DM.user.id); });
 
 function autoGrow(){ var t = $('chatInput'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px'; }
@@ -1182,7 +1245,6 @@ function openEditProfile(u){
   });
 }
 
-/* SETTINGS */
 function openSettings(){
   showModal('<div class="modal-header"><button class="back-btn" id="stBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">الإعدادات</div><div class="spacer"></div></div>' +
   '<div class="modal-list">' +
@@ -1302,6 +1364,7 @@ async function openDM(user){
       setTimeout(function(){ $('dmAlertTitle').textContent = 'تنبيه'; $('dmAlertText').textContent = 'الرسائل تُحذف بعد 48 ساعة.'; $('dmAlert').classList.add('open'); localStorage.setItem('dmAlertShown', '1'); }, 800);
     }
   } catch(_){}
+  startFastPoll(user.id);
 }
 
 function closeModal(){ $('modal').classList.remove('open'); $('modalBody').classList.remove('menu-sheet-wrap'); }
