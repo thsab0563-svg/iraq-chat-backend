@@ -858,9 +858,7 @@ function renderDMMsg(m){
   $('chatMsgs').appendChild(el);
 }
 
-$('chatBack').addEventListener('click', function(){ $('chatView').classList.remove('open'); CURRENT_DM = null; });
-$('chatInfo').addEventListener('click', function(){ if(CURRENT_DM) openUserById(CURRENT_DM.user.id); });
-
+  $('chatBack').addEventListener('click', closeChatView);
 function autoGrow(){ var t = $('chatInput'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px'; }
 $('chatInput').addEventListener('input', function(){
   autoGrow();
