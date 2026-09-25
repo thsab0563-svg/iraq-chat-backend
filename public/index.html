@@ -14,7 +14,7 @@
 
 <script id="app-config" type="application/json">
 {
-  "app": { "name_ar": "دردشة العراق", "version": "5.2.0" },
+  "app": { "name_ar": "دردشة العراق", "version": "5.3.0" },
   "colors": ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399","#22d3ee","#e11d48"],
   "emojis": ["😀","😂","🥰","😎","🤔","😢","😡","👍","👎","❤️","🔥","🎉","✨","🙏","👏","💪","🌹","☕","🍕","⚽","🎵","📚","💡","🚀","💯","🤝","🙌","😍"]
 }
@@ -437,8 +437,8 @@ var notifBadgeCount = 0;
 var onlineUsers = {};
 var currentProfileTab = 'info';
 var lastProfilePosts = [];
-var fastPollInterval = null;
-var listPollInterval = null;
+var globalPollInterval = null;
+var lastConvData = null;
 
 var esc = function(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
 var initial = function(n){ return (n||'؟').trim().charAt(0).toUpperCase(); };
@@ -600,6 +600,7 @@ function enterApp(user){
   $('app').classList.add('active');
   socket.emit('auth', { token: TOKEN });
   setTimeout(setupPush, 1500);
+  lastConvData = null;
 }
 function applyTheme(theme){ document.body.classList.toggle('light', theme === 'light'); }
 
@@ -624,11 +625,8 @@ async function updateChatStatus(userId){
 
 socket.on('notification', function(n){
   if(n.type === 'dm'){
-    updateChatBadge(chatBadgeCount + 1);
-    toast('رسالة من ' + (n.from ? n.from.display_name : 'مستخدم'), 'info');
     if(soundOn) playBeep();
     if(currentTab === 'chats') loadChats();
-    // إذا كانت الصفحة في دردشة مع المرسل، جلب الرسائل
     if(CURRENT_DM && n.from && CURRENT_DM.user.id === n.from.id){
       pollCurrentChat();
     }
@@ -660,7 +658,6 @@ socket.on('dm-message', function(m){
     }
     if(m.from_id === CURRENT_DM.user.id) socket.emit('dm-read', { fromId: m.from_id });
   } else if(!isMine){
-    updateChatBadge(chatBadgeCount + 1);
     if(soundOn) playBeep();
   }
   if(currentTab === 'chats') loadChats();
@@ -683,18 +680,7 @@ socket.on('dm-typing', function(d){
   }
 });
 
-/* ===== Fast Poll — الرسائل اللحظية ===== */
-function startFastPoll(userId){
-  stopFastPoll();
-  fastPollInterval = setInterval(function(){
-    if(!CURRENT_DM || CURRENT_DM.user.id !== userId) return;
-    if(document.hidden) return;
-    pollCurrentChat();
-  }, 2000);
-}
-function stopFastPoll(){
-  if(fastPollInterval){ clearInterval(fastPollInterval); fastPollInterval = null; }
-}
+/* ===== GLOBAL FAST POLL — يعمل على الطرفين في كل الشاشات ===== */
 async function pollCurrentChat(){
   if(!CURRENT_DM) return;
   var userId = CURRENT_DM.user.id;
@@ -704,7 +690,6 @@ async function pollCurrentChat(){
     myMessages.forEach(function(m){
       var exists = $('chatMsgs').querySelector('.cmsg[data-id="' + m.id + '"]');
       if(!exists){
-        // إزالة local echo مطابق
         if(m.from_id === ME.id){
           var locals = $('chatMsgs').querySelectorAll('.cmsg[data-local="1"]');
           for(var i = locals.length - 1; i >= 0; i--){
@@ -719,7 +704,6 @@ async function pollCurrentChat(){
         scrollChat();
         if(m.from_id !== ME.id && soundOn) playBeep();
       } else {
-        // تحديث حالة علامات القراءة
         var existing = $('chatMsgs').querySelector('.cmsg[data-id="' + m.id + '"]');
         var markEl = existing ? existing.querySelector('.read-marks') : null;
         if(markEl){
@@ -731,16 +715,48 @@ async function pollCurrentChat(){
   } catch(_){}
 }
 
+async function globalPoll(){
+  if(!ME) return;
+  if(document.hidden) return;
+  try {
+    var r = await api('/dm-conversations');
+    var totalUnread = 0;
+    r.conversations.forEach(function(c){ totalUnread += (c.unread || 0); });
+    updateChatBadge(totalUnread);
+    
+    // كشف الرسائل الجديدة (للتشغيل الصوتي)
+    if(lastConvData){
+      var prevUnread = 0;
+      lastConvData.forEach(function(c){ prevUnread += (c.unread || 0); });
+      if(totalUnread > prevUnread && soundOn){
+        var newCount = totalUnread - prevUnread;
+        playBeep();
+        toast('لديك ' + newCount + ' رسالة جديدة', 'info');
+      }
+    }
+    lastConvData = r.conversations;
+    
+    // تحديث قائمة المحادثات إذا كان في تبويب الرسائل
+    if(currentTab === 'chats'){
+      var el = $('chatsList');
+      if(el){
+        el.innerHTML = r.conversations.length ? r.conversations.map(function(c){
+          var online = c.user.online;
+          return '<div class="user-row" data-dmuid="' + c.user.id + '">' + avatarHTML(c.user) + '<div class="ur-info"><div class="ur-name">' + esc(c.user.display_name) + '</div><div class="ur-sub' + (online ? ' online' : '') + '">' + (online ? 'متصل الآن' : esc((c.last && c.last.text) || 'لا توجد رسائل').slice(0, 45)) + '</div></div>' + (c.unread ? '<span style="background:var(--danger);color:#fff;font-size:.7rem;font-weight:800;padding:3px 8px;border-radius:99px">' + c.unread + '</span>' : '') + '</div>';
+        }).join('') : '<div class="empty"><p>لا توجد محادثات</p></div>';
+        el.querySelectorAll('[data-dmuid]').forEach(function(r2){ r2.addEventListener('click', function(){ openDMById(parseInt(r2.dataset.dmuid)); }); });
+      }
+    }
+    
+    // إذا في دردشة مفتوحة، اسحب الرسائل الجديدة
+    if(CURRENT_DM) await pollCurrentChat();
+  } catch(_){}
+}
+
 async function loadEverything(){
   loadPosts(); loadSuggestions(); loadChats(); loadFriends(); loadNotifs(); loadProfile();
-  // Fast poll للقائمة — يحدّث عدد الرسائل
-  if(listPollInterval) clearInterval(listPollInterval);
-  listPollInterval = setInterval(function(){
-    if(!ME) return;
-    if(document.hidden) return;
-    if(currentTab === 'chats') loadChats();
-    if(currentTab === 'notifs') loadNotifs();
-  }, 5000);
+  if(globalPollInterval) clearInterval(globalPollInterval);
+  globalPollInterval = setInterval(globalPoll, 2000);
 }
 
 function switchTab(name){
@@ -947,6 +963,10 @@ function renderComments(list){
 async function loadChats(){
   try {
     var r = await api('/dm-conversations');
+    lastConvData = r.conversations;
+    var totalUnread = 0;
+    r.conversations.forEach(function(c){ totalUnread += (c.unread || 0); });
+    updateChatBadge(totalUnread);
     $('chatsList').innerHTML = r.conversations.length ? r.conversations.map(function(c){
       var online = c.user.online;
       return '<div class="user-row" data-dmuid="' + c.user.id + '">' + avatarHTML(c.user) + '<div class="ur-info"><div class="ur-name">' + esc(c.user.display_name) + '</div><div class="ur-sub' + (online ? ' online' : '') + '">' + (online ? 'متصل الآن' : esc((c.last && c.last.text) || 'لا توجد رسائل').slice(0, 45)) + '</div></div>' + (c.unread ? '<span style="background:var(--danger);color:#fff;font-size:.7rem;font-weight:800;padding:3px 8px;border-radius:99px">' + c.unread + '</span>' : '') + '</div>';
@@ -1051,7 +1071,6 @@ function renderDMMsg(m){
 $('chatBack').addEventListener('click', function(){
   $('chatView').classList.remove('open');
   CURRENT_DM = null;
-  stopFastPoll();
 });
 $('chatInfo').addEventListener('click', function(){ if(CURRENT_DM) openUserById(CURRENT_DM.user.id); });
 
@@ -1364,7 +1383,6 @@ async function openDM(user){
       setTimeout(function(){ $('dmAlertTitle').textContent = 'تنبيه'; $('dmAlertText').textContent = 'الرسائل تُحذف بعد 48 ساعة.'; $('dmAlert').classList.add('open'); localStorage.setItem('dmAlertShown', '1'); }, 800);
     }
   } catch(_){}
-  startFastPoll(user.id);
 }
 
 function closeModal(){ $('modal').classList.remove('open'); $('modalBody').classList.remove('menu-sheet-wrap'); }
