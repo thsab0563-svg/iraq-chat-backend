@@ -825,7 +825,7 @@ async function start() {
     console.log('✅ Server running on port ' + PORT);
     console.log('🌍 Env: ' + NODE_ENV);
     console.log('📊 DB: Turso');
-    console.log('🖼️ Storage: ' + (supabase ? 'Supabase' : 'NOT configured'));
+    console.log('🖼️ Storage: ' + (SUPABASE_ENABLED ? 'Supabase (REST)' : 'NOT configured'));
     console.log('🔔 Push: ' + (PUSH_ENABLED ? 'ON' : 'OFF'));
   });
 }
