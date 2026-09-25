@@ -259,28 +259,42 @@ const upload = multer({
   limits: { fileSize: 4 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype))
 });
-
 app.post('/upload', auth, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'invalid' });
-  if (!supabase) return res.status(500).json({ error: 'storage_not_configured' });
+  if (!SUPABASE_ENABLED) return res.status(500).json({ error: 'storage_not_configured' });
+
   try {
     const ext = (req.file.originalname.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5);
     const filename = req.user.id + '_' + Date.now() + '_' + crypto.randomBytes(4).toString('hex') + '.' + ext;
-    const { error } = await supabase.storage
-      .from(SUPABASE_BUCKET)
-      .upload(filename, req.file.buffer, {
-        contentType: req.file.mimetype,
-        upsert: false
-      });
-    if (error) throw error;
-    const { data: urlData } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(filename);
-    res.json({ url: urlData.publicUrl });
+
+    // رفع مباشر عبر REST API
+    const uploadUrl = SUPABASE_URL + '/storage/v1/object/' + SUPABASE_BUCKET + '/' + filename;
+    const r = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': req.file.mimetype,
+        'x-upsert': 'false',
+        'cache-control': '31536000'
+      },
+      body: req.file.buffer
+    });
+
+    if (!r.ok) {
+      const errText = await r.text();
+      console.error('Supabase upload failed:', r.status, errText);
+      return res.status(500).json({ error: 'upload_failed', status: r.status });
+    }
+
+    // الرابط العام
+    const publicUrl = SUPABASE_URL + '/storage/v1/object/public/' + SUPABASE_BUCKET + '/' + filename;
+    res.json({ url: publicUrl });
+
   } catch (e) {
     console.error('Upload error:', e);
     res.status(500).json({ error: 'upload_failed', message: e.message });
   }
 });
-
 // ===== AUTH =====
 app.post('/api/register', async (req, res) => {
   try {
