@@ -18,7 +18,7 @@
 
 <script id="app-config" type="application/json">
 {
-  "app": { "name_ar": "دردشة العراق", "version": "4.3.0" },
+  "app": { "name_ar": "دردشة العراق", "version": "4.4.0" },
   "colors": ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399","#22d3ee","#e11d48"],
   "emojis": ["😀","😂","🥰","😎","🤔","😢","😡","👍","👎","❤️","🔥","🎉","✨","🙏","👏","💪","🌹","☕","🍕","⚽","🎵","📚","💡","🚀","💯","🤝","🙌","😍"]
 }
@@ -57,7 +57,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .screen{display:none;height:100dvh;width:100%;position:relative;z-index:1}
 .screen.active{display:flex;flex-direction:column}
 
-/* SPLASH */
 #splash{position:fixed;inset:0;z-index:10000;background:radial-gradient(900px 700px at 100% 0%,rgba(232,181,103,.18),transparent 60%),radial-gradient(800px 700px at 0% 100%,rgba(78,205,196,.12),transparent 60%),var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;transition:opacity .4s,visibility .4s}
 #splash.hide{opacity:0;visibility:hidden;pointer-events:none}
 #splash .logo{width:96px;height:96px;border-radius:28px;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;box-shadow:var(--shadow-gold-lg);animation:logoFloat 2s ease-in-out infinite;position:relative}
@@ -70,7 +69,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 @keyframes splashBar{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
 @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 
-/* AUTH */
 #auth{overflow-y:auto}
 .auth-wrap{margin:auto;width:100%;max-width:440px;padding:36px 24px;position:relative;z-index:1}
 .auth-logo{width:88px;height:88px;margin:0 auto 20px;border-radius:26px;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;box-shadow:var(--shadow-gold-lg)}
@@ -93,7 +91,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .err{padding:13px 17px;border-radius:14px;background:var(--danger-soft);border:1px solid rgba(255,92,120,.35);color:#ff9aa8;font-size:.85rem;font-weight:600;text-align:center;margin-top:16px;display:none}
 .err.show{display:block}
 
-/* APP */
 #app{position:relative;overflow:hidden}
 .tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
 .tab{display:none}
@@ -126,20 +123,29 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .user-row .ur-name{font-weight:800;font-size:.95rem;display:flex;align-items:center;gap:6px}
 .user-row .ur-sub{font-size:.76rem;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .user-row .ur-sub.online{color:var(--green);font-weight:600}
-.post{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:18px;margin-bottom:14px}
+
+/* POSTS */
+.post{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:18px;margin-bottom:14px;position:relative}
 .post-head{display:flex;align-items:center;gap:11px;margin-bottom:13px}
 .post-head .avatar{width:44px;height:44px;font-size:.98rem}
 .post-head .ph-info{flex:1;min-width:0;cursor:pointer}
 .post-head .ph-name{font-weight:800;font-size:.93rem;display:flex;align-items:center;gap:6px}
 .post-head .ph-meta{font-size:.74rem;color:var(--muted);margin-top:2px}
+.post-menu-btn{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--muted);flex:0 0 auto}
+.post-menu-btn:active{background:var(--surface-2)}
 .post-body{font-size:.96rem;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:12px;color:var(--text-2)}
 .post-body .htag{color:var(--gold);font-weight:700;cursor:pointer}
+.post-edited{font-size:.7rem;color:var(--muted);font-style:italic;margin-bottom:8px}
 .post-actions{display:flex;align-items:center;gap:8px;padding-top:12px;border-top:1px solid var(--border);margin-top:6px}
 .post-actions button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;border-radius:12px;color:var(--muted-2);font-size:.83rem;font-weight:700}
 .post-actions button.liked{color:#ff6b8a}
 .post-actions button.liked .ic{fill:currentColor}
 
-/* CHAT */
+/* Profile tabs */
+.profile-tabs{display:flex;margin-top:16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:10}
+.profile-tabs button{flex:1;padding:14px;font-weight:800;font-size:.88rem;color:var(--muted);border-bottom:2.5px solid transparent}
+.profile-tabs button.on{color:var(--gold);border-bottom-color:var(--gold)}
+
 #chatView{position:fixed;inset:0;z-index:200;background:var(--bg);display:none;flex-direction:column}
 #chatView.open{display:flex}
 .chat-head{display:flex;align-items:center;gap:12px;padding:14px 16px;padding-top:calc(14px + env(safe-area-inset-top));border-bottom:1px solid var(--border);background:var(--bg)}
@@ -170,13 +176,11 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .cmsg .read-marks.delivered{color:var(--green)}
 .cmsg .read-marks.read{color:var(--blue)}
 .chat-input-row{padding:12px 14px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--bg);display:flex;align-items:flex-end;gap:9px}
-.mini-btn{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--border-2);color:var(--text);flex:0 0 auto}
 #chatInput{flex:1;padding:12px 16px;border-radius:15px;background:var(--surface);border:1.5px solid var(--border-2);color:var(--text);font-size:.93rem;line-height:1.55;max-height:120px;min-height:44px;resize:none}
 #chatInput:focus{border-color:var(--gold);box-shadow:0 0 0 4px var(--gold-soft)}
 .send{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;flex:0 0 auto;box-shadow:var(--shadow-gold)}
 .send:active{transform:scale(.9)}
 
-/* PROFILE */
 .profile-cover{height:180px;position:relative;background:linear-gradient(135deg,#ff9a7b 0%,#e8b567 50%,#4ecdc4 100%);overflow:hidden}
 .profile-cover img{width:100%;height:100%;object-fit:cover}
 .profile-cover::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(10,11,16,.55) 100%)}
@@ -192,7 +196,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .profile-user{color:var(--muted);font-size:.9rem;margin-top:3px}
 .profile-bio{margin-top:16px;font-size:.93rem;line-height:1.7;color:var(--text-2)}
 .profile-meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:16px;font-size:.83rem;color:var(--muted)}
-.profile-meta span{display:flex;align-items:center;gap:6px;color:var(--muted)}
+.profile-meta span{display:flex;align-items:center;gap:6px}
 .profile-meta svg{stroke:currentColor;fill:none}
 .profile-stats{display:flex;gap:24px;margin-top:20px;padding:18px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .profile-stats .stat{flex:1;text-align:center}
@@ -203,13 +207,11 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .btn-fill{background:var(--grad-gold);color:#1a1207;box-shadow:var(--shadow-gold)}
 .btn-ghost{background:var(--surface);border:1px solid var(--border-2);color:var(--text)}
 
-/* MODALS */
 .modal{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:none;align-items:flex-end;justify-content:center}
 .modal.open{display:flex}
 .modal.center{align-items:center}
 .modal-card{background:var(--surface);border-radius:28px 28px 0 0;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;padding:22px;padding-bottom:calc(22px + env(safe-area-inset-bottom))}
 .modal.center .modal-card{border-radius:26px;margin:20px;border:1px solid var(--border-2)}
-.modal-title{font-size:1.08rem;font-weight:900;margin-bottom:18px;text-align:center}
 .modal-list{display:flex;flex-direction:column;gap:6px}
 .modal-item{display:flex;align-items:center;gap:14px;padding:14px;border-radius:16px;background:transparent;font-weight:700;font-size:.94rem;text-align:start;width:100%;color:var(--text)}
 .modal-item:active{background:var(--surface-2)}
@@ -255,6 +257,14 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 #cropModal .crop-actions{padding:16px;display:flex;gap:10px}
 #cropModal .crop-actions button{flex:1;padding:14px;border-radius:14px;font-weight:800;font-size:.92rem}
 
+/* Notification item */
+.notif-item{display:flex;align-items:flex-start;gap:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:14px;position:relative}
+.notif-item.unread{border-color:rgba(232,181,103,.35);background:linear-gradient(135deg,rgba(232,181,103,.08),transparent)}
+.notif-item .notif-info{flex:1;min-width:0}
+.notif-item .notif-text{font-size:.9rem;font-weight:600;line-height:1.55;color:var(--text)}
+.notif-item .notif-time{font-size:.72rem;color:var(--muted);margin-top:5px}
+.notif-item .notif-del{position:absolute;top:8px;inset-inline-end:8px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);color:var(--muted);font-size:.8rem}
+
 #toasts{position:fixed;top:calc(16px + env(safe-area-inset-top));inset-inline:16px;z-index:999;display:flex;flex-direction:column;gap:9px;align-items:center;pointer-events:none}
 .toast{padding:13px 20px;border-radius:15px;background:color-mix(in srgb,var(--surface) 96%,transparent);backdrop-filter:blur(20px);border:1px solid var(--border-2);box-shadow:var(--shadow-lg);font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:10px;max-width:100%;pointer-events:auto}
 .toast.ok{border-color:rgba(52,211,153,.35);color:#7ee7b8}
@@ -274,7 +284,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 </head>
 <body>
 
-<!-- SPLASH -->
 <div id="splash">
   <div class="logo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 5.94 2 10.8c0 2.7 1.36 5.1 3.5 6.7V22l4.03-2.2c.79.16 1.61.25 2.47.25 5.52 0 10-3.94 10-8.8S17.52 2 12 2z"/></svg></div>
   <div class="title">دردشة العراق</div>
@@ -282,10 +291,9 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   <div class="bar"></div>
 </div>
 
-<div id="netBanner"><span>⚠️ لا يوجد اتصال بالإنترنت</span><button onclick="document.getElementById('netBanner').classList.remove('show')">إغلاق</button></div>
+<div id="netBanner"><span>لا يوجد اتصال بالإنترنت</span><button onclick="document.getElementById('netBanner').classList.remove('show')">إغلاق</button></div>
 <div id="toasts"></div>
 
-<!-- AUTH -->
 <div id="auth" class="screen">
   <div class="auth-wrap">
     <div class="auth-logo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 5.94 2 10.8c0 2.7 1.36 5.1 3.5 6.7V22l4.03-2.2c.79.16 1.61.25 2.47.25 5.52 0 10-3.94 10-8.8S17.52 2 12 2z"/></svg></div>
@@ -312,7 +320,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   </div>
 </div>
 
-<!-- APP -->
 <div id="app" class="screen">
   <div class="tab-content">
     <div id="tab-home" class="tab active">
@@ -340,7 +347,10 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
     </div>
 
     <div id="tab-notifs" class="tab">
-      <header class="app-header"><h1>الإشعارات</h1></header>
+      <header class="app-header">
+        <h1>الإشعارات</h1>
+        <button class="hbtn" id="clearNotifsBtn" title="حذف الكل"><svg class="ic" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+      </header>
       <div class="list-pad" id="notifsList"></div>
     </div>
 
@@ -358,7 +368,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   </nav>
 </div>
 
-<!-- CHAT -->
 <div id="chatView">
   <header class="chat-head">
     <button class="back" id="chatBack"><svg class="ic" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -379,7 +388,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 <div class="modal" id="dmAlert"><div class="modal-card" style="text-align:center"><div style="font-size:1.1rem;font-weight:900;margin-bottom:12px" id="dmAlertTitle">تنبيه</div><p style="color:var(--muted);font-size:.9rem;line-height:1.7;margin-bottom:20px" id="dmAlertText"></p><button class="btn-main" onclick="document.getElementById('dmAlert').classList.remove('open')">فهمت</button></div></div>
 
 <script>
-/* Unregister old SW */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(function(regs){
     regs.forEach(function(r){ r.unregister(); });
@@ -408,9 +416,9 @@ var currentSearchQuery = '';
 var chatBadgeCount = 0;
 var notifBadgeCount = 0;
 var onlineUsers = {};
-
 var navStack = [];
 var _isPopping = false;
+var currentProfileTab = 'info';
 
 var esc = function(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
 var initial = function(n){ return (n||'؟').trim().charAt(0).toUpperCase(); };
@@ -525,12 +533,12 @@ async function setupPush(){
       sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(j.key) });
     }
     await api('/push/subscribe', { method: 'POST', body: JSON.stringify(sub.toJSON()) });
-    console.log('✅ Push subscribed');
+    console.log('Push subscribed');
   } catch(e){ console.warn('Push error:', e.message); }
 }
 
-window.addEventListener('online', function(){ $('netBanner').classList.remove('show'); toast('✅ عاد الاتصال', 'ok'); });
-window.addEventListener('offline', function(){ $('netBanner').classList.add('show'); toast('⚠️ انقطع الاتصال', 'err'); });
+window.addEventListener('online', function(){ $('netBanner').classList.remove('show'); toast('عاد الاتصال', 'ok'); });
+window.addEventListener('offline', function(){ $('netBanner').classList.add('show'); toast('انقطع الاتصال', 'err'); });
 
 /* AUTH */
 var colorRow = $('colorRow');
@@ -613,7 +621,6 @@ socket.on('dm-message', function(m){
   var isCur = CURRENT_DM && (m.from_id === CURRENT_DM.user.id || m.to_id === CURRENT_DM.user.id);
   var isMine = m.from_id === ME.id;
   if(isCur){
-    // Remove local echo if this is our own message confirmation
     if(isMine && !m._local){
       var locals = $('chatMsgs').querySelectorAll('.cmsg[data-local="1"]');
       for(var i = locals.length - 1; i >= 0; i--){
@@ -624,7 +631,10 @@ socket.on('dm-message', function(m){
         }
       }
     }
-    renderDMMsg(m); scrollChat();
+    if(!$('chatMsgs').querySelector('.cmsg[data-id="' + m.id + '"]')){
+      renderDMMsg(m);
+      scrollChat();
+    }
     if(m.from_id === CURRENT_DM.user.id) socket.emit('dm-read', { fromId: m.from_id });
   } else if(!isMine){
     updateChatBadge(chatBadgeCount + 1);
@@ -632,6 +642,7 @@ socket.on('dm-message', function(m){
   }
   if(currentTab === 'chats') loadChats();
 });
+
 socket.on('dm-delivered', function(){
   document.querySelectorAll('.cmsg.me .read-marks').forEach(function(el){
     if(el.classList.contains('sent')){ el.textContent = '✓✓'; el.classList.remove('sent'); el.classList.add('delivered'); }
@@ -675,14 +686,58 @@ function renderPosts(posts){
   var el = $('homeFeed');
   if(!posts.length){ el.innerHTML = '<div class="empty"><p>لا توجد منشورات بعد</p></div>'; return; }
   el.innerHTML = posts.map(function(p){
-    return '<article class="post"><div class="post-head">' + avatarHTML(p.user, 44) + '<div class="ph-info" data-uid="' + p.user.id + '"><div class="ph-name">' + esc(p.user.display_name) + (p.user.verified ? ' ✓' : '') + '</div><div class="ph-meta">@' + esc(p.user.username) + ' · ' + fmtDate(p.time) + '</div></div></div><div class="post-body">' + linkify(p.text) + '</div><div class="post-actions"><button class="like-btn ' + (p.liked ? 'liked' : '') + '" data-pid="' + p.id + '"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>' + p.likes + '</span></button><button class="comment-btn" data-pid="' + p.id + '"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg><span>' + p.comments + '</span></button></div></article>';
+    var isMine = ME && p.user.id === ME.id;
+    var menuBtn = isMine ? '<button class="post-menu-btn" data-menu-pid="' + p.id + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/></svg></button>' : '';
+    var editedHtml = p.edited ? '<div class="post-edited">تم التعديل</div>' : '';
+    return '<article class="post" data-post-id="' + p.id + '">' +
+      '<div class="post-head">' + avatarHTML(p.user, 44) + '<div class="ph-info" data-uid="' + p.user.id + '"><div class="ph-name">' + esc(p.user.display_name) + (p.user.verified ? ' ✓' : '') + '</div><div class="ph-meta">@' + esc(p.user.username) + ' · ' + fmtDate(p.time) + '</div></div>' + menuBtn + '</div>' +
+      '<div class="post-body">' + linkify(p.text) + '</div>' + editedHtml +
+      '<div class="post-actions"><button class="like-btn ' + (p.liked ? 'liked' : '') + '" data-pid="' + p.id + '"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>' + p.likes + '</span></button><button class="comment-btn" data-pid="' + p.id + '"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg><span>' + p.comments + '</span></button></div></article>';
   }).join('');
   el.querySelectorAll('.post-body .htag').forEach(function(t){ t.addEventListener('click', function(){ doSearch('#' + t.dataset.tag); }); });
   el.querySelectorAll('.ph-info').forEach(function(b){ b.addEventListener('click', function(){ openUserById(parseInt(b.dataset.uid)); }); });
+  el.querySelectorAll('.post-menu-btn').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); openPostMenu(parseInt(b.dataset.menuPid)); }); });
   el.querySelectorAll('.like-btn').forEach(function(b){ b.addEventListener('click', async function(){
     try { var r = await api('/posts/' + b.dataset.pid + '/like', { method: 'POST' }); b.classList.toggle('liked', r.liked); b.querySelector('span').textContent = r.likes; } catch(e) { toast(e.message, 'err'); }
   }); });
   el.querySelectorAll('.comment-btn').forEach(function(b){ b.addEventListener('click', function(){ openComments(parseInt(b.dataset.pid)); }); });
+}
+
+/* Post menu (edit/delete) */
+async function openPostMenu(postId){
+  try {
+    var r = await api('/posts?user_id=' + ME.id + '&limit=100');
+    var p = r.posts.find(function(x){ return x.id === postId; });
+    if(!p) return toast('المنشور غير موجود', 'err');
+    showModal('<div class="modal-header"><button class="back-btn" id="pmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">خيارات المنشور</div><div class="spacer"></div></div>' +
+    '<div class="modal-list">' +
+      '<button class="modal-item" id="pmEdit">✏️ تعديل المنشور</button>' +
+      '<button class="modal-item danger" id="pmDelete">🗑️ حذف المنشور</button>' +
+    '</div>');
+    $('pmBack').addEventListener('click', closeModal);
+    $('pmEdit').addEventListener('click', function(){ closeModal(); openEditPost(p.id, p.text); });
+    $('pmDelete').addEventListener('click', async function(){
+      if(!confirm('حذف المنشور؟')) return;
+      try { await api('/posts/' + p.id, { method: 'DELETE' }); closeModal(); loadPosts(); toast('تم الحذف', 'ok'); } catch(e){ toast(e.message, 'err'); }
+    });
+  } catch(e){ toast(e.message, 'err'); }
+}
+
+function openEditPost(postId, currentText){
+  showModal('<div class="modal-header"><button class="back-btn" id="epBack2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">تعديل المنشور</div><div class="spacer"></div></div>' +
+  '<div class="field"><textarea id="epText" maxlength="1000" style="min-height:150px">' + esc(currentText) + '</textarea></div>' +
+  '<button class="btn-main" id="epSave">حفظ</button>');
+  $('epBack2').addEventListener('click', closeModal);
+  setTimeout(function(){ var t = $('epText'); if(t) t.focus(); }, 200);
+  $('epSave').addEventListener('click', async function(){
+    var txt = $('epText').value.trim();
+    if(!txt) return toast('اكتب شيئاً', 'err');
+    var btn = $('epSave');
+    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div>';
+    btn.disabled = true;
+    try { await api('/posts/' + postId, { method: 'PUT', body: JSON.stringify({ text: txt }) }); closeModal(); loadPosts(); toast('تم التعديل', 'ok'); }
+    catch(e){ toast(e.message, 'err'); btn.disabled = false; btn.textContent = 'حفظ'; }
+  });
 }
 
 /* SEARCH */
@@ -790,14 +845,37 @@ async function loadFriends(){
 /* NOTIFS */
 async function loadNotifs(){
   try {
-    var r = await api('/friends/requests');
-    $('notifsList').innerHTML = r.requests.length ? r.requests.map(function(u){
-      return '<div class="user-row">' + avatarHTML(u) + '<div class="ur-info"><div class="ur-name">' + esc(u.display_name) + '</div><div class="ur-sub">طلب صداقة</div></div><div style="display:flex;gap:7px"><button class="btn-fill" style="padding:9px 13px;border-radius:11px;font-weight:800;font-size:.8rem" data-a="' + u.id + '">قبول</button><button style="padding:9px 13px;border-radius:11px;background:var(--surface-2);font-weight:800;font-size:.8rem" data-r="' + u.id + '">رفض</button></div></div>';
-    }).join('') : '<div class="empty"><p>لا توجد إشعارات</p></div>';
-    $('notifsList').querySelectorAll('[data-a]').forEach(function(b){ b.addEventListener('click', async function(){ try { await api('/friends/accept/' + b.dataset.a, { method: 'POST' }); toast('تم', 'ok'); loadNotifs(); loadFriends(); } catch(e){ toast(e.message, 'err'); } }); });
-    $('notifsList').querySelectorAll('[data-r]').forEach(function(b){ b.addEventListener('click', async function(){ try { await api('/friends/reject/' + b.dataset.r, { method: 'POST' }); loadNotifs(); } catch(e){} }); });
-  } catch(_){}
+    var r = await api('/notifications');
+    var notifs = r.notifications || [];
+    if(!notifs.length){
+      $('notifsList').innerHTML = '<div class="empty"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><p>لا توجد إشعارات</p></div>';
+      return;
+    }
+    $('notifsList').innerHTML = notifs.map(function(n){
+      var icon = n.type === 'like' ? '❤️' : n.type === 'comment' ? '💬' : n.type === 'friend_request' ? '👥' : n.type === 'friend_accept' ? '✅' : '🔔';
+      return '<div class="notif-item ' + (n.read ? '' : 'unread') + '" data-nid="' + n.id + '">' +
+        (n.from ? avatarHTML(n.from, 44) : '<div class="avatar" style="background:var(--gold-soft);color:var(--gold)">' + icon + '</div>') +
+        '<div class="notif-info"><div class="notif-text">' + icon + ' ' + esc(n.text || 'إشعار') + '</div><div class="notif-time">' + fmtDate(n.time) + '</div></div>' +
+        '<button class="notif-del" data-dnid="' + n.id + '">✕</button>' +
+      '</div>';
+    }).join('');
+    $('notifsList').querySelectorAll('[data-dnid]').forEach(function(b){
+      b.addEventListener('click', async function(e){
+        e.stopPropagation();
+        try { await api('/notifications/' + b.dataset.dnid, { method: 'DELETE' }); loadNotifs(); } catch(_){}
+      });
+    });
+    // Mark all as read on open
+    try { await api('/notifications/read', { method: 'POST' }); } catch(_){}
+  } catch(_){
+    $('notifsList').innerHTML = '<div class="empty"><p>فشل التحميل</p></div>';
+  }
 }
+
+$('clearNotifsBtn').addEventListener('click', async function(){
+  if(!confirm('حذف جميع الإشعارات؟')) return;
+  try { await api('/notifications/all', { method: 'DELETE' }); loadNotifs(); toast('تم الحذف', 'ok'); } catch(_){}
+});
 
 /* CHAT */
 function scrollChat(inst){
@@ -883,16 +961,19 @@ async function loadProfile(){
     ME = r.user;
     var stats = { friends: 0, posts: 0, views: 0 };
     try { var s = await api('/me/stats'); stats = { friends: s.friends || 0, posts: s.posts || 0, views: s.views || 0 }; } catch(_){}
-    renderProfile(r.user, true, stats);
+    var myPosts = [];
+    try { var mp = await api('/posts?user_id=' + ME.id + '&limit=100'); myPosts = mp.posts || []; } catch(_){}
+    renderProfile(r.user, true, stats, myPosts);
   } catch(e) { toast(e.message, 'err'); }
 }
-function renderProfile(u, isMe, stats){
+function renderProfile(u, isMe, stats, myPosts){
   var el = $('profileContent');
   stats = stats || { friends: 0, posts: 0, views: 0 };
+  myPosts = myPosts || [];
   var locSvg = '<svg class="ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
   var globeSvg = '<svg class="ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
   var calSvg = '<svg class="ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
-  el.innerHTML =
+  var html =
   '<div class="profile-cover" id="profCover">' + (u.cover ? '<img src="' + esc(u.cover) + '" />' : '') +
     (isMe ? '<button class="cover-edit-btn" id="editCover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>' : '') +
   '</div>' +
@@ -910,14 +991,59 @@ function renderProfile(u, isMe, stats){
     '</div>' +
     '<div class="profile-stats"><div class="stat"><div class="num">' + stats.friends + '</div><div class="lbl">صديق</div></div><div class="stat"><div class="num">' + stats.posts + '</div><div class="lbl">منشور</div></div><div class="stat"><div class="num">' + stats.views + '</div><div class="lbl">زيارة</div></div></div>' +
     '<div class="profile-actions">' + (isMe ? '<button class="btn-fill" id="btnEditProfile">تعديل الملف</button>' : '<button class="btn-fill" id="btnMsgUser">💬 رسالة</button>') + '</div>' +
+    '<div class="profile-tabs">' +
+      '<button data-ptab="info" class="' + (currentProfileTab === 'info' ? 'on' : '') + '">معلوماتي</button>' +
+      '<button data-ptab="posts" class="' + (currentProfileTab === 'posts' ? 'on' : '') + '">منشوراتي (' + myPosts.length + ')</button>' +
+    '</div>' +
+    '<div id="profileTabContent" style="margin-top:16px"></div>' +
   '</div>';
+  el.innerHTML = html;
+
   if(isMe){
     $('btnEditProfile').addEventListener('click', function(){ openEditProfile(ME); });
     $('profAvatar').addEventListener('click', function(){ avatarInput.click(); });
     if($('avatarEditBtn')) $('avatarEditBtn').addEventListener('click', function(e){ e.stopPropagation(); avatarInput.click(); });
     if($('editCover')) $('editCover').addEventListener('click', function(){ coverInput.click(); });
-  } else { $('btnMsgUser').addEventListener('click', function(){ openDM(u); }); }
+  } else {
+    $('btnMsgUser').addEventListener('click', function(){ openDM(u); });
+  }
+  el.querySelectorAll('[data-ptab]').forEach(function(b){
+    b.addEventListener('click', function(){
+      currentProfileTab = b.dataset.ptab;
+      el.querySelectorAll('[data-ptab]').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      renderProfileTabContent(myPosts);
+    });
+  });
+  renderProfileTabContent(myPosts);
 }
+
+function renderProfileTabContent(myPosts){
+  var box = $('profileTabContent'); if(!box) return;
+  if(currentProfileTab === 'posts'){
+    if(!myPosts.length){ box.innerHTML = '<div class="empty"><p>لا توجد منشورات</p></div>'; return; }
+    box.innerHTML = myPosts.map(function(p){
+      var editedHtml = p.edited ? '<div class="post-edited">تم التعديل</div>' : '';
+      return '<article class="post" data-post-id="' + p.id + '">' +
+        '<div class="post-head"><div class="ph-info" style="cursor:default"><div class="ph-meta">' + fmtDate(p.time) + '</div></div><button class="post-menu-btn" data-menu-pid="' + p.id + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/></svg></button></div>' +
+        '<div class="post-body">' + linkify(p.text) + '</div>' + editedHtml +
+        '<div class="post-actions"><button class="like-btn ' + (p.liked ? 'liked' : '') + '" data-pid="' + p.id + '"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>' + p.likes + '</span></button><button class="comment-btn" data-pid="' + p.id + '"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg><span>' + p.comments + '</span></button></div></article>';
+    }).join('');
+    box.querySelectorAll('.post-body .htag').forEach(function(t){ t.addEventListener('click', function(){ doSearch('#' + t.dataset.tag); }); });
+    box.querySelectorAll('.post-menu-btn').forEach(function(b){ b.addEventListener('click', function(){ openPostMenu(parseInt(b.dataset.menuPid)); }); });
+    box.querySelectorAll('.like-btn').forEach(function(b){ b.addEventListener('click', async function(){
+      try { var r = await api('/posts/' + b.dataset.pid + '/like', { method: 'POST' }); b.classList.toggle('liked', r.liked); b.querySelector('span').textContent = r.likes; } catch(e) { toast(e.message, 'err'); }
+    }); });
+    box.querySelectorAll('.comment-btn').forEach(function(b){ b.addEventListener('click', function(){ openComments(parseInt(b.dataset.pid)); }); });
+  } else {
+    box.innerHTML = '<div style="padding:14px;background:var(--surface-2);border-radius:14px"><div style="font-size:.85rem;color:var(--muted);line-height:1.8">' +
+      '📧 اسم المستخدم: @' + esc(ME.username) + '<br>' +
+      '📱 الهاتف: ' + esc(ME.phone || 'غير محدد') + '<br>' +
+      '📅 انضم: ' + fmtDate(ME.created_at) +
+    '</div></div>';
+  }
+}
+
 async function openUserById(id){
   if(ME && id === ME.id){ switchTab('profile'); return; }
   try { var r = await api('/users/' + id); openUserModal(r.user, r.isFriend, r.blocked, r.stats); } catch(e) { toast(e.message, 'err'); }
@@ -925,22 +1051,11 @@ async function openUserById(id){
 function openUserModal(u, isFriend, blocked, stats){
   stats = stats || { friends: 0, posts: 0, views: 0 };
   var statusText = u.online ? 'متصل الآن' : fmtLastSeen(u.last_seen);
-  var locSvg = '<svg class="ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
-  var globeSvg = '<svg class="ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
-  var metaHtml = '';
-  if(u.location || u.country){
-    metaHtml = '<div style="display:flex;gap:14px;justify-content:center;margin-top:10px;font-size:.8rem;color:var(--muted)">' +
-      (u.location ? '<span style="display:flex;align-items:center;gap:5px">' + locSvg + ' ' + esc(u.location) + '</span>' : '') +
-      (u.country ? '<span style="display:flex;align-items:center;gap:5px">' + globeSvg + ' ' + esc(u.country) + '</span>' : '') +
-    '</div>';
-  }
   showModal('<div class="modal-header"><button class="back-btn" id="umBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">المستخدم</div><div class="spacer"></div></div>' +
   '<div style="text-align:center;padding:8px 0">' + avatarHTML(u, 84) +
   '<div style="font-weight:900;font-size:1.2rem;margin-top:14px">' + esc(u.display_name) + '</div>' +
   '<div style="color:var(--muted);font-size:.85rem">@' + esc(u.username) + '</div>' +
   '<div style="font-size:.82rem;margin-top:6px;color:' + (u.online ? 'var(--green)' : 'var(--muted)') + '">' + statusText + '</div>' +
-  metaHtml +
-  '<div style="display:flex;gap:24px;justify-content:center;margin-top:16px"><div><div style="font-size:1.15rem;font-weight:900;color:var(--gold)">' + stats.friends + '</div><div style="font-size:.7rem;color:var(--muted)">صديق</div></div><div><div style="font-size:1.15rem;font-weight:900;color:var(--gold)">' + stats.posts + '</div><div style="font-size:.7rem;color:var(--muted)">منشور</div></div></div>' +
   '</div><div class="modal-list" style="margin-top:14px">' +
     '<button class="modal-item" id="umMsg">💬 رسالة</button>' +
     (isFriend ? '<button class="modal-item danger" id="umUnfriend">🚫 إزالة من الأصدقاء</button>' : '<button class="modal-item" id="umAdd">+ إضافة صديق</button>') +
@@ -955,13 +1070,12 @@ function openUserModal(u, isFriend, blocked, stats){
 }
 
 function openEditProfile(u){
-  showModal(
-  '<div class="modal-header"><button class="back-btn" id="epBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">تعديل الملف</div><div class="spacer"></div></div>' +
+  showModal('<div class="modal-header"><button class="back-btn" id="epBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">تعديل الملف</div><div class="spacer"></div></div>' +
   '<div class="field"><label>الاسم الظاهر</label><input id="epName" value="' + esc(u.display_name) + '" maxlength="30" /></div>' +
-  '<div class="field"><label>اسم المستخدم (بدون @)</label><input id="epUsername" value="' + esc(u.username) + '" maxlength="20" placeholder="lowercase_letters" /></div>' +
-  '<div class="field"><label>نبذة</label><textarea id="epBio" maxlength="200" placeholder="اكتب عن نفسك...">' + esc(u.bio || '') + '</textarea></div>' +
+  '<div class="field"><label>اسم المستخدم (بدون @)</label><input id="epUsername" value="' + esc(u.username) + '" maxlength="20" /></div>' +
+  '<div class="field"><label>نبذة</label><textarea id="epBio" maxlength="200">' + esc(u.bio || '') + '</textarea></div>' +
   '<div class="field"><label>المحافظة</label><input id="epLoc" value="' + esc(u.location || '') + '" /></div>' +
-  '<div class="field"><label>رقم الهاتف</label><input id="epPhone" value="' + esc(u.phone || '') + '" placeholder="+964..." /></div>' +
+  '<div class="field"><label>رقم الهاتف</label><input id="epPhone" value="' + esc(u.phone || '') + '" /></div>' +
   '<button class="btn-main" id="epSubmit">حفظ</button>');
   $('epBack').addEventListener('click', closeModal);
   $('epSubmit').addEventListener('click', async function(){
@@ -1010,9 +1124,9 @@ function openSettings(){
 
 function openChangePassword(){
   showModal('<div class="modal-header"><button class="back-btn" id="cpBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">تغيير كلمة السر</div><div class="spacer"></div></div>' +
-  '<div class="field"><label>كلمة السر الحالية</label><input id="cpOld" type="password" placeholder="••••••" /></div>' +
-  '<div class="field"><label>كلمة السر الجديدة</label><input id="cpNew" type="password" placeholder="4 أحرف على الأقل" /></div>' +
-  '<div class="field"><label>تأكيد الجديدة</label><input id="cpConfirm" type="password" placeholder="••••••" /></div>' +
+  '<div class="field"><label>كلمة السر الحالية</label><input id="cpOld" type="password" /></div>' +
+  '<div class="field"><label>كلمة السر الجديدة</label><input id="cpNew" type="password" /></div>' +
+  '<div class="field"><label>تأكيد الجديدة</label><input id="cpConfirm" type="password" /></div>' +
   '<button class="btn-main" id="cpSubmit">حفظ</button>');
   $('cpBack').addEventListener('click', closeModal);
   $('cpSubmit').addEventListener('click', async function(){
@@ -1020,14 +1134,14 @@ function openChangePassword(){
     if(!oldP) return toast('أدخل كلمة السر الحالية', 'err');
     if(newP.length < 4) return toast('كلمة السر قصيرة', 'err');
     if(newP !== confP) return toast('غير متطابقتين', 'err');
-    try { await api('/change-password', { method: 'POST', body: JSON.stringify({ old_password: oldP, new_password: newP }) }); closeModal(); toast('تم تغيير كلمة السر', 'ok'); }
+    try { await api('/change-password', { method: 'POST', body: JSON.stringify({ old_password: oldP, new_password: newP }) }); closeModal(); toast('تم التغيير', 'ok'); }
     catch(e) { toast(e.message === 'wrong_old_password' ? 'كلمة السر الحالية خاطئة' : e.message, 'err'); }
   });
 }
 function confirmDeleteAccount(){
   showModal('<div class="modal-header"><button class="back-btn" id="delBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title" style="color:var(--danger)">حذف الحساب</div><div class="spacer"></div></div>' +
   '<p style="color:var(--muted);font-size:.9rem;line-height:1.7;margin-bottom:16px;text-align:center">لا يمكن استرجاع الحساب.</p>' +
-  '<div class="field"><label>اكتب "حذف" للتأكيد</label><input id="delConfirm" placeholder="حذف" /></div>' +
+  '<div class="field"><label>اكتب "حذف" للتأكيد</label><input id="delConfirm" /></div>' +
   '<button class="btn-main" id="delSubmit" style="background:linear-gradient(135deg,#ff5c78,#ef4444);color:#fff">حذف نهائياً</button>');
   $('delBack').addEventListener('click', closeModal);
   $('delSubmit').addEventListener('click', async function(){
@@ -1139,15 +1253,16 @@ $('btnMenu').addEventListener('click', function(){
   var html = '<div class="menu-sheet" onclick="event.stopPropagation()"><div class="menu-handle"></div>' +
     '<div class="menu-header">' + av + '<div class="menu-header-info"><div class="menu-header-name">' + esc(u.display_name || 'مستخدم') + '</div><div class="menu-header-handle">@' + esc(u.username || 'user') + '</div></div></div>' +
     '<div class="menu-section-title">الحساب</div>' +
-    '<button class="menu-row" id="mProfile"><div class="menu-icon gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="mr-info"><div class="mr-title">الملف الشخصي</div></div></button>' +
-    '<button class="menu-row" id="mEditProfile"><div class="menu-icon violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div><div class="mr-info"><div class="mr-title">تعديل الملف</div></div></button>' +
+    '<button class="menu-row" id="mProfile"><div class="menu-icon gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="mr-info"><div class="mr-title">الملف الشخصي</div><div class="mr-sub">عرض ملفك</div></div></button>' +
+    '<button class="menu-row" id="mEditProfile"><div class="menu-icon violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div><div class="mr-info"><div class="mr-title">تعديل الملف</div><div class="mr-sub">الاسم والصورة</div></div></button>' +
+    '<button class="menu-row" id="mMyPosts"><div class="menu-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="mr-info"><div class="mr-title">منشوراتي</div><div class="mr-sub">عرض منشوراتك</div></div></button>' +
     '<div class="menu-divider"></div>' +
     '<div class="menu-section-title">الإعدادات</div>' +
-    '<button class="menu-row" id="mSettings"><div class="menu-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><div class="mr-info"><div class="mr-title">الإعدادات</div></div></button>' +
-    '<button class="menu-row" id="mBlocks"><div class="menu-icon rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div><div class="mr-info"><div class="mr-title">قائمة الحظر</div></div></button>' +
-    '<button class="menu-row" id="mPrivacy"><div class="menu-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="mr-info"><div class="mr-title">الخصوصية</div></div></button>' +
+    '<button class="menu-row" id="mSettings"><div class="menu-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><div class="mr-info"><div class="mr-title">الإعدادات</div><div class="mr-sub">الثيم والأصوات</div></div></button>' +
+    '<button class="menu-row" id="mBlocks"><div class="menu-icon rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div><div class="mr-info"><div class="mr-title">قائمة الحظر</div><div class="mr-sub">إدارة المحظورين</div></div></button>' +
+    '<button class="menu-row" id="mPrivacy"><div class="menu-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="mr-info"><div class="mr-title">الخصوصية</div><div class="mr-sub">كيف نحمي بياناتك</div></div></button>' +
     '<div class="menu-divider"></div>' +
-    '<button class="menu-row danger" id="mLogout"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div><div class="mr-info"><div class="mr-title">تسجيل الخروج</div></div></button>' +
+    '<button class="menu-row danger" id="mLogout"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div><div class="mr-info"><div class="mr-title">تسجيل الخروج</div><div class="mr-sub">إنهاء الجلسة</div></div></button>' +
     '<div class="menu-close-hint">اضغط خارجاً للإغلاق</div></div>';
   $('modalBody').innerHTML = html;
   $('modalBody').classList.add('menu-sheet-wrap');
@@ -1155,6 +1270,7 @@ $('btnMenu').addEventListener('click', function(){
   pushNav('modal');
   $('mProfile').addEventListener('click', function(){ closeModal(); switchTab('profile'); });
   $('mEditProfile').addEventListener('click', function(){ closeModal(); openEditProfile(ME); });
+  $('mMyPosts').addEventListener('click', function(){ currentProfileTab = 'posts'; closeModal(); switchTab('profile'); });
   $('mSettings').addEventListener('click', function(){ closeModal(); openSettings(); });
   $('mBlocks').addEventListener('click', function(){ closeModal(); openBlocksList(); });
   $('mPrivacy').addEventListener('click', function(){ closeModal(); openPrivacy(); });
