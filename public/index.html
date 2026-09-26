@@ -1,4 +1,4 @@
-٠<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
@@ -363,7 +363,6 @@ var qrScanner = null;
 var qrFileInput = null;
 var lastLongPressAt = 0;
 
-/* ========== E2EE ========== */
 var E2EE = {
   keyPair: null, ready: false, cache: {},
   generateKeyPair: async function() { return crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']); },
@@ -421,7 +420,6 @@ var E2EE = {
   }
 };
 
-/* ========== Long press ========== */
 function attachLongPress(el, callback, duration){
   duration = duration || 500;
   var timer = null, startX = 0, startY = 0;
@@ -445,7 +443,6 @@ function attachLongPress(el, callback, duration){
 }
 function wasLongPress(){ return Date.now() - lastLongPressAt < 600; }
 
-/* ========== Helpers ========== */
 var esc = function(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
 var initial = function(n){ return (n||'?').trim().charAt(0).toUpperCase(); };
 var fmtTime = function(ts){ return new Intl.DateTimeFormat('ar-EG',{hour:'2-digit',minute:'2-digit'}).format(new Date(ts)); };
@@ -505,7 +502,6 @@ function handleApiError(e){
 window.addEventListener('online', function(){ $('netBanner').classList.remove('show'); });
 window.addEventListener('offline', function(){ $('netBanner').classList.add('show'); });
 
-/* ========== Auth ========== */
 $('btnRegister').addEventListener('click', async function(){
   var name = $('rgName').value.trim().toLowerCase();
   if(!/^[a-z][a-z0-9_]{1,19}$/.test(name)) return showErr('الاسم يجب أن يبدأ بحرف إنجليزي (2-20 حرف)');
@@ -531,7 +527,6 @@ async function enterApp(user){
   loadEverything();
 }
 
-/* ========== Socket ========== */
 socket.on('auth-error', function(data){
   var err = data && data.error;
   if(err === 'session_expired' || err === 'invalid_token' || err === 'user_not_found'){
@@ -639,7 +634,6 @@ async function updateChatStatus(userId){
   }
 }
 
-/* ========== Poll ========== */
 async function pollCurrentChat(){
   if(!CURRENT_DM) return;
   var userId = CURRENT_DM.user.id;
@@ -702,7 +696,6 @@ function switchTab(name){
 }
 $$('.bottom-nav button').forEach(function(b){ b.addEventListener('click', function(){ switchTab(b.dataset.tab); }); });
 
-/* ========== Chats list ========== */
 async function loadChats(){
   try {
     var r = await api('/dm-conversations');
@@ -710,13 +703,11 @@ async function loadChats(){
     var totalUnread = 0;
     r.conversations.forEach(function(c){ totalUnread += (c.unread || 0); });
     updateChatBadge(totalUnread);
-
     var html = '';
     for (var i = 0; i < r.conversations.length; i++) {
       var c = r.conversations[i];
       var online = c.user.online && !c.user.deleted;
       var preview = 'لا توجد رسائل';
-
       if (c.last && c.last.deleted) { preview = '🚫 تم حذف الرسالة'; }
       else if (c.last && c.last.text) {
         if (c.last.text.indexOf('🔒') === 0 && c.user.public_key) {
@@ -727,11 +718,9 @@ async function loadChats(){
           } catch(e) { preview = '🔒 رسالة مشفرة'; }
         } else preview = c.last.text.slice(0, 45);
       }
-
       var displayName = c.user.deleted ? 'حساب محذوف' : esc(c.user.display_name);
       var subText = c.user.deleted ? 'الحساب محذوف' : (online ? 'متصل الآن' : esc(preview));
       var subClass = c.user.deleted ? 'offline' : (online ? 'online' : '');
-
       html += '<div class="user-row" data-dmuid="' + c.user.id + '"' + (c.user.deleted ? ' style="opacity:.65"' : '') + '>' +
         avatarHTML(c.user) +
         '<div class="ur-info"><div class="ur-name" style="' + (c.user.deleted ? 'color:var(--muted);font-style:italic' : '') + '">' + displayName + '</div>' +
@@ -739,9 +728,7 @@ async function loadChats(){
         (c.unread && !c.user.deleted ? '<span class="ur-unread">' + c.unread + '</span>' : '') +
         '</div>';
     }
-
     $('chatsList').innerHTML = r.conversations.length ? html : '<div class="empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><p>لا توجد محادثات بعد<br><br>اضغط زر + لإضافة صديق</p></div>';
-
     $('chatsList').querySelectorAll('[data-dmuid]').forEach(function(r2){
       r2.addEventListener('click', function(){
         if (wasLongPress()) return;
@@ -794,7 +781,6 @@ function showConversationMenu(userId, name){
   });
 }
 
-/* ========== Account ========== */
 async function loadAccount(){
   try {
     var r = await api('/me');
@@ -809,11 +795,11 @@ async function loadAccount(){
         '<div class="account-info-row"><span class="label">تاريخ الانضمام</span><span class="value" style="font-family:inherit;direction:rtl">' + new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'long',year:'numeric'}).format(new Date(ME.created_at)) + '</span></div>' +
       '</div>' +
       '<div class="account-actions">' +
-        '<button class="btn-outline" id="btnOpenQr"><svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/></svg>عرض QR الخاص بي</button>' +
+        '<button class="btn-outline" id="btnPrivacy"><svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>سياسة الخصوصية</button>' +
         '<button class="btn-danger-outline" id="btnLogout"><svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>تسجيل الخروج (حذف الحساب)</button>' +
       '</div>';
 
-    $('btnOpenQr').addEventListener('click', showMyQrModal);
+    $('btnPrivacy').addEventListener('click', showPrivacyPolicy);
     $('btnLogout').addEventListener('click', function(){
       showConfirm({
         title: 'تسجيل الخروج',
@@ -833,7 +819,74 @@ async function loadAccount(){
   } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
 }
 
-/* ========== My QR Modal ========== */
+function showPrivacyPolicy(){
+  showModal(
+    '<div class="modal-header">' +
+      '<button class="back-btn" id="ppBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
+      '<div class="title">سياسة الخصوصية</div>' +
+      '<div class="spacer"></div>' +
+    '</div>' +
+    '<div style="font-size:.88rem;line-height:1.9;color:var(--text-2);padding:0 4px">' +
+      '<div style="display:flex;gap:12px;padding:14px;background:var(--success-soft);border-radius:14px;margin-bottom:16px;border:1px solid rgba(16,185,129,.25)">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" style="width:24px;height:24px;flex:0 0 auto;margin-top:2px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>' +
+        '<div style="font-size:.82rem;line-height:1.7;color:var(--success);font-weight:600">' +
+          'رسائلك الخاصة <b>مشفرة من الطرف إلى الطرف (E2EE)</b> ولا يمكن لأحد — حتى نحن — قراءتها.' +
+        '</div>' +
+      '</div>' +
+      '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">1. المعلومات التي نجمعها</h3>' +
+      '<p><b>لا نجمع:</b></p>' +
+      '<ul style="padding-inline-start:20px;margin:8px 0">' +
+        '<li>لا نجمع محتوى رسائلك (مشفرة من الطرف إلى الطرف).</li>' +
+        '<li>لا نجمع جهات الاتصال أو الموقع الجغرافي.</li>' +
+        '<li>لا نستخدم أدوات تتبع أو إعلانات.</li>' +
+      '</ul>' +
+      '<p style="margin-top:10px"><b>نجمع الحد الأدنى فقط:</b></p>' +
+      '<ul style="padding-inline-start:20px;margin:8px 0">' +
+        '<li>اسم المستخدم الذي اخترته (لإنشاء حسابك).</li>' +
+        '<li>المفتاح العام للتشفير (لتمكين الاتصال المشفر).</li>' +
+        '<li>الوقت وآخر ظهور (لإظهار حالة الاتصال).</li>' +
+        '<li>البيانات الوصفية للرسائل: <i>من</i> راسل <i>من</i>، ومتى — لكن ليس <b>ماذا</b> قال.</li>' +
+      '</ul>' +
+      '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">2. كيف نستخدم بياناتك</h3>' +
+      '<ul style="padding-inline-start:20px;margin:8px 0">' +
+        '<li>لتشغيل التطبيق وتوصيل رسائلك إلى صديقك.</li>' +
+        '<li>لمنع إساءة الاستخدام (تحديد معدل الطلبات).</li>' +
+        '<li>لا نبيع بياناتك لأي طرف ثالث.</li>' +
+        '<li>لا نشاركها إلا بموجب أمر قضائي ملزم قانونياً.</li>' +
+      '</ul>' +
+      '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">3. مدة الاحتفاظ بالبيانات</h3>' +
+      '<ul style="padding-inline-start:20px;margin:8px 0">' +
+        '<li>الرسائل تُحذف تلقائياً من الخادم بعد <b>48 ساعة</b> من قراءتها.</li>' +
+        '<li>حسابك يُحذف تلقائياً بعد <b>7 أيام</b> من عدم الاستخدام.</li>' +
+        '<li>تسجيل الخروج يحذف حسابك ومفاتيحك وبياناتك فوراً.</li>' +
+      '</ul>' +
+      '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">4. الأمان</h3>' +
+      '<ul style="padding-inline-start:20px;margin:8px 0">' +
+        '<li><b>E2EE:</b> تشفير AES-256-GCM بمفاتيح مشتقة من ECDH P-256.</li>' +
+        '<li><b>HTTPS:</b> كل الاتصالات مشفرة عبر TLS.</li>' +
+        '<li><b>التحقق من البصمة:</b> يمكنك مقارنة بصمة مفتاحك مع صديقك للتأكد من عدم وجود اختراق.</li>' +
+        '<li>حماية ضد SQL Injection، XSS، وهجمات القوة الغاشمة.</li>' +
+      '</ul>' +
+      '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">5. حقوقك</h3>' +
+      '<ul style="padding-inline-start:20px;margin:8px 0">' +
+        '<li>الحق في حذف حسابك وبياناتك في أي وقت (زر تسجيل الخروج).</li>' +
+        '<li>الحق في معرفة البيانات المُخزّنة عنك.</li>' +
+        '<li>لا يوجد التزام بفترة إشعار — الحذف فوري.</li>' +
+      '</ul>' +
+      '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">6. حدود المسؤولية</h3>' +
+      '<div style="padding:14px;background:var(--danger-soft);border-radius:12px;border:1px solid rgba(232,67,95,.25);font-size:.82rem;line-height:1.8;color:var(--danger)">' +
+        '<b>⚠️ تنبيه مهم:</b> هذا التطبيق غير مخصص لتبادل معلومات حساسة. للاستخدامات الحساسة (نشطاء، صحفيون، معارضون) ننصح باستخدام <b>Signal</b> أو <b>Briar</b> فقط.' +
+      '</div>' +
+      '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">7. التغييرات على السياسة</h3>' +
+      '<p>قد نحدّث هذه السياسة عند الحاجة. الاستمرار في استخدام التطبيق يعني قبولك للنسخة المحدّثة.</p>' +
+      '<div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:.75rem;color:var(--muted)">' +
+        'آخر تحديث: 2026' +
+      '</div>' +
+    '</div>'
+  );
+  $('ppBack').addEventListener('click', closeModal);
+}
+
 async function showMyQrModal(){
   showModal('<div class="modal-header"><button class="back-btn" id="qmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">QR الخاص بي</div><div class="spacer"></div></div><div id="qrModalContent"><div style="text-align:center;padding:30px"><div class="spinner"></div></div></div>');
   $('qmBack').addEventListener('click', closeModal);
@@ -861,7 +914,6 @@ async function showMyQrModal(){
 }
 $('btnMyQrMini').addEventListener('click', showMyQrModal);
 
-/* ========== Add friend ========== */
 $('btnAddFriend').addEventListener('click', showAddFriendMenu);
 
 function showAddFriendMenu(){
@@ -961,7 +1013,6 @@ function extractQrId(text){
   return null;
 }
 
-/* ========== Chat view ========== */
 function scrollChat(inst){ var el = $('chatMsgs'); requestAnimationFrame(function(){ el.scrollTo({ top: el.scrollHeight, behavior: inst ? 'auto' : 'smooth' }); }); }
 
 async function renderDMMsg(m){
@@ -971,7 +1022,6 @@ async function renderDMMsg(m){
   el.dataset.id = m.id;
   el.dataset.mine = mine ? '1' : '0';
   if(m._local) el.dataset.local = '1';
-
   var body = document.createElement('div');
   body.className = 'cmsg-body';
   var meta = document.createElement('div');
@@ -979,7 +1029,6 @@ async function renderDMMsg(m){
   meta.textContent = fmtTime(m.time);
   var bubble = document.createElement('div');
   bubble.className = 'cbubble';
-
   if (m.deleted) {
     bubble.classList.add('deleted');
     bubble.textContent = 'تم حذف الرسالة';
@@ -992,12 +1041,10 @@ async function renderDMMsg(m){
       else displayText = '[🔒 رسالة مشفرة]';
     }
     bubble.dataset.plain = displayText;
-
     var lockIcon = isEncrypted ? '<svg class="lock-ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' : '';
     var editedMark = m.edited ? '<span class="edited-mark">(معدّلة)</span>' : '';
     bubble.innerHTML = lockIcon + linkify(displayText) + editedMark;
   }
-
   body.appendChild(meta); body.appendChild(bubble);
   if(mine && !m.deleted){
     var mk = document.createElement('div');
@@ -1029,12 +1076,10 @@ attachLongPress($('chatMsgs'), function(e){
 });
 
 function showMessageMenu(msgId, isMine, text){
-  // فقط رسائل المرسل يمكن تعديلها أو حذفها
   if (!isMine) {
     toast('يمكنك فقط حذف أو تعديل رسائلك', 'info');
     return;
   }
-
   var html = '<div class="modal-header">' +
     '<button class="back-btn" id="mmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
     '<div class="title">خيارات الرسالة</div><div class="spacer"></div></div>' +
@@ -1042,15 +1087,9 @@ function showMessageMenu(msgId, isMine, text){
       '<button class="modal-item" id="mmEdit"><div class="mi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div><div class="mi-info"><div class="mi-title">تعديل الرسالة</div><div class="mi-sub">سيتم التعديل عند الطرفين</div></div></button>' +
       '<button class="modal-item" id="mmDelete"><div class="mi-icon danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div><div class="mi-info"><div class="mi-title">حذف الرسالة</div><div class="mi-sub">سيتم الحذف من الطرفين</div></div></button>' +
     '</div>';
-
   showModal(html);
   $('mmBack').addEventListener('click', closeModal);
-
-  $('mmEdit').addEventListener('click', function(){
-    closeModal();
-    showEditMessageModal(msgId, text);
-  });
-
+  $('mmEdit').addEventListener('click', function(){ closeModal(); showEditMessageModal(msgId, text); });
   $('mmDelete').addEventListener('click', function(){
     closeModal();
     showConfirm({
@@ -1083,21 +1122,17 @@ function showEditMessageModal(msgId, currentText){
   );
   $('emmBack').addEventListener('click', closeModal);
   setTimeout(function(){ var t = $('emmText'); if(t){ t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, 200);
-
   $('emmSave').addEventListener('click', async function(){
     var newText = $('emmText').value.trim();
     if (!newText) return toast('اكتب نصاً', 'err');
     if (newText === currentText) { closeModal(); return; }
     if (!CURRENT_DM || !CURRENT_DM.sharedKey) return toast('لا يوجد مفتاح تشفير', 'err');
-
     var btn = $('emmSave');
     btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div>';
     btn.disabled = true;
-
     try {
       var encrypted = await E2EE.encrypt(CURRENT_DM.sharedKey, newText);
       await api('/dms/' + msgId, { method: 'PUT', body: JSON.stringify({ text: encrypted }) });
-
       var el = $('chatMsgs').querySelector('.cmsg[data-id="' + msgId + '"]');
       if (el) {
         var bubble = el.querySelector('.cbubble');
@@ -1133,20 +1168,13 @@ async function sendChat(){
   if (CURRENT_DM.deleted) { toast('لا يمكن المراسلة — الحساب محذوف', 'err'); return; }
   var toId = CURRENT_DM.user.id;
   var now = Date.now();
-
-  renderDMMsg({
-    id: 'local_' + now + '_' + Math.random().toString(36).slice(2),
-    from_id: ME.id, to_id: toId, text: txt, time: now,
-    read: false, delivered: false, _local: true
-  });
+  renderDMMsg({ id: 'local_' + now + '_' + Math.random().toString(36).slice(2), from_id: ME.id, to_id: toId, text: txt, time: now, read: false, delivered: false, _local: true });
   scrollChat();
-
   var encrypted = txt;
   if (CURRENT_DM.sharedKey) {
     try { encrypted = await E2EE.encrypt(CURRENT_DM.sharedKey, txt); }
     catch(e) { toast('فشل التشفير', 'err'); return; }
   } else { toast('لا يوجد مفتاح مشفر', 'err'); return; }
-
   socket.emit('dm-send', { toId: toId, text: encrypted });
   socket.emit('dm-typing', { toId: toId, isTyping: false });
   clearTimeout(dmTypingTimer);
@@ -1174,9 +1202,7 @@ async function openDM(user){
   var shared = null;
   if (peerPub) { try { shared = await E2EE.getSharedKey(user.id, peerPub); } catch(_){} }
   if (!isDeleted && !shared) return showConfirm({ title: 'لا يمكن بدء المحادثة', text: 'صديقك لم يفتح التطبيق بعد على النظام الجديد. اطلب منه فتح التطبيق مرة واحدة، ثم حاول مجدداً.', confirmText: 'حسناً' });
-
   CURRENT_DM = { user: user, sharedKey: shared ? shared.key : null, fingerprint: shared ? shared.fingerprint : null, deleted: isDeleted };
-
   if (isDeleted) {
     $('chatName').textContent = 'حساب محذوف';
     $('chatName').style.color = 'var(--muted)'; $('chatName').style.fontStyle = 'italic';
@@ -1191,7 +1217,6 @@ async function openDM(user){
     $('chatInput').disabled = false; $('chatInput').placeholder = 'اكتب رسالة مشفرة...';
     $('chatSend').disabled = false; $('chatVerify').style.display = '';
   }
-
   $('chatView').classList.add('open');
   $('chatMsgs').innerHTML = '';
   try {
@@ -1202,7 +1227,6 @@ async function openDM(user){
   } catch(_){}
 }
 
-/* ========== Verify fingerprint ========== */
 $('chatVerify').addEventListener('click', function(){
   if (!CURRENT_DM || !CURRENT_DM.fingerprint) return;
   var peerId = CURRENT_DM.user.id;
@@ -1229,7 +1253,6 @@ $('chatVerify').addEventListener('click', function(){
   });
 });
 
-/* ========== Modal ========== */
 function closeModal(){ $('modal').classList.remove('open'); }
 function showModal(html){ $('modalBody').innerHTML = html; $('modal').classList.add('open'); }
 $('modal').addEventListener('click', function(e){ if(e.target === $('modal')) closeModal(); });
@@ -1258,7 +1281,6 @@ function showConfirm(opts){
   backdrop.querySelector('#cfOk').addEventListener('click', function(){ backdrop.remove(); if(opts.onConfirm) opts.onConfirm(); });
 }
 
-/* ========== Beep ========== */
 var audioCtx = null;
 function getAudioCtx(){ var Ctx = window.AudioContext || window.webkitAudioContext; if(!Ctx) return null; if(!audioCtx) audioCtx = new Ctx(); if(audioCtx.state === 'suspended') audioCtx.resume(); return audioCtx; }
 function playBeep(){
@@ -1277,7 +1299,6 @@ function playBeep(){
   } catch(_){}
 }
 
-/* ========== Init ========== */
 (async function(){
   var minWait = new Promise(function(r){ setTimeout(r, 800); });
   try {
