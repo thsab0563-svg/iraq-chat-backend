@@ -1,5 +1,5 @@
 /* ============================================================
-   Dust Server v7.0 — خادم دردشة مشفر مع حماية شاملة
+   Dust Server v7.1 — خادم دردشة مشفر مع حماية شاملة
    ============================================================ */
 'use strict';
 
@@ -15,7 +15,6 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const Database = require('better-sqlite3');
 const multer = require('multer');
 const webpush = require('web-push');
@@ -194,10 +193,6 @@ function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
-function generateToken() {
-  return crypto.randomBytes(48).toString('base64url');
-}
-
 function publicUser(row, includePrivate = false) {
   if (!row) return null;
   const u = {
@@ -210,16 +205,13 @@ function publicUser(row, includePrivate = false) {
     qr_id: row.qr_id,
     created_at: row.created_at,
     last_seen: row.last_seen,
-    online: ONLINE_USERS.has(row.id)
+    online: ONLINE_USERS.has(row.id),
+    bio: decryptField(row.bio_enc),
+    location: decryptField(row.location_enc)
   };
   if (includePrivate) {
-    u.bio = decryptField(row.bio_enc);
-    u.location = decryptField(row.location_enc);
     u.theme = row.theme;
     u.sound = !!row.sound;
-  } else {
-    u.bio = decryptField(row.bio_enc);
-    u.location = decryptField(row.location_enc);
   }
   return u;
 }
@@ -236,26 +228,22 @@ function extractHashtags(text) {
    5. Express setup
    ============================================================ */
 const app = express();
-app.set('trust proxy', 1); // مهم لـ Railway
+app.set('trust proxy', 1);
 
 app.use(helmet({
-  contentSecurityPolicy: false, // نستخدم CSP في HTML
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
 app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
-    cb(null, true); // اسمح للجميع (التطبيق عام)
-  },
+  origin: (origin, cb) => cb(null, true),
   credentials: true
 }));
 
 app.use(express.json({ limit: '256kb' }));
 app.use(express.urlencoded({ extended: true, limit: '256kb' }));
 
-// تقديم الملفات الثابتة
 const PUBLIC_DIR = path.join(__dirname, 'public');
 if (fs.existsSync(PUBLIC_DIR)) {
   app.use(express.static(PUBLIC_DIR, {
@@ -266,7 +254,6 @@ if (fs.existsSync(PUBLIC_DIR)) {
   }));
 }
 
-// مجلد الرفع
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d' }));
@@ -276,7 +263,7 @@ app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d' }));
    ============================================================ */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 30,
   message: { error: 'too_many_requests' },
   standardHeaders: true,
   legacyHeaders: false
@@ -284,7 +271,7 @@ const authLimiter = rateLimit({
 
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 180,
+  max: 240,
   message: { error: 'rate_limit_exceeded' },
   standardHeaders: true,
   legacyHeaders: false
@@ -292,7 +279,7 @@ const apiLimiter = rateLimit({
 
 const dmLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 60,
+  max: 80,
   keyGenerator: (req) => req.userId ? String(req.userId) : req.ip,
   message: { error: 'slow_down' }
 });
@@ -313,7 +300,6 @@ function authRequired(req, res, next) {
     const row = db.prepare('SELECT * FROM users WHERE id = ? AND deleted = 0').get(decoded.id);
     if (!row) return res.status(401).json({ error: 'user_not_found' });
 
-    // تحقق من token_hash (للسماح بإبطال الجلسة)
     if (row.token_hash !== hashToken(token)) {
       return res.status(401).json({ error: 'session_expired' });
     }
@@ -355,7 +341,7 @@ function validate(req, res, next) {
 }
 
 /* ============================================================
-   9. Auth Routes
+   9. Auth Routes — [مُصلحة]
    ============================================================ */
 app.post('/api/register',
   body('name').trim().isLength({ min: 2, max: 20 }).escape(),
@@ -368,41 +354,47 @@ app.post('/api/register',
     let username;
     let isDuplicate = false;
     for (let i = 0; i < 5; i++) {
-      username = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_\u0600-\u06FF]/g, '') || 'user';
-      if (username.length < 3) username = 'user';
-      username = username.slice(0, 14);
+      let base = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_\u0600-\u06FF]/g, '') || 'user';
+      if (base.length < 3) base = 'user';
+      base = base.slice(0, 14);
       const suffix = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
-      const candidate = username + suffix;
+      const candidate = base + suffix;
       const exists = db.prepare('SELECT id FROM users WHERE username = ?').get(candidate);
       if (!exists) { username = candidate; break; }
       if (i === 4) isDuplicate = true;
     }
 
     const qrId = nanoid(16).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16);
-    const token = generateToken();
-    const tokenHash = hashToken(token);
 
+    // ✅ الإصلاح: أضف المستخدم أولاً بـ token_hash مؤقت
     const info = db.prepare(`
       INSERT INTO users (username, display_name, color, qr_id, token_hash, created_at, last_seen)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(username, name, color || '#e8b567', qrId, tokenHash, now(), now());
+    `).run(username, name, color || '#e8b567', qrId, 'pending', now(), now());
 
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
+
+    // ✅ الآن أنشئ JWT مع id الحقيقي
     const jwtToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '365d' });
+
+    // ✅ خزّن hash الخاص بالـ JWT (وليس نص عشوائي)
+    const tokenHash = hashToken(jwtToken);
+    db.prepare('UPDATE users SET token_hash = ? WHERE id = ?').run(tokenHash, user.id);
+
+    // أعد تحميل المستخدم مع token_hash الجديد
+    const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id);
 
     res.json({
       token: jwtToken,
-      user: publicUser(user, true),
+      user: publicUser(updatedUser, true),
       isDuplicate
     });
   }
 );
 
 app.post('/api/logout', authRequired, (req, res) => {
-  // حذف الحساب نهائياً (كما في التطبيق الأصلي)
   const userId = req.userId;
   db.prepare('UPDATE users SET deleted = 1 WHERE id = ?').run(userId);
-  // إعلام المتصلين
   io.emit('user-deleted', { userId });
   res.json({ ok: true });
 });
@@ -453,17 +445,14 @@ app.get('/api/users/:id', authRequired, (req, res) => {
   const row = db.prepare('SELECT * FROM users WHERE id = ? AND deleted = 0').get(id);
   if (!row) return res.status(404).json({ error: 'user_not_found' });
 
-  // فحص الحظر
   const blocked = !!db.prepare(
     'SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)'
   ).get(req.userId, id, id, req.userId);
 
-  // فحص الصداقة
   const isFriend = !!db.prepare(
     'SELECT 1 FROM friendships WHERE user_id = ? AND friend_id = ? AND status = ?'
   ).get(req.userId, id, 'accepted');
 
-  // إحصائيات
   const stats = {
     friends: db.prepare('SELECT COUNT(*) as c FROM friendships WHERE (user_id = ? OR friend_id = ?) AND status = ?').get(id, id, 'accepted').c,
     posts: db.prepare('SELECT COUNT(*) as c FROM posts WHERE user_id = ?').get(id).c
@@ -521,6 +510,7 @@ app.get('/api/qr/image', authRequired, async (req, res) => {
     });
     res.json({ qr: dataUrl, link, qr_id: req.user.qr_id });
   } catch (e) {
+    console.error('QR error:', e);
     res.status(500).json({ error: 'qr_failed' });
   }
 });
@@ -537,13 +527,11 @@ app.post('/api/friends/add-by-qr', authRequired,
     if (!target) return res.status(404).json({ error: 'user_not_found' });
     if (target.id === req.userId) return res.status(400).json({ error: 'self' });
 
-    // فحص الحظر
     const blocked = db.prepare(
       'SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)'
     ).get(req.userId, target.id, target.id, req.userId);
     if (blocked) return res.status(403).json({ error: 'blocked' });
 
-    // فحص الصداقة الحالية
     const existing = db.prepare(
       'SELECT 1 FROM friendships WHERE user_id = ? AND friend_id = ?'
     ).get(req.userId, target.id);
@@ -552,7 +540,6 @@ app.post('/api/friends/add-by-qr', authRequired,
       return res.json({ status: 'already_friends', user: publicUser(target) });
     }
 
-    // إضافة ثنائية الاتجاه
     const t = now();
     const tx = db.transaction(() => {
       db.prepare('INSERT OR IGNORE INTO friendships (user_id, friend_id, status, time) VALUES (?, ?, ?, ?)')
@@ -562,7 +549,6 @@ app.post('/api/friends/add-by-qr', authRequired,
     });
     tx();
 
-    // إشعار الطرف الآخر
     io.to(`u_${target.id}`).emit('notification', {
       type: 'friend_added',
       text: `${req.user.display_name} أضافك كصديق`,
@@ -626,7 +612,6 @@ app.post('/api/block/:id', authRequired, (req, res) => {
   db.prepare('INSERT OR IGNORE INTO blocks (blocker_id, blocked_id, time) VALUES (?, ?, ?)')
     .run(req.userId, targetId, now());
 
-  // إزالة الصداقة
   db.prepare('DELETE FROM friendships WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)')
     .run(req.userId, targetId, targetId, req.userId);
 
@@ -692,7 +677,6 @@ app.post('/api/posts', authRequired, dmLimiter,
     const info = db.prepare('INSERT INTO posts (user_id, text, time) VALUES (?, ?, ?)')
       .run(req.userId, text, t);
 
-    // استخراج hashtags
     const tags = extractHashtags(text);
     const insertTag = db.prepare('INSERT INTO hashtags (post_id, tag) VALUES (?, ?)');
     for (const tag of tags) insertTag.run(info.lastInsertRowid, tag);
@@ -827,11 +811,9 @@ app.get('/api/dms/:userId', authRequired, (req, res) => {
     LIMIT 500
   `).all(req.userId, otherId, otherId, req.userId);
 
-  // تعليم كمقروء
   db.prepare('UPDATE dms SET read = 1 WHERE from_id = ? AND to_id = ? AND read = 0')
     .run(otherId, req.userId);
 
-  // إعلام المرسل بأن رسائله قُرئت
   io.to(`u_${otherId}`).emit('dm-read-receipt', { byId: req.userId });
 
   const messages = rows.map(m => ({
@@ -941,7 +923,7 @@ const io = new Server(server, {
   maxHttpBufferSize: 1e6
 });
 
-const ONLINE_USERS = new Map(); // userId -> Set<socketId>
+const ONLINE_USERS = new Map();
 
 io.use((socket, next) => {
   const token = socket.handshake.auth && socket.handshake.auth.token;
@@ -964,30 +946,24 @@ io.use((socket, next) => {
 io.on('connection', (socket) => {
   const userId = socket.userId;
 
-  // انضم لغرفة خاصة
   socket.join(`u_${userId}`);
 
-  // تتبع الحالة
   if (!ONLINE_USERS.has(userId)) ONLINE_USERS.set(userId, new Set());
   ONLINE_USERS.get(userId).add(socket.id);
 
-  // إعلام الآخرين
   io.emit('user-online', { userId });
 
-  // تحديث last_seen
   db.prepare('UPDATE users SET last_seen = ? WHERE id = ?').run(now(), userId);
 
   console.log(`🟢 User ${userId} connected (${socket.id})`);
 
-  /* -------------------- DM Send -------------------- */
-  socket.on('dm-send', async (data, cb) => {
+  socket.on('dm-send', async (data) => {
     try {
       if (!data || typeof data.toId !== 'number' || typeof data.text !== 'string') return;
-      if (data.text.length === 0 || data.text.length > 10000) return; // حد أقصى للنص المشفر
+      if (data.text.length === 0 || data.text.length > 10000) return;
 
       const toId = data.toId;
 
-      // فحص الحظر
       const blocked = db.prepare(
         'SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)'
       ).get(userId, toId, toId, userId);
@@ -1013,14 +989,12 @@ io.on('connection', (socket) => {
         read: false
       };
 
-      // أرسل للطرفين
       io.to(`u_${toId}`).emit('dm-message', msg);
       socket.emit('dm-message', msg);
 
       if (isOnline) {
         socket.emit('dm-delivered', { id: msg.id });
       } else {
-        // إشعار Push
         sendPush(toId, {
           title: 'Dust',
           body: 'رسالة جديدة',
@@ -1033,7 +1007,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  /* -------------------- DM Read -------------------- */
   socket.on('dm-read', (data) => {
     if (!data || typeof data.fromId !== 'number') return;
     db.prepare('UPDATE dms SET read = 1 WHERE from_id = ? AND to_id = ? AND read = 0')
@@ -1041,7 +1014,6 @@ io.on('connection', (socket) => {
     io.to(`u_${data.fromId}`).emit('dm-read-receipt', { byId: userId });
   });
 
-  /* -------------------- Typing -------------------- */
   socket.on('dm-typing', (data) => {
     if (!data || typeof data.toId !== 'number') return;
     io.to(`u_${data.toId}`).emit('dm-typing', {
@@ -1050,7 +1022,6 @@ io.on('connection', (socket) => {
     });
   });
 
-  /* -------------------- Disconnect -------------------- */
   socket.on('disconnect', () => {
     const set = ONLINE_USERS.get(userId);
     if (set) {
@@ -1069,11 +1040,10 @@ io.on('connection', (socket) => {
    19. Cleanup Task — حذف الرسائل القديمة
    ============================================================ */
 setInterval(() => {
-  // حذف الرسائل الأقدم من 48 ساعة
   const cutoff = now() - (48 * 60 * 60 * 1000);
   const r = db.prepare('DELETE FROM dms WHERE time < ? AND read = 1').run(cutoff);
   if (r.changes > 0) console.log(`🧹 Cleaned ${r.changes} old messages`);
-}, 60 * 60 * 1000); // كل ساعة
+}, 60 * 60 * 1000);
 
 /* ============================================================
    20. Health Check + Errors
@@ -1085,7 +1055,7 @@ app.get('/health', (req, res) => {
     users: db.prepare('SELECT COUNT(*) as c FROM users WHERE deleted = 0').get().c,
     online: ONLINE_USERS.size,
     e2ee: 'client-side',
-    version: '7.0.0'
+    version: '7.1.0'
   });
 });
 
