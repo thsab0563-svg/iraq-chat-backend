@@ -138,6 +138,7 @@ function now() { return Date.now(); }
 function hashToken(token) { return crypto.createHash('sha256').update(token).digest('hex'); }
 
 function publicUser(row, includePrivate = false) {
+function publicUser(row, includePrivate = false) {
   if (!row) return null;
   const u = {
     id: row.id,
@@ -149,10 +150,11 @@ function publicUser(row, includePrivate = false) {
     qr_id: row.qr_id,
     created_at: row.created_at,
     last_seen: row.last_seen,
-    online: ONLINE_USERS.has(row.id),
+    online: !row.deleted && ONLINE_USERS.has(row.id),
     public_key: row.public_key || null,
     bio: decryptField(row.bio_enc),
-    location: decryptField(row.location_enc)
+    location: decryptField(row.location_enc),
+    deleted: row.deleted === 1
   };
   if (includePrivate) {
     u.theme = row.theme;
