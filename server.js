@@ -1,5 +1,5 @@
 /* ============================================================
-   Dust Server v8.2 — E2EE + Deleted User Support
+   Dust Server v8.2 — E2EE (ECDH) + Deleted User Support
    ============================================================ */
 'use strict';
 
