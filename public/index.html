@@ -46,7 +46,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .screen{display:none;height:100dvh;width:100%;position:relative;z-index:1}
 .screen.active{display:flex;flex-direction:column}
 
-/* ===== Splash ===== */
 #splash{position:fixed;inset:0;z-index:10000;background:radial-gradient(900px 700px at 100% 0%,rgba(232,181,103,.18),transparent 60%),radial-gradient(800px 700px at 0% 100%,rgba(91,140,255,.1),transparent 60%),var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;transition:opacity .5s,visibility .5s}
 #splash.hide{opacity:0;visibility:hidden;pointer-events:none}
 #splash .logo{width:104px;height:104px;border-radius:32px;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;box-shadow:var(--shadow-gold);animation:logoFloat 2.4s ease-in-out infinite;position:relative}
@@ -61,7 +60,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 @keyframes splashBar{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
 @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 
-/* ===== Auth ===== */
 #auth{overflow-y:auto}
 .auth-wrap{margin:auto;width:100%;max-width:440px;padding:36px 24px;position:relative;z-index:1}
 .auth-logo{width:92px;height:92px;margin:0 auto 22px;border-radius:28px;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;box-shadow:var(--shadow-gold)}
@@ -85,7 +83,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .warn-card .w-text{flex:1;font-size:.82rem;line-height:1.75;color:var(--text-2)}
 .warn-card .w-text b{color:var(--gold);font-weight:800}
 
-/* ===== App ===== */
 #app{position:relative;overflow:hidden}
 .tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
 .tab{display:none}
@@ -113,7 +110,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .user-row .ur-sub.online{color:var(--success);font-weight:600}
 .user-row .ur-unread{background:var(--danger);color:#fff;font-size:.7rem;font-weight:800;padding:3px 9px;border-radius:99px;min-width:22px;text-align:center}
 
-/* ===== Account ===== */
 .account-wrap{padding:32px 20px 24px;display:flex;flex-direction:column;align-items:center;gap:14px}
 .account-avatar{width:110px;height:110px;border-radius:50%;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;font-weight:900;font-size:2.6rem;box-shadow:var(--shadow-gold);border:5px solid var(--surface)}
 .account-name{font-size:1.6rem;font-weight:900;text-align:center;letter-spacing:-.3px;margin-top:4px}
@@ -130,7 +126,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .btn-danger-outline{width:100%;padding:14px;border-radius:var(--radius);background:var(--surface);border:1.5px solid rgba(232,67,95,.3);color:var(--danger);font-weight:800;font-size:.92rem;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,background .2s}
 .btn-danger-outline:active{transform:scale(.97);background:var(--danger-soft)}
 
-/* ===== Chat View ===== */
 #chatView{position:fixed;inset:0;z-index:200;background:var(--bg);display:none;flex-direction:column}
 #chatView.open{display:flex}
 .chat-head{display:flex;align-items:center;gap:10px;padding:14px 16px;padding-top:calc(14px + env(safe-area-inset-top));border-bottom:1px solid var(--border);background:var(--bg)}
@@ -168,7 +163,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .send:active{transform:scale(.9)}
 .send:disabled{opacity:.4;cursor:not-allowed}
 
-/* ===== Modal ===== */
 .modal{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:none;align-items:flex-end;justify-content:center}
 .modal.open{display:flex}
 .modal-card{background:var(--surface);border-radius:var(--radius-xl) var(--radius-xl) 0 0;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;padding:22px;padding-bottom:calc(22px + env(safe-area-inset-bottom));animation:slideUp .3s var(--ease)}
@@ -190,7 +184,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .modal-item .mi-sub{font-size:.72rem;color:var(--muted);margin-top:3px;font-weight:500}
 #qrReader{width:100%;max-width:400px;margin:0 auto;border-radius:var(--radius-lg);overflow:hidden}
 
-/* ===== Toasts ===== */
 #toasts{position:fixed;top:calc(16px + env(safe-area-inset-top));inset-inline:16px;z-index:999;display:flex;flex-direction:column;gap:9px;align-items:center;pointer-events:none}
 .toast{padding:13px 20px;border-radius:var(--radius);background:color-mix(in srgb,var(--surface) 96%,transparent);backdrop-filter:blur(20px);border:1px solid var(--border-2);box-shadow:var(--shadow-lg);font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:10px;max-width:100%;pointer-events:auto;animation:slideDown .3s var(--ease)}
 .toast.ok{border-color:rgba(16,185,129,.35);color:var(--success)}
@@ -207,7 +200,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .empty svg{width:64px;height:64px;opacity:.3;margin:0 auto 18px;stroke:currentColor;fill:none;stroke-width:1.5}
 .empty p{font-size:.92rem;line-height:1.65}
 
-/* ===== PIN Lock Screen ===== */
 #pinLock{position:fixed;inset:0;z-index:5000;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
 #pinLock.open{display:flex}
 #pinLock .pin-logo{width:92px;height:92px;border-radius:28px;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;box-shadow:var(--shadow-gold);margin-bottom:20px}
@@ -227,7 +219,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 #pinLock .pin-attempts{font-size:.75rem;color:var(--muted);margin-top:8px;text-align:center}
 #pinLock .pin-attempts.danger{color:var(--danger);font-weight:700}
 
-/* ===== Security Pack ===== */
 body.security-blur{filter:blur(22px) brightness(.7);transition:filter .15s;pointer-events:none}
 .cmsg .cbubble,.chat-msgs,.msg-content{-webkit-touch-callout:none !important;-webkit-user-select:none !important;user-select:none !important}
 
@@ -396,7 +387,6 @@ var qrScanner = null;
 var qrFileInput = null;
 var lastLongPressAt = 0;
 
-/* ===== Security Pack State ===== */
 var SecurityPack = {
   autoLockMinutes: 2,
   wipeAfterAttempts: 10,
@@ -410,17 +400,12 @@ var SecurityPack = {
 });
 
 document.addEventListener('contextmenu', function(e){
-  if (e.target.closest('.cmsg') || e.target.closest('.chat-msgs')) {
-    e.preventDefault();
-  }
+  if (e.target.closest('.cmsg') || e.target.closest('.chat-msgs')) e.preventDefault();
 });
 
 document.addEventListener('visibilitychange', function(){
-  if (document.hidden && ME && E2EE.ready) {
-    document.body.classList.add('security-blur');
-  } else {
-    document.body.classList.remove('security-blur');
-  }
+  if (document.hidden && ME && E2EE.ready) document.body.classList.add('security-blur');
+  else document.body.classList.remove('security-blur');
 });
 
 function startAutoLockMonitor(){
@@ -431,19 +416,14 @@ function startAutoLockMonitor(){
     if (!E2EE.ready) return;
     if ($('pinLock').classList.contains('open')) return;
     var inactive = Date.now() - SecurityPack.lastActivity;
-    if (inactive >= SecurityPack.autoLockMinutes * 60 * 1000) {
-      lockAppNow('auto');
-    }
+    if (inactive >= SecurityPack.autoLockMinutes * 60 * 1000) lockAppNow('auto');
   }, 5000);
 }
 
 function lockAppNow(reason){
   if ($('pinLock').classList.contains('open')) return;
   E2EE.lock();
-  if (CURRENT_DM) {
-    $('chatView').classList.remove('open');
-    CURRENT_DM = null;
-  }
+  if (CURRENT_DM) { $('chatView').classList.remove('open'); CURRENT_DM = null; }
   try { switchTab('chats'); } catch(e){}
   showPINUnlock(reason === 'auto');
 }
@@ -458,15 +438,13 @@ function wipeAllData(){
     toDelete.forEach(function(k){ try { localStorage.removeItem(k); } catch(e){} });
     try { sessionStorage.clear(); } catch(e){}
     if ('caches' in window) {
-      caches.keys().then(function(names){
-        names.forEach(function(n){ try { caches.delete(n); } catch(e){} });
-      });
+      caches.keys().then(function(names){ names.forEach(function(n){ try { caches.delete(n); } catch(e){} }); });
     }
   } catch(e){}
 }
 
 /* ============================================================
-   E2EE — ECDH + PIN Encryption + Anti-MITM
+   E2EE — ECDH + PIN + Anti-MITM + Padding
    ============================================================ */
 var E2EE = {
   keyPair: null, ready: false, cache: {},
@@ -478,10 +456,7 @@ var E2EE = {
     var km = await crypto.subtle.importKey('raw', enc.encode(pin), {name:'PBKDF2'}, false, ['deriveKey']);
     return crypto.subtle.deriveKey(
       {name:'PBKDF2', salt: salt, iterations: 250000, hash:'SHA-256'},
-      km,
-      {name:'AES-GCM', length:256},
-      false,
-      ['encrypt','decrypt']
+      km, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']
     );
   },
   saveEncryptedPrivateKey: async function(privB64, pin) {
@@ -490,9 +465,7 @@ var E2EE = {
     var iv = crypto.getRandomValues(new Uint8Array(12));
     var cipher = await crypto.subtle.encrypt({name:'AES-GCM', iv: iv}, key, new TextEncoder().encode(privB64));
     var combined = new Uint8Array(16 + 12 + cipher.byteLength);
-    combined.set(salt, 0);
-    combined.set(iv, 16);
-    combined.set(new Uint8Array(cipher), 28);
+    combined.set(salt, 0); combined.set(iv, 16); combined.set(new Uint8Array(cipher), 28);
     var bin = '';
     for (var i = 0; i < combined.length; i++) bin += String.fromCharCode(combined[i]);
     localStorage.setItem('dust_e2ee_priv_enc', btoa(bin));
@@ -505,14 +478,14 @@ var E2EE = {
       var bin = atob(encB64);
       var raw = new Uint8Array(bin.length);
       for (var i = 0; i < bin.length; i++) raw[i] = bin.charCodeAt(i);
-      var salt = raw.slice(0, 16);
-      var iv = raw.slice(16, 28);
-      var cipher = raw.slice(28);
+      var salt = raw.slice(0, 16); var iv = raw.slice(16, 28); var cipher = raw.slice(28);
       var key = await this.deriveKeyFromPIN(pin, salt);
       var plain = await crypto.subtle.decrypt({name:'AES-GCM', iv: iv}, key, cipher);
       return new TextDecoder().decode(plain);
     } catch(e) { return null; }
   },
+
+  // ✅ FIXED: unlock now uploads public key
   unlock: async function(pin) {
     var privB64 = await this.decryptPrivateKey(pin);
     if (!privB64) return false;
@@ -523,25 +496,24 @@ var E2EE = {
       var privateKey = await this.importPrivateKey(privB64);
       this.keyPair = { publicKey, privateKey };
       this.ready = true;
+      // ✅ ارفع المفتاح العام كل مرة
+      try { await api('/me/public-key', { method: 'PUT', body: JSON.stringify({ public_key: pubB64 }) }); } catch(e) { console.warn('pubkey upload:', e.message); }
       return true;
     } catch(e) { return false; }
   },
-  lock: function() {
-    this.keyPair = null;
-    this.ready = false;
-    this.cache = {};
-  },
+  lock: function() { this.keyPair = null; this.ready = false; this.cache = {}; },
   setup: async function(pin) {
     var kp = await this.generateKeyPair();
     var pubB64 = await this.exportPublicKey(kp.publicKey);
     var privB64 = await this.exportPrivateKey(kp.privateKey);
     await this.saveEncryptedPrivateKey(privB64, pin);
     localStorage.setItem('dust_e2ee_pub', pubB64);
-    this.keyPair = kp;
-    this.ready = true;
+    this.keyPair = kp; this.ready = true;
     try { await api('/me/public-key', {method:'PUT', body: JSON.stringify({public_key: pubB64})}); } catch(e) {}
     return true;
   },
+
+  // ✅ FIXED: migrateOldKey now uploads public key
   migrateOldKey: async function(pin) {
     var oldPriv = localStorage.getItem('dust_e2ee_priv');
     var oldPub = localStorage.getItem('dust_e2ee_pub');
@@ -552,6 +524,8 @@ var E2EE = {
       var privateKey = await this.importPrivateKey(oldPriv);
       this.keyPair = {publicKey, privateKey};
       this.ready = true;
+      // ✅ ارفع المفتاح العام بعد الترحيل
+      try { await api('/me/public-key', { method: 'PUT', body: JSON.stringify({ public_key: oldPub }) }); } catch(e) { console.warn('pubkey migrate upload:', e.message); }
       return true;
     } catch(e) { return false; }
   },
@@ -586,10 +560,7 @@ var E2EE = {
     var hkdfKey = await crypto.subtle.importKey('raw', bits, 'HKDF', false, ['deriveKey']);
     return crypto.subtle.deriveKey(
       { name: 'HKDF', hash: 'SHA-256', salt: new TextEncoder().encode('Dust-E2EE-Salt-v3'), info: new TextEncoder().encode('Dust-Shared-Key-v3') },
-      hkdfKey,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['encrypt', 'decrypt']
+      hkdfKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
     );
   },
   computeFingerprint: async function(pub1, pub2) {
@@ -626,8 +597,7 @@ var E2EE = {
     var iv = crypto.getRandomValues(new Uint8Array(12));
     var cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, sharedKey, padded);
     var combined = new Uint8Array(iv.length + cipher.byteLength);
-    combined.set(iv, 0);
-    combined.set(new Uint8Array(cipher), iv.length);
+    combined.set(iv, 0); combined.set(new Uint8Array(cipher), iv.length);
     var bin = '';
     for (var i = 0; i < combined.length; i++) bin += String.fromCharCode(combined[i]);
     return '🔒' + btoa(bin);
@@ -638,8 +608,7 @@ var E2EE = {
       var bin = atob(payload.substring(2));
       var raw = new Uint8Array(bin.length);
       for (var i = 0; i < bin.length; i++) raw[i] = bin.charCodeAt(i);
-      var iv = raw.slice(0, 12);
-      var cipher = raw.slice(12);
+      var iv = raw.slice(0, 12); var cipher = raw.slice(12);
       var plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, sharedKey, cipher);
       var bytes = new Uint8Array(plain);
       var origLen = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
@@ -732,29 +701,22 @@ function handleApiError(e){
 window.addEventListener('online', function(){ $('netBanner').classList.remove('show'); });
 window.addEventListener('offline', function(){ $('netBanner').classList.add('show'); });
 
-/* ========== Key Change Warning ========== */
 function showKeyChangeWarning(user, onCancel, onAccept){
   var backdrop = document.createElement('div');
   backdrop.style.cssText = 'position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:20px;';
   backdrop.innerHTML =
     '<div style="background:var(--surface);border:2px solid var(--danger);border-radius:24px;width:100%;max-width:400px;padding:26px 22px 22px;text-align:center;box-shadow:0 20px 60px rgba(232,67,95,.4)">' +
-      '<div style="width:72px;height:72px;border-radius:50%;margin:0 auto 18px;display:grid;place-items:center;background:var(--danger-soft);color:var(--danger);animation:pulse 1.5s ease-in-out infinite">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:38px;height:38px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
-      '</div>' +
+      '<div style="width:72px;height:72px;border-radius:50%;margin:0 auto 18px;display:grid;place-items:center;background:var(--danger-soft);color:var(--danger);animation:pulse 1.5s ease-in-out infinite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:38px;height:38px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>' +
       '<div style="font-size:1.2rem;font-weight:900;color:var(--danger);margin-bottom:10px">⚠️ تحذير أمني خطير</div>' +
       '<div style="font-size:.9rem;color:var(--text-2);line-height:1.75;margin-bottom:18px">تغيّر مفتاح التشفير الخاص بـ <b>' + esc(user.display_name) + '</b>.<br><br><b>قد يعني:</b><br>• صديقك أعاد تثبيت التطبيق<br>• <b style="color:var(--danger)">أو هناك هجوم MITM</b></div>' +
       '<div style="padding:14px;background:var(--surface-2);border-radius:12px;margin-bottom:16px;font-size:.82rem;line-height:1.7;color:var(--muted)"><b>للتأكد:</b> قارن البصمة عبر مكالمة صوتية.</div>' +
-      '<div style="display:flex;gap:10px">' +
-        '<button id="kcCancel" style="flex:1;padding:14px;border-radius:14px;font-weight:800;background:var(--surface-2);color:var(--text);border:none;cursor:pointer">إلغاء</button>' +
-        '<button id="kcAccept" style="flex:1;padding:14px;border-radius:14px;font-weight:800;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;cursor:pointer">متابعة</button>' +
-      '</div>' +
+      '<div style="display:flex;gap:10px"><button id="kcCancel" style="flex:1;padding:14px;border-radius:14px;font-weight:800;background:var(--surface-2);color:var(--text);border:none;cursor:pointer">إلغاء</button><button id="kcAccept" style="flex:1;padding:14px;border-radius:14px;font-weight:800;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;cursor:pointer">متابعة</button></div>' +
     '</div>';
   document.body.appendChild(backdrop);
   backdrop.querySelector('#kcCancel').addEventListener('click', function(){ backdrop.remove(); onCancel(); });
   backdrop.querySelector('#kcAccept').addEventListener('click', function(){ backdrop.remove(); onAccept(); });
 }
 
-/* ========== Auth ========== */
 $('btnRegister').addEventListener('click', async function(){
   var name = $('rgName').value.trim().toLowerCase();
   if(!/^[a-z][a-z0-9_]{1,19}$/.test(name)) return showErr('الاسم يجب أن يبدأ بحرف إنجليزي (2-20 حرف)');
@@ -775,7 +737,6 @@ async function enterApp(user){
   $('app').classList.add('active');
   socket.emit('auth', { token: TOKEN });
   lastConvData = null;
-
   if (E2EE.hasPIN()) {
     showPINUnlock(false);
   } else {
@@ -784,9 +745,19 @@ async function enterApp(user){
   }
 }
 
-function afterUnlock(){
+// ✅ FIXED: afterUnlock uploads public key + waits
+async function afterUnlock(){
   SecurityPack.lastActivity = Date.now();
   document.body.classList.remove('security-blur');
+
+  // ✅ ارفع المفتاح العام احتياطاً (لو فُقد من الخادم)
+  try {
+    var pubB64 = localStorage.getItem('dust_e2ee_pub');
+    if (pubB64) {
+      await api('/me/public-key', { method: 'PUT', body: JSON.stringify({ public_key: pubB64 }) });
+    }
+  } catch(e) { console.warn('Public key upload skipped:', e.message); }
+
   loadEverything();
   startAutoLockMonitor();
   if (CURRENT_DM) {
@@ -797,7 +768,6 @@ function afterUnlock(){
   }
 }
 
-/* ========== PIN Screens ========== */
 function showPINSetup(isMigration){
   var lock = $('pinLock');
   lock.classList.add('open');
@@ -931,7 +901,6 @@ function showPINUnlock(autoLocked){
   render();
 }
 
-/* ========== Socket ========== */
 socket.on('auth-error', function(data){
   var err = data && data.error;
   if(err === 'session_expired' || err === 'invalid_token' || err === 'user_not_found'){
@@ -1102,7 +1071,6 @@ function switchTab(name){
 }
 $$('.bottom-nav button').forEach(function(b){ b.addEventListener('click', function(){ switchTab(b.dataset.tab); }); });
 
-/* ========== Chats list ========== */
 async function loadChats(){
   if (!E2EE.ready) return;
   try {
@@ -1179,7 +1147,6 @@ function showConversationMenu(userId, name){
   });
 }
 
-/* ========== Account ========== */
 async function loadAccount(){
   try {
     var r = await api('/me');
@@ -1199,7 +1166,6 @@ async function loadAccount(){
         '<button class="btn-outline" id="btnPrivacy"><svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>سياسة الخصوصية</button>' +
         '<button class="btn-danger-outline" id="btnLogout"><svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>تسجيل الخروج</button>' +
       '</div>';
-
     $('btnLockNow').addEventListener('click', function(){ lockAppNow('manual'); });
     $('btnPrivacy').addEventListener('click', showPrivacyPolicy);
     $('btnLogout').addEventListener('click', function(){
@@ -1222,24 +1188,12 @@ function showPrivacyPolicy(){
   showModal(
     '<div class="modal-header"><button class="back-btn" id="ppBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">سياسة الخصوصية</div><div class="spacer"></div></div>' +
     '<div style="font-size:.88rem;line-height:1.9;color:var(--text-2);padding:0 4px">' +
-      '<div style="display:flex;gap:12px;padding:14px;background:var(--success-soft);border-radius:14px;margin-bottom:16px;border:1px solid rgba(16,185,129,.25)">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" style="width:24px;height:24px;flex:0 0 auto;margin-top:2px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>' +
-        '<div style="font-size:.82rem;line-height:1.7;color:var(--success);font-weight:600">رسائلك مشفرة E2EE + كشف اختراق + حماية PIN + قفل تلقائي.</div>' +
-      '</div>' +
+      '<div style="display:flex;gap:12px;padding:14px;background:var(--success-soft);border-radius:14px;margin-bottom:16px;border:1px solid rgba(16,185,129,.25)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" style="width:24px;height:24px;flex:0 0 auto;margin-top:2px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div style="font-size:.82rem;line-height:1.7;color:var(--success);font-weight:600">رسائلك مشفرة E2EE + كشف اختراق + حماية PIN + قفل تلقائي.</div></div>' +
       '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">1. المعلومات التي نجمعها</h3>' +
-      '<p><b>لا نجمع:</b></p>' +
-      '<ul style="padding-inline-start:20px;margin:8px 0"><li>لا نجمع محتوى رسائلك (مشفرة).</li><li>لا نجمع جهات الاتصال أو الموقع.</li><li>لا نستخدم تتبع أو إعلانات.</li></ul>' +
-      '<p style="margin-top:10px"><b>نجمع الحد الأدنى فقط:</b></p>' +
-      '<ul style="padding-inline-start:20px;margin:8px 0"><li>اسم المستخدم.</li><li>المفتاح العام للتشفير.</li><li>البيانات الوصفية (من راسل من، ومتى).</li></ul>' +
+      '<p><b>لا نجمع:</b></p><ul style="padding-inline-start:20px;margin:8px 0"><li>لا نجمع محتوى رسائلك (مشفرة).</li><li>لا نجمع جهات الاتصال أو الموقع.</li><li>لا نستخدم تتبع أو إعلانات.</li></ul>' +
+      '<p style="margin-top:10px"><b>نجمع الحد الأدنى فقط:</b></p><ul style="padding-inline-start:20px;margin:8px 0"><li>اسم المستخدم.</li><li>المفتاح العام للتشفير.</li><li>البيانات الوصفية (من راسل من، ومتى).</li></ul>' +
       '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">2. الأمان</h3>' +
-      '<ul style="padding-inline-start:20px;margin:8px 0">' +
-        '<li><b>E2EE:</b> AES-256-GCM + ECDH P-256.</li>' +
-        '<li><b>Padding:</b> طول الرسالة مخفي.</li>' +
-        '<li><b>كشف تغيّر المفتاح:</b> تحذير تلقائي.</li>' +
-        '<li><b>تشفير المفتاح:</b> PIN بـ PBKDF2 (250,000 تكرار).</li>' +
-        '<li><b>قفل تلقائي:</b> بعد دقيقتين خمول.</li>' +
-        '<li><b>حذف عند 10 محاولات PIN خاطئة.</b></li>' +
-      '</ul>' +
+      '<ul style="padding-inline-start:20px;margin:8px 0"><li><b>E2EE:</b> AES-256-GCM + ECDH P-256.</li><li><b>Padding:</b> طول الرسالة مخفي.</li><li><b>كشف تغيّر المفتاح.</b></li><li><b>PIN:</b> PBKDF2 (250,000 تكرار).</li><li><b>قفل تلقائي</b> بعد دقيقتين.</li><li><b>حذف عند 10 محاولات خاطئة.</b></li></ul>' +
       '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">3. حدود المسؤولية</h3>' +
       '<div style="padding:14px;background:var(--danger-soft);border-radius:12px;border:1px solid rgba(232,67,95,.25);font-size:.82rem;line-height:1.8;color:var(--danger)"><b>⚠️ تنبيه:</b> هذا التطبيق غير مخصص لتبادل معلومات حساسة. للاستخدامات الحساسة استخدم <b>Signal</b> أو <b>Briar</b>.</div>' +
     '</div>'
@@ -1557,7 +1511,7 @@ async function openDM(user){
   }
   var shared = null;
   if (peerPub) { try { shared = await E2EE.getSharedKey(user.id, peerPub); } catch(_){} }
-  if (!isDeleted && !shared) return showConfirm({ title: 'لا يمكن بدء المحادثة', text: 'صديقك لم يفتح التطبيق بعد على النظام الجديد.', confirmText: 'حسناً' });
+  if (!isDeleted && !shared) return showConfirm({ title: 'لا يمكن بدء المحادثة', text: 'صديقك لم يفتح التطبيق بعد على النظام الجديد. اطلب منه فتح التطبيق مرة واحدة ثم حاول مجدداً.', confirmText: 'حسناً' });
   CURRENT_DM = { user: user, sharedKey: shared ? shared.key : null, fingerprint: shared ? shared.fingerprint : null, deleted: isDeleted };
   if (isDeleted) {
     $('chatName').textContent = 'حساب محذوف';
@@ -1583,7 +1537,6 @@ async function openDM(user){
   } catch(_){}
 }
 
-/* ========== Verify Fingerprint ========== */
 $('chatVerify').addEventListener('click', function(){
   if (!CURRENT_DM || !CURRENT_DM.fingerprint) return;
   var peerId = CURRENT_DM.user.id;
@@ -1615,7 +1568,6 @@ $('chatVerify').addEventListener('click', function(){
   });
 });
 
-/* ========== Modal ========== */
 function closeModal(){ $('modal').classList.remove('open'); }
 function showModal(html){ $('modalBody').innerHTML = html; $('modal').classList.add('open'); }
 $('modal').addEventListener('click', function(e){ if(e.target === $('modal')) closeModal(); });
@@ -1626,17 +1578,10 @@ function showConfirm(opts){
   var danger = opts.danger;
   backdrop.innerHTML =
     '<div style="background:var(--surface);border:1px solid var(--border-2);border-radius:22px;width:100%;max-width:380px;padding:26px 22px 22px;text-align:center;box-shadow:var(--shadow-lg)">' +
-      '<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;background:' + (danger ? 'var(--danger-soft);color:var(--danger)' : 'var(--gold-soft);color:var(--gold)') + '">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:30px;height:30px">' +
-          (danger ? '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>') +
-        '</svg>' +
-      '</div>' +
+      '<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;background:' + (danger ? 'var(--danger-soft);color:var(--danger)' : 'var(--gold-soft);color:var(--gold)') + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:30px;height:30px">' + (danger ? '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>') + '</svg></div>' +
       '<div style="font-size:1.15rem;font-weight:900;margin-bottom:8px">' + esc(opts.title) + '</div>' +
       '<div style="font-size:.88rem;color:var(--muted);line-height:1.7;margin-bottom:22px;white-space:pre-line">' + esc(opts.text || '') + '</div>' +
-      '<div style="display:flex;gap:10px">' +
-        '<button id="cfCancel" style="flex:1;padding:14px;border-radius:16px;font-weight:800;background:var(--surface-2);color:var(--text);border:none;cursor:pointer">إلغاء</button>' +
-        '<button id="cfOk" style="flex:1;padding:14px;border-radius:16px;font-weight:800;background:' + (danger ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 'var(--grad-gold)') + ';color:' + (danger ? '#fff' : '#1a1207') + ';border:none;cursor:pointer">' + esc(opts.confirmText || 'تأكيد') + '</button>' +
-      '</div>' +
+      '<div style="display:flex;gap:10px"><button id="cfCancel" style="flex:1;padding:14px;border-radius:16px;font-weight:800;background:var(--surface-2);color:var(--text);border:none;cursor:pointer">إلغاء</button><button id="cfOk" style="flex:1;padding:14px;border-radius:16px;font-weight:800;background:' + (danger ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 'var(--grad-gold)') + ';color:' + (danger ? '#fff' : '#1a1207') + ';border:none;cursor:pointer">' + esc(opts.confirmText || 'تأكيد') + '</button></div>' +
     '</div>';
   document.body.appendChild(backdrop);
   backdrop.addEventListener('click', function(e){ if(e.target === backdrop) backdrop.remove(); });
