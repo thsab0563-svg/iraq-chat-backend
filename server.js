@@ -519,7 +519,7 @@ app.get('/api/qr/image', authRequired, async (req, res) => {
    12. Friends Routes
    ============================================================ */
 app.post('/api/friends/add-by-qr', authRequired,
-  body('qr_id').trim().isLength({ min: 8, max: 32 }).matches(/^[a-f0-9]+$/i),
+  body('qr_id').trim().isLength({ min: 8, max: 32 }).matches(/^[a-z0-9]+$/i),
   validate,
   (req, res) => {
     const qrId = req.body.qr_id.toLowerCase();
