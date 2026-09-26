@@ -1,5 +1,5 @@
 /* ============================================================
-   Dust Server v8.1 — E2EE (ECDH) + Socket Auth Fix
+   Dust Server v8.2 — E2EE + Deleted User Support
    ============================================================ */
 'use strict';
 
@@ -22,11 +22,17 @@ const QRCode = require('qrcode');
 const cors = require('cors');
 const { nanoid } = require('nanoid');
 
-/* ===== 1. Env ===== */
+/* ===== 1. Environment ===== */
 const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET || JWT_SECRET.length < 32) { console.error('❌ JWT_SECRET missing'); process.exit(1); }
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  console.error('❌ JWT_SECRET missing or too short');
+  process.exit(1);
+}
 const DB_KEY_HEX = process.env.DB_ENCRYPTION_KEY;
-if (!DB_KEY_HEX || DB_KEY_HEX.length !== 32) { console.error('❌ DB_ENCRYPTION_KEY must be 32 chars'); process.exit(1); }
+if (!DB_KEY_HEX || DB_KEY_HEX.length !== 32) {
+  console.error('❌ DB_ENCRYPTION_KEY must be exactly 32 chars');
+  process.exit(1);
+}
 const DB_KEY = Buffer.from(DB_KEY_HEX, 'utf8');
 const PUBLIC_URL = process.env.PUBLIC_URL || 'http://localhost:8080';
 const PORT = parseInt(process.env.PORT || '8080', 10);
@@ -67,18 +73,21 @@ CREATE TABLE IF NOT EXISTS posts (
   time INTEGER NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 CREATE TABLE IF NOT EXISTS likes (
   post_id INTEGER NOT NULL, user_id INTEGER NOT NULL, time INTEGER NOT NULL,
   PRIMARY KEY (post_id, user_id),
   FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 CREATE TABLE IF NOT EXISTS comments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   post_id INTEGER NOT NULL, user_id INTEGER NOT NULL, text TEXT NOT NULL, time INTEGER NOT NULL,
   FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 CREATE TABLE IF NOT EXISTS friendships (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL, friend_id INTEGER NOT NULL,
@@ -87,10 +96,12 @@ CREATE TABLE IF NOT EXISTS friendships (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 CREATE TABLE IF NOT EXISTS blocks (
   blocker_id INTEGER NOT NULL, blocked_id INTEGER NOT NULL, time INTEGER NOT NULL,
   PRIMARY KEY (blocker_id, blocked_id)
 );
+
 CREATE TABLE IF NOT EXISTS dms (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   from_id INTEGER NOT NULL, to_id INTEGER NOT NULL, text TEXT NOT NULL,
@@ -100,6 +111,7 @@ CREATE TABLE IF NOT EXISTS dms (
 );
 CREATE INDEX IF NOT EXISTS idx_dms_from_to ON dms(from_id, to_id, time);
 CREATE INDEX IF NOT EXISTS idx_dms_to ON dms(to_id, read);
+
 CREATE TABLE IF NOT EXISTS push_subs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL, endpoint TEXT NOT NULL UNIQUE,
@@ -120,6 +132,7 @@ function encryptField(plain) {
   const tag = cipher.getAuthTag();
   return Buffer.concat([iv, tag, enc]).toString('base64');
 }
+
 function decryptField(payload) {
   if (!payload) return null;
   try {
@@ -137,7 +150,8 @@ function decryptField(payload) {
 function now() { return Date.now(); }
 function hashToken(token) { return crypto.createHash('sha256').update(token).digest('hex'); }
 
-function publicUser(row, includePrivate = false) {
+const ONLINE_USERS = new Map();
+
 function publicUser(row, includePrivate = false) {
   if (!row) return null;
   const u = {
@@ -150,7 +164,7 @@ function publicUser(row, includePrivate = false) {
     qr_id: row.qr_id,
     created_at: row.created_at,
     last_seen: row.last_seen,
-    online: !row.deleted && ONLINE_USERS.has(row.id),
+    online: ONLINE_USERS.has(row.id),
     public_key: row.public_key || null,
     bio: decryptField(row.bio_enc),
     location: decryptField(row.location_enc),
@@ -166,7 +180,11 @@ function publicUser(row, includePrivate = false) {
 /* ===== 5. Express ===== */
 const app = express();
 app.set('trust proxy', 1);
-app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
 app.use(cors({ origin: (o, cb) => cb(null, true), credentials: true }));
 app.use(express.json({ limit: '256kb' }));
 app.use(express.urlencoded({ extended: true, limit: '256kb' }));
@@ -178,13 +196,14 @@ if (fs.existsSync(PUBLIC_DIR)) {
     setHeaders: (res, p) => { if (p.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache'); }
   }));
 }
+
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d' }));
 
 /* ===== 6. Rate limiting ===== */
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, message: { error: 'too_many_requests' }, standardHeaders: true, legacyHeaders: false });
-const apiLimiter = rateLimit({ windowMs: 60 * 1000, max: 240, message: { error: 'rate_limit_exceeded' }, standardHeaders: true, legacyHeaders: false });
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, message: { error: 'too_many_requests' } });
+const apiLimiter = rateLimit({ windowMs: 60 * 1000, max: 240, message: { error: 'rate_limit_exceeded' } });
 const dmLimiter = rateLimit({ windowMs: 60 * 1000, max: 80, keyGenerator: (req) => req.userId ? String(req.userId) : req.ip, message: { error: 'slow_down' } });
 
 app.use('/api/', apiLimiter);
@@ -204,7 +223,9 @@ function authRequired(req, res, next) {
     req.user = row;
     req.token = token;
     next();
-  } catch (e) { return res.status(401).json({ error: 'invalid_token' }); }
+  } catch (e) {
+    return res.status(401).json({ error: 'invalid_token' });
+  }
 }
 
 function validate(req, res, next) {
@@ -226,15 +247,23 @@ app.post('/api/register',
     if (exists) {
       for (let i = 0; i < 10; i++) {
         const candidate = baseName + Math.floor(Math.random() * 9999).toString().padStart(4, '0');
-        if (!db.prepare('SELECT id FROM users WHERE username = ?').get(candidate)) { username = candidate; break; }
+        if (!db.prepare('SELECT id FROM users WHERE username = ?').get(candidate)) {
+          username = candidate;
+          break;
+        }
       }
     }
     const qrId = nanoid(16).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16);
-    const info = db.prepare(`INSERT INTO users (username, display_name, color, qr_id, token_hash, created_at, last_seen) VALUES (?, ?, ?, ?, ?, ?, ?)`).run(username, baseName, color || '#e8b567', qrId, 'pending', now(), now());
+    const info = db.prepare(`
+      INSERT INTO users (username, display_name, color, qr_id, token_hash, created_at, last_seen)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(username, baseName, color || '#e8b567', qrId, 'pending', now(), now());
+
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
     const jwtToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '365d' });
     db.prepare('UPDATE users SET token_hash = ? WHERE id = ?').run(hashToken(jwtToken), user.id);
     const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id);
+
     res.json({ token: jwtToken, user: publicUser(updated, true) });
   }
 );
@@ -246,7 +275,9 @@ app.post('/api/logout', authRequired, (req, res) => {
 });
 
 /* ===== 9. User routes ===== */
-app.get('/api/me', authRequired, (req, res) => res.json({ user: publicUser(req.user, true) }));
+app.get('/api/me', authRequired, (req, res) => {
+  res.json({ user: publicUser(req.user, true) });
+});
 
 app.put('/api/me', authRequired,
   body('display_name').optional().trim().isLength({ min: 2, max: 20 }),
@@ -257,13 +288,17 @@ app.put('/api/me', authRequired,
   validate,
   (req, res) => {
     const b = req.body;
-    const updates = []; const values = [];
+    const updates = [];
+    const values = [];
     if (b.display_name !== undefined) { updates.push('display_name = ?'); values.push(b.display_name); }
     if (b.bio !== undefined) { updates.push('bio_enc = ?'); values.push(encryptField(b.bio)); }
     if (b.location !== undefined) { updates.push('location_enc = ?'); values.push(encryptField(b.location)); }
     if (b.theme !== undefined) { updates.push('theme = ?'); values.push(b.theme); }
     if (b.sound !== undefined) { updates.push('sound = ?'); values.push(b.sound ? 1 : 0); }
-    if (updates.length) { values.push(req.userId); db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...values); }
+    if (updates.length) {
+      values.push(req.userId);
+      db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+    }
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
     res.json({ user: publicUser(user, true) });
   }
@@ -281,7 +316,8 @@ app.put('/api/me/public-key', authRequired,
 app.get('/api/users/:id', authRequired, (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (!id) return res.status(400).json({ error: 'invalid_id' });
-  const row = db.prepare('SELECT * FROM users WHERE id = ?').get(id);  if (!row) return res.status(404).json({ error: 'user_not_found' });
+  const row = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
+  if (!row) return res.status(404).json({ error: 'user_not_found' });
   const blocked = !!db.prepare('SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)').get(req.userId, id, id, req.userId);
   const isFriend = !!db.prepare('SELECT 1 FROM friendships WHERE user_id = ? AND friend_id = ? AND status = ?').get(req.userId, id, 'accepted');
   const stats = {
@@ -308,9 +344,15 @@ app.get('/api/me/stats', authRequired, (req, res) => {
 app.get('/api/qr/image', authRequired, async (req, res) => {
   try {
     const link = `${PUBLIC_URL}/?qr=${req.user.qr_id}`;
-    const dataUrl = await QRCode.toDataURL(link, { width: 512, margin: 2, color: { dark: '#0b0d14', light: '#ffffff' } });
+    const dataUrl = await QRCode.toDataURL(link, {
+      width: 512,
+      margin: 2,
+      color: { dark: '#0b0d14', light: '#ffffff' }
+    });
     res.json({ qr: dataUrl, link, qr_id: req.user.qr_id });
-  } catch (e) { res.status(500).json({ error: 'qr_failed' }); }
+  } catch (e) {
+    res.status(500).json({ error: 'qr_failed' });
+  }
 });
 
 /* ===== 11. Friends ===== */
@@ -338,7 +380,6 @@ app.post('/api/friends/add-by-qr', authRequired,
     });
     tx();
 
-    // Notify target user
     io.to(`u_${target.id}`).emit('notification', {
       type: 'friend_added',
       text: `${req.user.display_name} أضافك كصديق`,
@@ -417,10 +458,15 @@ app.get('/api/dms/:userId', authRequired, (req, res) => {
   io.to(`u_${otherId}`).emit('dm-read-receipt', { byId: req.userId });
 
   const messages = rows.map(m => ({
-    id: m.id, from_id: m.from_id, to_id: m.to_id,
-    text: m.text, time: m.time,
-    delivered: !!m.delivered, read: !!m.read
+    id: m.id,
+    from_id: m.from_id,
+    to_id: m.to_id,
+    text: m.text,
+    time: m.time,
+    delivered: !!m.delivered,
+    read: !!m.read
   }));
+
   res.json({ messages });
 });
 
@@ -433,6 +479,7 @@ const storage = multer.diskStorage({
     cb(null, `${Date.now()}_${crypto.randomBytes(8).toString('hex')}${safe}`);
   }
 });
+
 const upload = multer({
   storage,
   limits: { fileSize: 8 * 1024 * 1024 },
@@ -441,6 +488,7 @@ const upload = multer({
     cb(ok ? null : new Error('invalid_type'), ok);
   }
 });
+
 app.post('/upload', authRequired, upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'no_file' });
   res.json({ url: `${PUBLIC_URL}/uploads/${req.file.filename}` });
@@ -449,57 +497,52 @@ app.post('/upload', authRequired, upload.single('image'), (req, res) => {
 /* ===== 15. Push ===== */
 let pushEnabled = false;
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:admin@dust.app', process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT || 'mailto:admin@dust.app',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
   pushEnabled = true;
   console.log('✅ Web Push enabled');
 }
+
 app.get('/api/vapid-public', (req, res) => res.json({ key: process.env.VAPID_PUBLIC_KEY || null }));
+
 app.post('/api/push/subscribe', authRequired, (req, res) => {
   const sub = req.body;
   if (!sub || !sub.endpoint) return res.status(400).json({ error: 'invalid' });
-  db.prepare(`INSERT INTO push_subs (user_id, endpoint, p256dh, auth, time) VALUES (?, ?, ?, ?, ?)
-    ON CONFLICT(endpoint) DO UPDATE SET user_id = excluded.user_id`)
-    .run(req.userId, sub.endpoint, sub.keys ? sub.keys.p256dh : '', sub.keys ? sub.keys.auth : '', now());
+  db.prepare(`
+    INSERT INTO push_subs (user_id, endpoint, p256dh, auth, time)
+    VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(endpoint) DO UPDATE SET user_id = excluded.user_id
+  `).run(req.userId, sub.endpoint, sub.keys ? sub.keys.p256dh : '', sub.keys ? sub.keys.auth : '', now());
   res.json({ ok: true });
 });
+
 async function sendPush(userId, payload) {
   if (!pushEnabled) return;
   const subs = db.prepare('SELECT * FROM push_subs WHERE user_id = ?').all(userId);
   const dead = [];
   for (const s of subs) {
-    try { await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(payload)); }
-    catch (e) { if (e.statusCode === 404 || e.statusCode === 410) dead.push(s.id); }
+    try {
+      await webpush.sendNotification({
+        endpoint: s.endpoint,
+        keys: { p256dh: s.p256dh, auth: s.auth }
+      }, JSON.stringify(payload));
+    } catch (e) {
+      if (e.statusCode === 404 || e.statusCode === 410) dead.push(s.id);
+    }
   }
   for (const id of dead) db.prepare('DELETE FROM push_subs WHERE id = ?').run(id);
 }
 
-/* ============================================================
-   16. Socket.io — FIXED (Auth via event OR handshake)
-   ============================================================ */
+/* ===== 16. Socket.io ===== */
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
   pingTimeout: 30000,
   pingInterval: 25000,
   maxHttpBufferSize: 1e6
-});
-
-const ONLINE_USERS = new Map();
-
-/* Try handshake auth; if absent, allow connection to wait for 'auth' event */
-io.use((socket, next) => {
-  const token = (socket.handshake.auth && socket.handshake.auth.token)
-    || (socket.handshake.query && socket.handshake.query.token);
-  if (!token) return next(); // Allow; wait for 'auth' event
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const row = db.prepare('SELECT * FROM users WHERE id = ? AND deleted = 0').get(decoded.id);
-    if (!row) return next(new Error('user_not_found'));
-    if (row.token_hash !== hashToken(token)) return next(new Error('session_expired'));
-    socket.userId = row.id;
-    socket.user = row;
-    next();
-  } catch (e) { next(new Error('invalid_token')); }
 });
 
 function verifyToken(token) {
@@ -509,12 +552,13 @@ function verifyToken(token) {
     if (!row) return { error: 'user_not_found' };
     if (row.token_hash !== hashToken(token)) return { error: 'session_expired' };
     return { user: row };
-  } catch (e) { return { error: 'invalid_token' }; }
+  } catch (e) {
+    return { error: 'invalid_token' };
+  }
 }
 
 function activateSocket(socket, row) {
-  if (socket.userId && socket.userId !== row.id) {
-    // Already authed as different user — leave old room first
+  if (socket.userId) {
     try { socket.leave(`u_${socket.userId}`); } catch(_){}
   }
   socket.userId = row.id;
@@ -529,14 +573,20 @@ function activateSocket(socket, row) {
 }
 
 io.on('connection', (socket) => {
-  console.log(`🔌 Socket connected (${socket.id}), handshakeAuth=${!!socket.userId}`);
+  console.log(`🔌 Socket connected (${socket.id})`);
 
-  // If handshake auth worked, activate immediately
-  if (socket.userId && socket.user) {
-    activateSocket(socket, socket.user);
+  const handshakeToken = (socket.handshake.auth && socket.handshake.auth.token)
+    || (socket.handshake.query && socket.handshake.query.token);
+
+  if (handshakeToken) {
+    const result = verifyToken(handshakeToken);
+    if (result.error) {
+      socket.emit('auth-error', { error: result.error });
+    } else {
+      activateSocket(socket, result.user);
+    }
   }
 
-  // Also accept 'auth' event (for clients that auth post-connection)
   socket.on('auth', (data) => {
     const token = data && data.token;
     if (!token) {
@@ -551,12 +601,8 @@ io.on('connection', (socket) => {
     activateSocket(socket, result.user);
   });
 
-  /* --- DM send --- */
   socket.on('dm-send', (data) => {
-    if (!socket.userId) {
-      console.log('⚠️ dm-send from unauthenticated socket, ignored');
-      return;
-    }
+    if (!socket.userId) return;
     try {
       if (!data || typeof data.toId !== 'number' || typeof data.text !== 'string') return;
       if (data.text.length === 0 || data.text.length > 10000) return;
@@ -566,15 +612,23 @@ io.on('connection', (socket) => {
       const blocked = db.prepare('SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)').get(userId, toId, toId, userId);
       if (blocked) return;
 
-      const target = db.prepare('SELECT id FROM users WHERE id = ? AND deleted = 0').get(toId);
-      if (!target) return;
+      const target = db.prepare('SELECT id, deleted FROM users WHERE id = ?').get(toId);
+      if (!target || target.deleted === 1) return;
 
       const t = now();
       const isOnline = ONLINE_USERS.has(toId);
 
       const info = db.prepare('INSERT INTO dms (from_id, to_id, text, time, delivered) VALUES (?, ?, ?, ?, ?)').run(userId, toId, data.text, t, isOnline ? 1 : 0);
 
-      const msg = { id: info.lastInsertRowid, from_id: userId, to_id: toId, text: data.text, time: t, delivered: isOnline, read: false };
+      const msg = {
+        id: info.lastInsertRowid,
+        from_id: userId,
+        to_id: toId,
+        text: data.text,
+        time: t,
+        delivered: isOnline,
+        read: false
+      };
 
       io.to(`u_${toId}`).emit('dm-message', msg);
       socket.emit('dm-message', msg);
@@ -582,13 +636,13 @@ io.on('connection', (socket) => {
       if (isOnline) {
         socket.emit('dm-delivered', { id: msg.id });
       } else {
-        sendPush(toId, { title: 'Dust', body: 'رسالة جديدة', tag: 'dm_' + userId, data: { type: 'dm', fromId: userId } }).catch(() => {});
+        sendPush(toId, { title: 'Dust', body: 'رسالة جديدة', tag: 'dm_' + userId }).catch(() => {});
       }
-      console.log(`✉️  DM from ${userId} to ${toId} (${data.text.length} bytes)`);
-    } catch (e) { console.error('dm-send:', e); }
+    } catch (e) {
+      console.error('dm-send error:', e);
+    }
   });
 
-  /* --- DM read --- */
   socket.on('dm-read', (data) => {
     if (!socket.userId) return;
     if (!data || typeof data.fromId !== 'number') return;
@@ -596,14 +650,15 @@ io.on('connection', (socket) => {
     io.to(`u_${data.fromId}`).emit('dm-read-receipt', { byId: socket.userId });
   });
 
-  /* --- Typing --- */
   socket.on('dm-typing', (data) => {
     if (!socket.userId) return;
     if (!data || typeof data.toId !== 'number') return;
-    io.to(`u_${data.toId}`).emit('dm-typing', { fromId: socket.userId, isTyping: !!data.isTyping });
+    io.to(`u_${data.toId}`).emit('dm-typing', {
+      fromId: socket.userId,
+      isTyping: !!data.isTyping
+    });
   });
 
-  /* --- Disconnect --- */
   socket.on('disconnect', () => {
     if (!socket.userId) {
       console.log(`🔴 Socket disconnected (unauthenticated)`);
@@ -638,7 +693,7 @@ app.get('/health', (req, res) => {
     users: db.prepare('SELECT COUNT(*) as c FROM users WHERE deleted = 0').get().c,
     online: ONLINE_USERS.size,
     e2ee: 'ECDH-P256',
-    version: '8.1.0'
+    version: '8.2.0'
   });
 });
 
@@ -650,13 +705,16 @@ app.use((err, req, res, next) => {
 
 /* ===== 19. Start ===== */
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Dust Server v8.1 on port ${PORT}`);
+  console.log(`🚀 Dust Server v8.2 on port ${PORT}`);
   console.log(`🔗 ${PUBLIC_URL}`);
   console.log(`🔐 E2EE: ECDH P-256 + HKDF`);
-  console.log(`🛡️  Socket auth: handshake OR event`);
+  console.log(`🛡️  Security: helmet + rate-limit + JWT + AES-256-GCM`);
 });
 
 process.on('SIGTERM', () => {
-  console.log('SIGTERM...');
-  server.close(() => { db.close(); process.exit(0); });
+  console.log('SIGTERM — closing...');
+  server.close(() => {
+    db.close();
+    process.exit(0);
+  });
 });
