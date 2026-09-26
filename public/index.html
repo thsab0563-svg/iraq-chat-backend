@@ -659,8 +659,6 @@ socket.on('auth-error', function(data){
     setTimeout(function(){ location.reload(); }, 1500);
   }
 });
-socket.on('auth-ok', function(data){ ME = data.user; loadEverything(); });
-
 socket.on('user-online', function(d){ onlineUsers[d.userId] = true; if(currentTab === 'chats') loadChats(); });
 socket.on('user-offline', function(d){ delete onlineUsers[d.userId]; if(currentTab === 'chats') loadChats(); });
 socket.on('user-deleted', function(d){
