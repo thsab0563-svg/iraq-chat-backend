@@ -1,5 +1,5 @@
 /* ============================================================
-   Dust Server v8.4 — E2EE + Message Edit/Delete + Conv Delete
+   Dust Server v8.5 — E2EE + Message Edit/Delete + Conv Delete
    ============================================================ */
 'use strict';
 
@@ -22,23 +22,15 @@ const QRCode = require('qrcode');
 const cors = require('cors');
 const { nanoid } = require('nanoid');
 
-/* ===== 1. Environment ===== */
 const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET || JWT_SECRET.length < 32) {
-  console.error('❌ JWT_SECRET missing or too short');
-  process.exit(1);
-}
+if (!JWT_SECRET || JWT_SECRET.length < 32) { console.error('❌ JWT_SECRET missing or too short'); process.exit(1); }
 const DB_KEY_HEX = process.env.DB_ENCRYPTION_KEY;
-if (!DB_KEY_HEX || DB_KEY_HEX.length !== 32) {
-  console.error('❌ DB_ENCRYPTION_KEY must be exactly 32 chars');
-  process.exit(1);
-}
+if (!DB_KEY_HEX || DB_KEY_HEX.length !== 32) { console.error('❌ DB_ENCRYPTION_KEY must be exactly 32 chars'); process.exit(1); }
 const DB_KEY = Buffer.from(DB_KEY_HEX, 'utf8');
 const PUBLIC_URL = process.env.PUBLIC_URL || 'http://localhost:8080';
 const PORT = parseInt(process.env.PORT || '8080', 10);
 const DB_PATH = process.env.DB_PATH || './dust.db';
 
-/* ===== 2. Database ===== */
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
@@ -103,7 +95,6 @@ try { db.exec('ALTER TABLE users ADD COLUMN public_key TEXT'); } catch(e) {}
 try { db.exec('ALTER TABLE dms ADD COLUMN edited INTEGER DEFAULT 0'); } catch(e) {}
 try { db.exec('ALTER TABLE dms ADD COLUMN deleted INTEGER DEFAULT 0'); } catch(e) {}
 
-/* ===== 3. Field encryption ===== */
 function encryptField(plain) {
   if (!plain) return null;
   const iv = crypto.randomBytes(12);
@@ -125,7 +116,6 @@ function decryptField(payload) {
   } catch (e) { return null; }
 }
 
-/* ===== 4. Helpers ===== */
 function now() { return Date.now(); }
 function hashToken(token) { return crypto.createHash('sha256').update(token).digest('hex'); }
 const ONLINE_USERS = new Map();
@@ -145,7 +135,6 @@ function publicUser(row, includePrivate = false) {
   if (includePrivate) { u.theme = row.theme; u.sound = !!row.sound; }
   return u;
 }
-
 function mapMessage(m) {
   return {
     id: m.id, from_id: m.from_id, to_id: m.to_id,
@@ -156,7 +145,6 @@ function mapMessage(m) {
   };
 }
 
-/* ===== 5. Express ===== */
 const app = express();
 app.set('trust proxy', 1);
 app.use(helmet({
@@ -179,15 +167,12 @@ const UPLOAD_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d' }));
 
-/* ===== 6. Rate limiting ===== */
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, message: { error: 'too_many_requests' } });
 const apiLimiter = rateLimit({ windowMs: 60 * 1000, max: 240, message: { error: 'rate_limit_exceeded' } });
 const dmLimiter = rateLimit({ windowMs: 60 * 1000, max: 80, keyGenerator: (req) => req.userId ? String(req.userId) : req.ip, message: { error: 'slow_down' } });
-
 app.use('/api/', apiLimiter);
 app.use('/api/register', authLimiter);
 
-/* ===== 7. Auth middleware ===== */
 function authRequired(req, res, next) {
   const h = req.headers.authorization || '';
   const token = h.startsWith('Bearer ') ? h.slice(7) : null;
@@ -207,7 +192,6 @@ function validate(req, res, next) {
   next();
 }
 
-/* ===== 8. Auth routes ===== */
 app.post('/api/register',
   body('name').trim().isLength({ min: 2, max: 20 }).matches(/^[a-z][a-z0-9_]*$/i),
   body('color').optional().matches(/^#[0-9a-f]{6}$/i),
@@ -239,7 +223,6 @@ app.post('/api/logout', authRequired, (req, res) => {
   res.json({ ok: true });
 });
 
-/* ===== 9. User routes ===== */
 app.get('/api/me', authRequired, (req, res) => res.json({ user: publicUser(req.user, true) }));
 
 app.put('/api/me', authRequired,
@@ -282,7 +265,6 @@ app.get('/api/users/:id', authRequired, (req, res) => {
   res.json({ user: publicUser(row), isFriend, blocked });
 });
 
-/* ===== 10. QR ===== */
 app.get('/api/qr/image', authRequired, async (req, res) => {
   try {
     const link = `${PUBLIC_URL}/?qr=${req.user.qr_id}`;
@@ -291,7 +273,6 @@ app.get('/api/qr/image', authRequired, async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'qr_failed' }); }
 });
 
-/* ===== 11. Friends ===== */
 app.post('/api/friends/add-by-qr', authRequired,
   body('qr_id').trim().isLength({ min: 8, max: 32 }).matches(/^[a-z0-9]+$/i),
   validate,
@@ -300,62 +281,46 @@ app.post('/api/friends/add-by-qr', authRequired,
     const target = db.prepare('SELECT * FROM users WHERE qr_id = ? AND deleted = 0').get(qrId);
     if (!target) return res.status(404).json({ error: 'user_not_found' });
     if (target.id === req.userId) return res.status(400).json({ error: 'self' });
-
     const blocked = db.prepare('SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)').get(req.userId, target.id, target.id, req.userId);
     if (blocked) return res.status(403).json({ error: 'blocked' });
-
     const existing = db.prepare('SELECT 1 FROM friendships WHERE user_id = ? AND friend_id = ?').get(req.userId, target.id);
     if (existing) return res.json({ status: 'already_friends', user: publicUser(target) });
-
     const t = now();
     const tx = db.transaction(() => {
       db.prepare('INSERT OR IGNORE INTO friendships (user_id, friend_id, status, time) VALUES (?, ?, ?, ?)').run(req.userId, target.id, 'accepted', t);
       db.prepare('INSERT OR IGNORE INTO friendships (user_id, friend_id, status, time) VALUES (?, ?, ?, ?)').run(target.id, req.userId, 'accepted', t);
     });
     tx();
-
     io.to(`u_${target.id}`).emit('notification', { type: 'friend_added', text: `${req.user.display_name} أضافك كصديق`, from: publicUser(req.user) });
     res.json({ status: 'added', user: publicUser(target) });
   }
 );
 
-/* ===== 12. DM conversations ===== */
 app.get('/api/dm-conversations', authRequired, (req, res) => {
   const rows = db.prepare(`
     SELECT CASE WHEN from_id = ? THEN to_id ELSE from_id END AS other_id, MAX(time) AS last_time
     FROM dms WHERE from_id = ? OR to_id = ?
     GROUP BY other_id ORDER BY last_time DESC LIMIT 100
   `).all(req.userId, req.userId, req.userId);
-
   const conversations = rows.map(r => {
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(r.other_id);
     if (!user) return null;
     const last = db.prepare('SELECT id, text, time, deleted FROM dms WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?) ORDER BY time DESC LIMIT 1').get(req.userId, r.other_id, r.other_id, req.userId);
     const unread = db.prepare('SELECT COUNT(*) as c FROM dms WHERE from_id = ? AND to_id = ? AND read = 0').get(r.other_id, req.userId).c;
-    return {
-      user: publicUser(user),
-      last: last ? { text: last.deleted === 1 ? '' : last.text, time: last.time, deleted: last.deleted === 1 } : null,
-      unread
-    };
+    return { user: publicUser(user), last: last ? { text: last.deleted === 1 ? '' : last.text, time: last.time, deleted: last.deleted === 1 } : null, unread };
   }).filter(Boolean);
-
   res.json({ conversations });
 });
 
 app.get('/api/dms/:userId', authRequired, (req, res) => {
   const otherId = parseInt(req.params.userId, 10);
   if (!otherId) return res.status(400).json({ error: 'invalid' });
-  const rows = db.prepare(`
-    SELECT * FROM dms WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)
-    ORDER BY time ASC LIMIT 500
-  `).all(req.userId, otherId, otherId, req.userId);
-
+  const rows = db.prepare(`SELECT * FROM dms WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?) ORDER BY time ASC LIMIT 500`).all(req.userId, otherId, otherId, req.userId);
   db.prepare('UPDATE dms SET read = 1 WHERE from_id = ? AND to_id = ? AND read = 0').run(otherId, req.userId);
   io.to(`u_${otherId}`).emit('dm-read-receipt', { byId: req.userId });
   res.json({ messages: rows.map(mapMessage) });
 });
 
-/* Delete entire conversation (both sides) */
 app.delete('/api/dm-conversations/:userId', authRequired, (req, res) => {
   const otherId = parseInt(req.params.userId, 10);
   if (!otherId) return res.status(400).json({ error: 'invalid' });
@@ -364,7 +329,6 @@ app.delete('/api/dm-conversations/:userId', authRequired, (req, res) => {
   res.json({ ok: true });
 });
 
-/* ===== 13. Message edit / delete ===== */
 app.put('/api/dms/:messageId', authRequired,
   body('text').trim().isLength({ min: 1, max: 10000 }),
   validate,
@@ -375,16 +339,12 @@ app.put('/api/dms/:messageId', authRequired,
     if (!msg) return res.status(404).json({ error: 'not_found' });
     if (msg.from_id !== req.userId) return res.status(403).json({ error: 'forbidden' });
     if (msg.deleted === 1) return res.status(400).json({ error: 'already_deleted' });
-
     db.prepare('UPDATE dms SET text = ?, edited = 1 WHERE id = ?').run(req.body.text, msgId);
-    io.to(`u_${msg.to_id}`).emit('dm-edited', {
-      id: msgId, text: req.body.text, edited: true, byId: req.userId
-    });
+    io.to(`u_${msg.to_id}`).emit('dm-edited', { id: msgId, text: req.body.text, edited: true, byId: req.userId });
     res.json({ ok: true });
   }
 );
 
-/* ✅ Delete — sender only + use parameter for empty text */
 app.delete('/api/dms/:messageId', authRequired, (req, res) => {
   const msgId = parseInt(req.params.messageId, 10);
   if (!msgId) return res.status(400).json({ error: 'invalid' });
@@ -392,14 +352,11 @@ app.delete('/api/dms/:messageId', authRequired, (req, res) => {
   if (!msg) return res.status(404).json({ error: 'not_found' });
   if (msg.from_id !== req.userId) return res.status(403).json({ error: 'forbidden' });
   if (msg.deleted === 1) return res.json({ ok: true });
-
   db.prepare('UPDATE dms SET deleted = 1, text = ? WHERE id = ?').run('', msgId);
-
   io.to(`u_${msg.to_id}`).emit('dm-deleted', { id: msgId, byId: req.userId });
   res.json({ ok: true });
 });
 
-/* ===== 14. Upload ===== */
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
   filename: (req, file, cb) => {
@@ -421,7 +378,6 @@ app.post('/upload', authRequired, upload.single('image'), (req, res) => {
   res.json({ url: `${PUBLIC_URL}/uploads/${req.file.filename}` });
 });
 
-/* ===== 15. Push ===== */
 let pushEnabled = false;
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:admin@dust.app', process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
@@ -431,8 +387,7 @@ app.get('/api/vapid-public', (req, res) => res.json({ key: process.env.VAPID_PUB
 app.post('/api/push/subscribe', authRequired, (req, res) => {
   const sub = req.body;
   if (!sub || !sub.endpoint) return res.status(400).json({ error: 'invalid' });
-  db.prepare(`INSERT INTO push_subs (user_id, endpoint, p256dh, auth, time) VALUES (?, ?, ?, ?, ?) ON CONFLICT(endpoint) DO UPDATE SET user_id = excluded.user_id`)
-    .run(req.userId, sub.endpoint, sub.keys ? sub.keys.p256dh : '', sub.keys ? sub.keys.auth : '', now());
+  db.prepare(`INSERT INTO push_subs (user_id, endpoint, p256dh, auth, time) VALUES (?, ?, ?, ?, ?) ON CONFLICT(endpoint) DO UPDATE SET user_id = excluded.user_id`).run(req.userId, sub.endpoint, sub.keys ? sub.keys.p256dh : '', sub.keys ? sub.keys.auth : '', now());
   res.json({ ok: true });
 });
 async function sendPush(userId, payload) {
@@ -446,7 +401,6 @@ async function sendPush(userId, payload) {
   for (const id of dead) db.prepare('DELETE FROM push_subs WHERE id = ?').run(id);
 }
 
-/* ===== 16. Socket.io ===== */
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*', methods: ['GET', 'POST'] }, pingTimeout: 30000, pingInterval: 25000, maxHttpBufferSize: 1e6 });
 
@@ -478,7 +432,6 @@ io.on('connection', (socket) => {
     if (result.error) socket.emit('auth-error', { error: result.error });
     else activateSocket(socket, result.user);
   }
-
   socket.on('auth', (data) => {
     const token = data && data.token;
     if (!token) { socket.emit('auth-error', { error: 'auth_required' }); return; }
@@ -486,7 +439,6 @@ io.on('connection', (socket) => {
     if (result.error) { socket.emit('auth-error', { error: result.error }); return; }
     activateSocket(socket, result.user);
   });
-
   socket.on('dm-send', (data) => {
     if (!socket.userId) return;
     try {
@@ -494,40 +446,29 @@ io.on('connection', (socket) => {
       if (data.text.length === 0 || data.text.length > 10000) return;
       const userId = socket.userId;
       const toId = data.toId;
-
       const blocked = db.prepare('SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)').get(userId, toId, toId, userId);
       if (blocked) return;
-
       const target = db.prepare('SELECT id, deleted FROM users WHERE id = ?').get(toId);
       if (!target || target.deleted === 1) return;
-
       const t = now();
       const isOnline = ONLINE_USERS.has(toId);
       const info = db.prepare('INSERT INTO dms (from_id, to_id, text, time, delivered) VALUES (?, ?, ?, ?, ?)').run(userId, toId, data.text, t, isOnline ? 1 : 0);
-
-      const msg = {
-        id: info.lastInsertRowid, from_id: userId, to_id: toId,
-        text: data.text, time: t, delivered: isOnline, read: false,
-        edited: false, deleted: false
-      };
+      const msg = { id: info.lastInsertRowid, from_id: userId, to_id: toId, text: data.text, time: t, delivered: isOnline, read: false, edited: false, deleted: false };
       io.to(`u_${toId}`).emit('dm-message', msg);
       socket.emit('dm-message', msg);
       if (isOnline) socket.emit('dm-delivered', { id: msg.id });
       else sendPush(toId, { title: 'Dust', body: 'رسالة جديدة', tag: 'dm_' + userId }).catch(() => {});
     } catch (e) { console.error('dm-send error:', e); }
   });
-
   socket.on('dm-read', (data) => {
     if (!socket.userId || !data || typeof data.fromId !== 'number') return;
     db.prepare('UPDATE dms SET read = 1 WHERE from_id = ? AND to_id = ? AND read = 0').run(data.fromId, socket.userId);
     io.to(`u_${data.fromId}`).emit('dm-read-receipt', { byId: socket.userId });
   });
-
   socket.on('dm-typing', (data) => {
     if (!socket.userId || !data || typeof data.toId !== 'number') return;
     io.to(`u_${data.toId}`).emit('dm-typing', { fromId: socket.userId, isTyping: !!data.isTyping });
   });
-
   socket.on('disconnect', () => {
     if (!socket.userId) return;
     const userId = socket.userId;
@@ -543,19 +484,17 @@ io.on('connection', (socket) => {
   });
 });
 
-/* ===== 17. Cleanup ===== */
 setInterval(() => {
   const cutoff = now() - (48 * 60 * 60 * 1000);
   const r = db.prepare('DELETE FROM dms WHERE time < ? AND read = 1').run(cutoff);
   if (r.changes > 0) console.log(`🧹 Cleaned ${r.changes} messages`);
 }, 60 * 60 * 1000);
 
-/* ===== 18. Health ===== */
 app.get('/health', (req, res) => {
   res.json({
     ok: true, uptime: process.uptime(),
     users: db.prepare('SELECT COUNT(*) as c FROM users WHERE deleted = 0').get().c,
-    online: ONLINE_USERS.size, e2ee: 'ECDH-P256', version: '8.4.0'
+    online: ONLINE_USERS.size, e2ee: 'ECDH-P256', version: '8.5.0'
   });
 });
 app.use((err, req, res, next) => {
@@ -564,9 +503,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'server_error' });
 });
 
-/* ===== 19. Start ===== */
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Dust Server v8.4 on port ${PORT}`);
+  console.log(`🚀 Dust Server v8.5 on port ${PORT}`);
   console.log(`🔗 ${PUBLIC_URL}`);
   console.log(`🔐 E2EE: ECDH P-256 + HKDF`);
 });
