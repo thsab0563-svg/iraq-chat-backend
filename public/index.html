@@ -320,7 +320,7 @@ body.security-blur{filter:blur(22px) brightness(.7);transition:filter .15s;point
 <div id="pinLock"></div>
 
 <script>
-// ✅ EMERGENCY FIX: Hide splash after 5s even if JS fails
+// ✅ EMERGENCY FIX: Hide splash after 5s
 setTimeout(function(){
   try {
     var sp = document.getElementById('splash');
@@ -328,9 +328,8 @@ setTimeout(function(){
       sp.classList.add('hide');
       var auth = document.getElementById('auth');
       if (auth && !auth.classList.contains('active')) auth.classList.add('active');
-      console.warn('EMERGENCY: splash forced hide');
     }
-  } catch(e) { console.error('emergency failed:', e); }
+  } catch(e) {}
 }, 5000);
 
 if ('serviceWorker' in navigator) {
@@ -357,6 +356,52 @@ var lastConvData = null;
 var qrScanner = null;
 var qrFileInput = null;
 var lastLongPressAt = 0;
+
+/* ========== Cache للرسائل المرسلة (Forward Secrecy Fix) ========== */
+function cacheSentMsg(encrypted, plaintext) {
+  try {
+    var cache = JSON.parse(localStorage.getItem('dust_sent_cache') || '{}');
+    var key = encrypted.substring(0, 80);
+    cache[key] = { t: plaintext, ts: Date.now() };
+    var keys = Object.keys(cache).sort(function(a,b){ return cache[a].ts - cache[b].ts; });
+    if (keys.length > 500) {
+      keys.slice(0, keys.length - 500).forEach(function(k){ delete cache[k]; });
+    }
+    localStorage.setItem('dust_sent_cache', JSON.stringify(cache));
+  } catch(e){}
+}
+function lookupSentMsg(encrypted) {
+  try {
+    var cache = JSON.parse(localStorage.getItem('dust_sent_cache') || '{}');
+    var entry = cache[encrypted.substring(0, 80)];
+    return entry ? entry.t : null;
+  } catch(e){ return null; }
+}
+function cacheReceivedMsg(encrypted, plaintext) {
+  try {
+    var cache = JSON.parse(localStorage.getItem('dust_recv_cache') || '{}');
+    var key = encrypted.substring(0, 80);
+    cache[key] = { t: plaintext, ts: Date.now() };
+    var keys = Object.keys(cache).sort(function(a,b){ return cache[a].ts - cache[b].ts; });
+    if (keys.length > 500) {
+      keys.slice(0, keys.length - 500).forEach(function(k){ delete cache[k]; });
+    }
+    localStorage.setItem('dust_recv_cache', JSON.stringify(cache));
+  } catch(e){}
+}
+function lookupRecvMsg(encrypted) {
+  try {
+    var cache = JSON.parse(localStorage.getItem('dust_recv_cache') || '{}');
+    var entry = cache[encrypted.substring(0, 80)];
+    return entry ? entry.t : null;
+  } catch(e){ return null; }
+}
+function clearMsgCaches() {
+  try {
+    localStorage.removeItem('dust_sent_cache');
+    localStorage.removeItem('dust_recv_cache');
+  } catch(e){}
+}
 
 var SecurityPack = { autoLockMinutes: 2, wipeAfterAttempts: 10, lockInterval: null, lastActivity: Date.now(), totalAttempts: parseInt(localStorage.getItem('dust_pin_total_attempts') || '0') };
 
@@ -1169,9 +1214,22 @@ async function loadChats(){
       if (c.last && c.last.deleted) { preview = '🚫 تم حذف الرسالة'; }
       else if (c.last && c.last.text) {
         var lastTxt = c.last.text;
-        if (lastTxt.indexOf('🔒R') === 0 && c.user.public_key) { try { var dec = await Ratchet.decrypt(c.user.id, c.user.public_key, lastTxt); preview = (dec.charAt(0) === '[' ? '🔐 رسالة قديمة' : (dec.length > 45 ? dec.slice(0, 45) + '...' : dec)); } catch(e) { preview = '🔒 رسالة مشفرة'; } }
-        else if (lastTxt.indexOf('🔒') === 0 && c.user.public_key) { try { var shared = await E2EE.getSharedKey(c.user.id, c.user.public_key); var decrypted = await E2EE.decrypt(shared.key, lastTxt); preview = (decrypted.charAt(0) === '[' ? '🔐 رسالة قديمة' : (decrypted.length > 45 ? decrypted.slice(0, 45) + '...' : decrypted)); } catch(e) { preview = '🔒 رسالة مشفرة'; } }
-        else preview = lastTxt.slice(0, 45);
+        // ✅ أولاً: cache للرسائل التي أرسلتها أنت
+        var cached = lookupSentMsg(lastTxt) || lookupRecvMsg(lastTxt);
+        if (cached) {
+          preview = cached.length > 45 ? cached.slice(0, 45) + '...' : cached;
+        } else if (lastTxt.indexOf('🔒') === 0) {
+          try {
+            if (lastTxt.indexOf('🔒R') === 0 && c.user.public_key) {
+              var dec = await Ratchet.decrypt(c.user.id, c.user.public_key, lastTxt);
+              preview = (dec.charAt(0) === '[' ? '🔐 رسالة' : (dec.length > 45 ? dec.slice(0, 45) + '...' : dec));
+            } else if (c.user.public_key) {
+              var shared = await E2EE.getSharedKey(c.user.id, c.user.public_key);
+              var decrypted = await E2EE.decrypt(shared.key, lastTxt);
+              preview = (decrypted.charAt(0) === '[' ? '🔐 رسالة' : (decrypted.length > 45 ? decrypted.slice(0, 45) + '...' : decrypted));
+            } else preview = '🔒 رسالة مشفرة';
+          } catch(e) { preview = '🔒 رسالة مشفرة'; }
+        } else preview = lastTxt.slice(0, 45);
       }
       var displayName = c.user.deleted ? 'حساب محذوف' : esc(c.user.display_name);
       var subText = c.user.deleted ? 'الحساب محذوف' : (online ? 'متصل الآن' : esc(preview));
@@ -1303,6 +1361,9 @@ function extractQrId(text){
 }
 function scrollChat(inst){ var el = $('chatMsgs'); requestAnimationFrame(function(){ el.scrollTo({ top: el.scrollHeight, behavior: inst ? 'auto' : 'smooth' }); }); }
 
+/* ============================================================
+   renderDMMsg — مع cache للأرسال والمستقبل
+   ============================================================ */
 async function renderDMMsg(m){
   var el = document.createElement('div');
   var mine = m.from_id === ME.id;
@@ -1321,15 +1382,39 @@ async function renderDMMsg(m){
     var displayText = m.text || '';
     var isEncrypted = displayText.indexOf('🔒') === 0;
     if (isEncrypted) {
-      try {
-        if (displayText.indexOf('🔒R') === 0 && CURRENT_DM && CURRENT_DM.user.public_key) {
-          var result = await Ratchet.decrypt(CURRENT_DM.user.id, CURRENT_DM.user.public_key, displayText);
-          displayText = (result && result.charAt(0) === '[') ? '🔐 رسالة قديمة (نظام سابق)' : result;
-        } else if (CURRENT_DM && CURRENT_DM.sharedKey) {
-          var r2 = await E2EE.decrypt(CURRENT_DM.sharedKey, displayText);
-          displayText = (r2 && r2.charAt(0) === '[' && r2.indexOf('🔒') !== -1) ? '🔐 رسالة قديمة (نظام سابق)' : r2;
-        } else displayText = '🔐 رسالة مشفرة';
-      } catch(e) { displayText = '🔐 لا يمكن فك التشفير'; }
+      // ✅ 1. cache للرسائل التي أرسلتها
+      var cached = lookupSentMsg(displayText) || lookupRecvMsg(displayText);
+      if (cached) {
+        displayText = cached;
+      } else {
+        // ✅ 2. حاول فك التشفير
+        try {
+          if (displayText.indexOf('🔒R') === 0 && CURRENT_DM && CURRENT_DM.user.public_key) {
+            var result = await Ratchet.decrypt(CURRENT_DM.user.id, CURRENT_DM.user.public_key, displayText);
+            if (result && result.charAt(0) === '[') {
+              displayText = '🔐 رسالة مشفرة (لا يمكن قراءتها)';
+            } else {
+              displayText = result;
+              // ✅ احفظ في cache للمستقبل
+              if (mine) cacheSentMsg(m.text, result);
+              else cacheReceivedMsg(m.text, result);
+            }
+          } else if (CURRENT_DM && CURRENT_DM.sharedKey) {
+            var r2 = await E2EE.decrypt(CURRENT_DM.sharedKey, displayText);
+            if (r2 && r2.charAt(0) === '[' && r2.indexOf('🔒') !== -1) {
+              displayText = '🔐 رسالة مشفرة (لا يمكن قراءتها)';
+            } else {
+              displayText = r2;
+              if (mine) cacheSentMsg(m.text, r2);
+              else cacheReceivedMsg(m.text, r2);
+            }
+          } else {
+            displayText = '🔐 رسالة مشفرة';
+          }
+        } catch(e) {
+          displayText = '🔐 لا يمكن فك التشفير';
+        }
+      }
     }
     bubble.dataset.plain = displayText;
     var lockIcon = isEncrypted ? '<i class="fa-solid fa-lock lock-ic"></i>' : '';
@@ -1405,6 +1490,7 @@ $('chatInput').addEventListener('input', function(){
 });
 $('chatInput').addEventListener('keydown', function(e){ if(e.key === 'Enter' && !e.shiftKey && window.innerWidth > 720){ e.preventDefault(); sendChat(); } });
 $('chatSend').addEventListener('click', sendChat);
+
 async function sendChat(){
   var txt = $('chatInput').value.trim(); if(!txt || !CURRENT_DM) return;
   if (CURRENT_DM.deleted) { toast('لا يمكن المراسلة', 'err'); return; }
@@ -1418,11 +1504,16 @@ async function sendChat(){
     else if (CURRENT_DM.sharedKey) encrypted = await E2EE.encrypt(CURRENT_DM.sharedKey, txt);
     else { toast('لا يوجد مفتاح', 'err'); return; }
   } catch(e) { toast('فشل التشفير', 'err'); return; }
+
+  // ✅ احفظ plaintext في cache قبل الإرسال
+  cacheSentMsg(encrypted, txt);
+
   socket.emit('dm-send', { toId: toId, text: encrypted });
   socket.emit('dm-typing', { toId: toId, isTyping: false });
   clearTimeout(dmTypingTimer);
   $('chatInput').value = ''; autoGrow();
 }
+
 async function openDMById(userId){
   if(ME && userId === ME.id) return toast('نفسك', 'err');
   try { var r = await api('/users/' + userId); openDM(r.user); } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
