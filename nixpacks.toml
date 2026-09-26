@@ -1,10 +1,8 @@
-# nixpacks.toml
-# تثبيت أدوات البناء المطلوبة لمكتبة better-sqlite3
 [phases.setup]
-nixPkgs = ["python311", "gcc", "gnumake", "nodejs_20"]
+nixPkgs = ["nodejs_20", "python311", "gcc", "gnumake", "pkg-config"]
 
 [phases.install]
-cmds = ["npm ci --omit=dev"]
+cmds = ["npm install"]
 
 [start]
 cmd = "node server.js"
