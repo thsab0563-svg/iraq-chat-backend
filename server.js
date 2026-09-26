@@ -1,5 +1,5 @@
 /* ============================================================
-   Dust Server v8.3 — E2EE + Message Edit/Delete + Conv Delete
+   Dust Server v8.4 — E2EE + Message Edit/Delete + Conv Delete
    ============================================================ */
 'use strict';
 
@@ -384,16 +384,18 @@ app.put('/api/dms/:messageId', authRequired,
   }
 );
 
+/* ✅ Delete — sender only + use parameter for empty text */
 app.delete('/api/dms/:messageId', authRequired, (req, res) => {
   const msgId = parseInt(req.params.messageId, 10);
   if (!msgId) return res.status(400).json({ error: 'invalid' });
   const msg = db.prepare('SELECT * FROM dms WHERE id = ?').get(msgId);
   if (!msg) return res.status(404).json({ error: 'not_found' });
-  if (msg.from_id !== req.userId && msg.to_id !== req.userId) return res.status(403).json({ error: 'forbidden' });
+  if (msg.from_id !== req.userId) return res.status(403).json({ error: 'forbidden' });
+  if (msg.deleted === 1) return res.json({ ok: true });
 
-  db.prepare('UPDATE dms SET deleted = 1, text = "" WHERE id = ?').run(msgId);
-  const otherId = msg.from_id === req.userId ? msg.to_id : msg.from_id;
-  io.to(`u_${otherId}`).emit('dm-deleted', { id: msgId, byId: req.userId });
+  db.prepare('UPDATE dms SET deleted = 1, text = ? WHERE id = ?').run('', msgId);
+
+  io.to(`u_${msg.to_id}`).emit('dm-deleted', { id: msgId, byId: req.userId });
   res.json({ ok: true });
 });
 
@@ -553,7 +555,7 @@ app.get('/health', (req, res) => {
   res.json({
     ok: true, uptime: process.uptime(),
     users: db.prepare('SELECT COUNT(*) as c FROM users WHERE deleted = 0').get().c,
-    online: ONLINE_USERS.size, e2ee: 'ECDH-P256', version: '8.3.0'
+    online: ONLINE_USERS.size, e2ee: 'ECDH-P256', version: '8.4.0'
   });
 });
 app.use((err, req, res, next) => {
@@ -564,7 +566,7 @@ app.use((err, req, res, next) => {
 
 /* ===== 19. Start ===== */
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Dust Server v8.3 on port ${PORT}`);
+  console.log(`🚀 Dust Server v8.4 on port ${PORT}`);
   console.log(`🔗 ${PUBLIC_URL}`);
   console.log(`🔐 E2EE: ECDH P-256 + HKDF`);
 });
