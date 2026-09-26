@@ -18,14 +18,13 @@
 
 <script id="app-config" type="application/json">
 {
-  "app": { "name_ar": "Dust", "name_en": "Dust", "version": "7.0.0" },
-  "colors": ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399","#22d3ee","#e11d48"],
+  "app": { "name_ar": "Dust", "name_en": "Dust", "version": "7.1.0" },
+  "colors": ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399"],
   "emojis": ["😀","😂","🥰","😎","🤔","😢","😡","👍","👎","❤️","🔥","🎉","✨","🙏","👏","💪","🌹","☕","🍕","⚽","🎵","📚","💡","🚀","💯","🤝","🙌","😍"]
 }
 </script>
 
 <style>
-/* ============ Dust Design System ============ */
 :root{
   --bg:#0b0d14;
   --bg-2:#11141c;
@@ -61,19 +60,10 @@
   --radius-xl:28px;
 }
 body.light{
-  --bg:#f5f6fa;
-  --bg-2:#eef0f6;
-  --surface:#ffffff;
-  --surface-2:#f3f4f9;
-  --surface-3:#e8eaf1;
-  --text:#0e1018;
-  --text-2:#3a3d4d;
-  --muted:#6b7285;
-  --muted-2:#9ca3b5;
-  --border:rgba(0,0,0,.06);
-  --border-2:rgba(0,0,0,.1);
-  --gold:#c98f3d;
-  --gold-soft:rgba(201,143,61,.12);
+  --bg:#f5f6fa;--bg-2:#eef0f6;--surface:#ffffff;--surface-2:#f3f4f9;--surface-3:#e8eaf1;
+  --text:#0e1018;--text-2:#3a3d4d;--muted:#6b7285;--muted-2:#9ca3b5;
+  --border:rgba(0,0,0,.06);--border-2:rgba(0,0,0,.1);
+  --gold:#c98f3d;--gold-soft:rgba(201,143,61,.12);
   --shadow-sm:0 2px 8px rgba(0,0,0,.04);
   --shadow-md:0 8px 24px rgba(0,0,0,.08);
   --shadow-lg:0 20px 50px rgba(0,0,0,.12);
@@ -83,13 +73,9 @@ input,textarea{user-select:text;-webkit-user-select:text}
 html,body{height:100%;overscroll-behavior:none}
 body{
   font-family:'Cairo',system-ui,-apple-system,sans-serif;
-  color:var(--text);
-  background:var(--bg);
-  overflow:hidden;
-  -webkit-font-smoothing:antialiased;
-  font-size:15px;
-  transition:background .3s,color .3s;
-  position:relative;
+  color:var(--text);background:var(--bg);overflow:hidden;
+  -webkit-font-smoothing:antialiased;font-size:15px;
+  transition:background .3s,color .3s;position:relative;
 }
 body::before{
   content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
@@ -98,7 +84,6 @@ body::before{
     radial-gradient(1000px 700px at 0% 100%,rgba(124,156,255,.06),transparent 55%);
 }
 body.light::before{opacity:.4}
-
 button,input,textarea,select{font-family:inherit;color:inherit;font-size:inherit}
 button{cursor:pointer;border:none;background:none;transition:.2s var(--ease)}
 input,textarea{outline:none;border:none;background:none}
@@ -115,7 +100,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .screen{display:none;height:100dvh;width:100%;position:relative;z-index:1}
 .screen.active{display:flex;flex-direction:column}
 
-/* ============ Splash ============ */
 #splash{
   position:fixed;inset:0;z-index:10000;
   background:
@@ -147,7 +131,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 @keyframes splashBar{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
 @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 
-/* ============ Auth ============ */
 #auth{overflow-y:auto}
 .auth-wrap{margin:auto;width:100%;max-width:440px;padding:36px 24px;position:relative;z-index:1}
 .auth-logo{
@@ -167,9 +150,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   transition:border-color .2s,box-shadow .2s;
 }
 .field input:focus,.field textarea:focus{border-color:var(--gold);box-shadow:0 0 0 4px var(--gold-soft)}
-.color-row{display:flex;gap:12px;flex-wrap:wrap;padding:4px 0}
-.color-row button{width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;transition:transform .2s}
-.color-row button.on{border-color:var(--text);transform:scale(1.15)}
 .btn-main{
   width:100%;padding:16px;border-radius:var(--radius);
   background:var(--grad-gold);color:#1a1207;
@@ -200,7 +180,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .warn-card .w-text{flex:1;font-size:.82rem;line-height:1.75;color:var(--text-2)}
 .warn-card .w-text b{color:var(--gold-2);font-weight:800}
 
-/* ============ App ============ */
 #app{position:relative;overflow:hidden}
 .tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
 .tab{display:none}
@@ -220,7 +199,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   transition:transform .15s;
 }
 .hbtn:active{transform:scale(.92)}
-
 .fab{
   position:absolute;bottom:calc(94px + env(safe-area-inset-bottom));left:20px;
   width:60px;height:60px;border-radius:50%;
@@ -231,7 +209,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 }
 .fab svg{width:28px;height:28px;stroke-width:2.6}
 .fab:active{transform:scale(.9) rotate(90deg)}
-
 .bottom-nav{
   position:absolute;bottom:calc(12px + env(safe-area-inset-bottom));inset-inline:16px;z-index:60;
   display:flex;height:66px;
@@ -253,8 +230,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 0 0 2px var(--surface);
 }
-
-/* ============ Security Banner ============ */
 .sec-banner{
   margin:12px 18px 0;padding:11px 14px;border-radius:var(--radius-sm);
   background:linear-gradient(135deg,var(--success-soft),rgba(52,211,153,.02));
@@ -263,12 +238,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   font-size:.78rem;color:#7ee7b8;font-weight:600;
 }
 .sec-banner svg{width:16px;height:16px;stroke:var(--success);fill:none;stroke-width:2.2;flex:0 0 auto}
-.sec-banner .fp{
-  margin-inline-start:auto;font-family:ui-monospace,monospace;
-  font-size:.68rem;color:var(--muted);letter-spacing:.5px;
-}
-
-/* ============ Search ============ */
+.sec-banner .fp{margin-inline-start:auto;font-family:ui-monospace,monospace;font-size:.68rem;color:var(--muted);letter-spacing:.5px}
 .home-search{
   display:flex;align-items:center;gap:10px;
   margin:14px 18px;padding:12px 16px;border-radius:var(--radius);
@@ -283,8 +253,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   display:grid;place-items:center;
   background:var(--surface-3);color:var(--muted);font-size:.7rem;cursor:pointer;
 }
-
-/* ============ Lists ============ */
 .list-pad{padding:16px 18px;display:flex;flex-direction:column;gap:11px}
 .user-row{
   display:flex;align-items:center;gap:13px;padding:13px;
@@ -307,9 +275,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .user-row .ur-name{font-weight:800;font-size:.95rem;display:flex;align-items:center;gap:6px}
 .user-row .ur-sub{font-size:.76rem;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .user-row .ur-sub.online{color:var(--success);font-weight:600}
-.user-row .ur-lock{color:var(--success);flex:0 0 auto}
-
-/* ============ Post ============ */
 .post{
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
   padding:18px;margin-bottom:14px;position:relative;
@@ -338,8 +303,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .post-actions button:hover{background:var(--surface-2)}
 .post-actions button.liked{color:#ff6b8a}
 .post-actions button.liked .ic{fill:currentColor}
-
-/* ============ Confirm / Modal ============ */
 .confirm-backdrop{
   position:fixed;inset:0;z-index:500;
   background:rgba(0,0,0,.75);backdrop-filter:blur(10px);
@@ -366,7 +329,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .confirm-btn.cancel{background:var(--surface-2);color:var(--text)}
 .confirm-btn.ok{background:var(--grad-gold);color:#1a1207;box-shadow:var(--shadow-gold)}
 .confirm-btn.danger{background:var(--grad-danger);color:#fff}
-
 .action-sheet{
   background:var(--surface);border-radius:var(--radius-xl) var(--radius-xl) 0 0;
   width:100%;max-width:500px;padding:12px 14px calc(20px + env(safe-area-inset-bottom));
@@ -385,15 +347,12 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .as-icon.edit{background:var(--accent-soft);color:var(--accent)}
 .as-icon.delete{background:var(--danger-soft);color:var(--danger)}
 .as-icon svg{width:20px;height:20px;stroke-width:2.2}
-
-/* ============ Chat ============ */
 #chatView{position:fixed;inset:0;z-index:200;background:var(--bg);display:none;flex-direction:column}
 #chatView.open{display:flex}
 .chat-head{
   display:flex;align-items:center;gap:12px;padding:14px 16px;
   padding-top:calc(14px + env(safe-area-inset-top));
   border-bottom:1px solid var(--border);background:var(--bg);
-  position:relative;
 }
 .chat-head .back{
   width:42px;height:42px;border-radius:13px;display:grid;place-items:center;
@@ -408,7 +367,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .chat-head .ch-sub.online{color:var(--success);font-weight:600}
 .chat-head .ch-sub.offline{color:var(--muted)}
 .chat-head .ch-sub svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.2}
-
 .chat-msgs{
   flex:1;overflow-y:auto;padding:20px 14px 12px;
   display:flex;flex-direction:column;gap:12px;
@@ -467,8 +425,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   box-shadow:var(--shadow-gold);transition:transform .15s;
 }
 .send:active{transform:scale(.9)}
-
-/* ============ Profile ============ */
 .profile-cover{
   height:180px;position:relative;
   background:linear-gradient(135deg,#f4a261 0%,#e8b567 40%,#7c9cff 100%);
@@ -530,8 +486,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   border-bottom:2.5px solid transparent;transition:.2s;
 }
 .profile-tabs button.on{color:var(--gold);border-bottom-color:var(--gold)}
-
-/* ============ Modal ============ */
 .modal{
   position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
   display:none;align-items:flex-end;justify-content:center;
@@ -553,7 +507,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .modal-item:active{background:var(--surface-2)}
 .modal-item.danger{color:var(--danger)}
 .modal-item .arrow{margin-inline-start:auto;color:var(--muted-2)}
-
 .modal-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
 .modal-header .back-btn{
   width:40px;height:40px;border-radius:13px;display:grid;place-items:center;
@@ -563,8 +516,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .modal-header .back-btn svg{width:20px;height:20px;stroke-width:2.2}
 .modal-header .title{flex:1;text-align:center;font-size:1.08rem;font-weight:900}
 .modal-header .spacer{width:40px;flex:0 0 auto}
-
-/* ============ Menu Sheet ============ */
 .menu-sheet{
   background:var(--surface);border-radius:var(--radius-xl) var(--radius-xl) 0 0;
   width:100%;max-width:500px;max-height:88vh;overflow-y:auto;
@@ -606,8 +557,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .menu-divider{height:1px;background:var(--border);margin:10px 8px}
 .menu-close-hint{text-align:center;color:var(--muted-2);font-size:.72rem;padding:12px 0 4px}
 .modal-card.menu-sheet-wrap{background:transparent;padding:0;border:none;border-radius:0;max-height:none;box-shadow:none;max-width:100%}
-
-/* ============ QR ============ */
 .qr-box{
   background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius-xl);
   padding:24px;text-align:center;
@@ -622,8 +571,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   font-family:ui-monospace,monospace;text-align:center;direction:ltr;
 }
 #qrReader{width:100%;max-width:400px;margin:0 auto;border-radius:var(--radius-lg);overflow:hidden}
-
-/* ============ Toasts ============ */
 #toasts{
   position:fixed;top:calc(16px + env(safe-area-inset-top));inset-inline:16px;z-index:999;
   display:flex;flex-direction:column;gap:9px;align-items:center;pointer-events:none;
@@ -642,14 +589,12 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 @keyframes slideDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
-
 .spinner{
   width:22px;height:22px;border:2.5px solid rgba(232,181,103,.2);
   border-top-color:var(--gold);border-radius:50%;
   animation:spin .8s linear infinite;display:inline-block;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-
 #netBanner{
   position:fixed;top:0;inset-inline:0;z-index:1000;
   background:var(--danger);color:#fff;padding:11px 16px;text-align:center;
@@ -658,13 +603,10 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 }
 #netBanner.show{display:flex}
 #netBanner button{background:rgba(255,255,255,.2);color:#fff;border-radius:9px;padding:6px 13px;font-weight:800;font-size:.78rem}
-
 .empty{padding:70px 30px;text-align:center;color:var(--muted)}
 .empty svg{width:64px;height:64px;opacity:.3;margin:0 auto 18px;stroke:currentColor;fill:none;stroke-width:1.5}
 .empty p{font-size:.92rem;line-height:1.65}
 .sec-title{padding:20px 20px 10px;font-size:.82rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-
-/* ============ Responsive ============ */
 @media(min-width:720px){
   .modal{align-items:center}
   .modal-card{border-radius:var(--radius-xl);margin:20px}
@@ -676,12 +618,12 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 </head>
 <body>
 
-<!-- Splash -->
 <div id="splash">
   <div class="logo">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 2L3 7v6c0 5 3.8 9.4 9 10 5.2-.6 9-5 9-10V7l-9-5z"/>
-      <path d="M9 12l2 2 4-4" stroke-width="2.2"/>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      <rect x="8" y="11" width="8" height="6" rx="1"/>
+      <path d="M10 11V8a2 2 0 0 1 4 0v3"/>
     </svg>
   </div>
   <div class="title">Dust<span>.</span></div>
@@ -695,13 +637,13 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 <div id="netBanner"><span>لا يوجد اتصال بالإنترنت</span><button onclick="document.getElementById('netBanner').classList.remove('show')">إغلاق</button></div>
 <div id="toasts"></div>
 
-<!-- Auth -->
 <div id="auth" class="screen">
   <div class="auth-wrap">
     <div class="auth-logo">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2L3 7v6c0 5 3.8 9.4 9 10 5.2-.6 9-5 9-10V7l-9-5z"/>
-        <path d="M9 12l2 2 4-4" stroke-width="2.2"/>
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <rect x="8" y="11" width="8" height="6" rx="1"/>
+        <path d="M10 11V8a2 2 0 0 1 4 0v3"/>
       </svg>
     </div>
     <h1 class="auth-title">Dust<span>.</span></h1>
@@ -710,11 +652,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
     <div class="field">
       <label>اسمك</label>
       <input id="rgName" placeholder="مثال: أحمد" maxlength="20" autocomplete="off" />
-    </div>
-
-    <div class="field">
-      <label>لون اسمك</label>
-      <div class="color-row" id="colorRow"></div>
     </div>
 
     <button id="btnRegister" class="btn-main">
@@ -740,7 +677,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   </div>
 </div>
 
-<!-- App -->
 <div id="app" class="screen">
   <div class="tab-content">
     <div id="tab-home" class="tab active">
@@ -811,7 +747,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   </nav>
 </div>
 
-<!-- Chat View -->
 <div id="chatView">
   <header class="chat-head">
     <button class="back" id="chatBack">
@@ -880,7 +815,6 @@ var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAl
 
 var ME = null, TOKEN = localStorage.getItem('token');
 var CURRENT_DM = null;
-var selectedColor = CFG.colors[0];
 var soundOn = true;
 var dmTypingTimer = null;
 var currentTab = 'home';
@@ -1105,24 +1039,17 @@ window.addEventListener('online', function(){ $('netBanner').classList.remove('s
 window.addEventListener('offline', function(){ $('netBanner').classList.add('show'); toast('انقطع الاتصال', 'err'); });
 
 /* ============ AUTH ============ */
-var colorRow = $('colorRow');
-CFG.colors.forEach(function(c, i){
-  var b = document.createElement('button');
-  b.type = 'button'; b.style.background = c; b.dataset.color = c;
-  if(i === 0) b.classList.add('on');
-  b.addEventListener('click', function(){
-    Array.prototype.forEach.call(colorRow.children, function(x){ x.classList.remove('on'); });
-    b.classList.add('on'); selectedColor = c;
-  });
-  colorRow.appendChild(b);
-});
-
 $('btnRegister').addEventListener('click', async function(){
   var name = $('rgName').value.trim();
   if(!name || name.length < 2) return showErr('اكتب اسمك (حرفين على الأقل)');
   this.disabled = true;
+
+  // اختيار لون عشوائي جميل
+  var niceColors = ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399"];
+  var randomColor = niceColors[Math.floor(Math.random() * niceColors.length)];
+
   try {
-    var r = await api('/register', { method: 'POST', body: JSON.stringify({ name: name, color: selectedColor }) });
+    var r = await api('/register', { method: 'POST', body: JSON.stringify({ name: name, color: randomColor }) });
     TOKEN = r.token; localStorage.setItem('token', TOKEN);
     if(r.isDuplicate){ toast('الاسم مستخدم، أضفنا رقماً للتمييز', 'info'); }
     await enterApp(r.user);
@@ -1137,7 +1064,6 @@ async function enterApp(user){
   soundOn = user.sound !== false;
   applyTheme(user.theme || 'dark');
 
-  // تفعيل التشفير
   var ok = await E2EE.init(TOKEN);
   if (ok && E2EE.fingerprint) {
     $('fpText').textContent = E2EE.fingerprint;
@@ -1209,8 +1135,7 @@ socket.on('dm-message', async function(m){
     if(isMine && !m._local){
       var locals = $('chatMsgs').querySelectorAll('.cmsg[data-local="1"]');
       for(var i = locals.length - 1; i >= 0; i--){
-        var bub = locals[i].querySelector('.cbubble');
-        if(bub){ locals[i].remove(); break; }
+        locals[i].remove(); break;
       }
     }
     if(!$('chatMsgs').querySelector('.cmsg[data-id="' + m.id + '"]')){
@@ -1241,7 +1166,7 @@ socket.on('dm-typing', function(d){
   }
 });
 
-/* ============ GLOBAL POLL ============ */
+/* ============ POLL ============ */
 async function pollCurrentChat(){
   if(!CURRENT_DM) return;
   var userId = CURRENT_DM.user.id;
@@ -1677,7 +1602,6 @@ async function renderDMMsg(m){
   var bubble = document.createElement('div');
   bubble.className = 'cbubble';
 
-  // فك التشفير
   var displayText = m.text || '';
   var isEncrypted = displayText.indexOf('🔒') === 0;
   if (isEncrypted && E2EE.ready) {
