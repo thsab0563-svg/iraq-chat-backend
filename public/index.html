@@ -3,31 +3,57 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
-<meta name="theme-color" content="#0a0b10" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' wss: https:;">
+<meta name="theme-color" content="#f5f6fa" />
 <title>Dust | دُست — دردشة مشفرة</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Dust">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="/socket.io/socket.io.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <script id="app-config" type="application/json">
 {
-  "app": { "name_ar": "Dust", "name_en": "Dust", "version": "7.1.0" },
-  "colors": ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399"],
-  "emojis": ["😀","😂","🥰","😎","🤔","😢","😡","👍","👎","❤️","🔥","🎉","✨","🙏","👏","💪","🌹","☕","🍕","⚽","🎵","📚","💡","🚀","💯","🤝","🙌","😍"]
+  "app": { "name_ar": "Dust", "name_en": "Dust", "version": "8.0.0" }
 }
 </script>
 
 <style>
 :root{
+  --bg:#f5f6fa;
+  --surface:#ffffff;
+  --surface-2:#eef0f6;
+  --surface-3:#e2e5ee;
+  --text:#0e1018;
+  --text-2:#3a3d4d;
+  --muted:#6b7285;
+  --muted-2:#9ca3b5;
+  --border:rgba(0,0,0,.06);
+  --border-2:rgba(0,0,0,.1);
+  --gold:#c98f3d;
+  --gold-2:#e8b567;
+  --gold-soft:rgba(201,143,61,.12);
+  --accent:#5b8cff;
+  --accent-soft:rgba(91,140,255,.12);
+  --danger:#e8435f;
+  --danger-soft:rgba(232,67,95,.12);
+  --success:#10b981;
+  --success-soft:rgba(16,185,129,.12);
+  --grad-gold:linear-gradient(135deg,#f4c885,#e8b567 50%,#d4a574);
+  --grad-gold-soft:linear-gradient(135deg,#f9dcaa,#e8b567);
+  --shadow-sm:0 2px 8px rgba(0,0,0,.04);
+  --shadow-md:0 8px 24px rgba(0,0,0,.08);
+  --shadow-lg:0 20px 50px rgba(0,0,0,.12);
+  --shadow-gold:0 8px 24px rgba(201,143,61,.25);
+  --ease:cubic-bezier(.2,.8,.3,1);
+  --radius-sm:12px;
+  --radius:16px;
+  --radius-lg:22px;
+  --radius-xl:28px;
+}
+body.dark{
   --bg:#0b0d14;
-  --bg-2:#11141c;
   --surface:#161a25;
   --surface-2:#1c2130;
   --surface-3:#242b3d;
@@ -40,39 +66,15 @@
   --gold:#e8b567;
   --gold-2:#f4c885;
   --gold-soft:rgba(232,181,103,.12);
-  --accent:#7c9cff;
-  --accent-soft:rgba(124,156,255,.12);
-  --danger:#ff5c78;
-  --danger-soft:rgba(255,92,120,.12);
-  --success:#34d399;
-  --success-soft:rgba(52,211,153,.12);
-  --grad-gold:linear-gradient(135deg,#f4c885,#e8b567 50%,#d4a574);
-  --grad-accent:linear-gradient(135deg,#8fa9ff,#7c9cff);
-  --grad-danger:linear-gradient(135deg,#ff5c78,#ef4444);
   --shadow-sm:0 2px 8px rgba(0,0,0,.2);
   --shadow-md:0 8px 24px rgba(0,0,0,.3);
   --shadow-lg:0 20px 50px rgba(0,0,0,.4);
-  --shadow-gold:0 8px 24px rgba(232,181,103,.28);
-  --ease:cubic-bezier(.2,.8,.3,1);
-  --radius-sm:12px;
-  --radius:16px;
-  --radius-lg:22px;
-  --radius-xl:28px;
-}
-body.light{
-  --bg:#f5f6fa;--bg-2:#eef0f6;--surface:#ffffff;--surface-2:#f3f4f9;--surface-3:#e8eaf1;
-  --text:#0e1018;--text-2:#3a3d4d;--muted:#6b7285;--muted-2:#9ca3b5;
-  --border:rgba(0,0,0,.06);--border-2:rgba(0,0,0,.1);
-  --gold:#c98f3d;--gold-soft:rgba(201,143,61,.12);
-  --shadow-sm:0 2px 8px rgba(0,0,0,.04);
-  --shadow-md:0 8px 24px rgba(0,0,0,.08);
-  --shadow-lg:0 20px 50px rgba(0,0,0,.12);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 input,textarea{user-select:text;-webkit-user-select:text}
 html,body{height:100%;overscroll-behavior:none}
 body{
-  font-family:'Cairo',system-ui,-apple-system,sans-serif;
+  font-family:'Cairo','Inter',system-ui,-apple-system,sans-serif;
   color:var(--text);background:var(--bg);overflow:hidden;
   -webkit-font-smoothing:antialiased;font-size:15px;
   transition:background .3s,color .3s;position:relative;
@@ -80,31 +82,31 @@ body{
 body::before{
   content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(1200px 800px at 100% 0%,rgba(232,181,103,.07),transparent 55%),
-    radial-gradient(1000px 700px at 0% 100%,rgba(124,156,255,.06),transparent 55%);
+    radial-gradient(1200px 800px at 100% 0%,rgba(232,181,103,.06),transparent 55%),
+    radial-gradient(1000px 700px at 0% 100%,rgba(91,140,255,.05),transparent 55%);
 }
-body.light::before{opacity:.4}
-button,input,textarea,select{font-family:inherit;color:inherit;font-size:inherit}
+button,input,textarea{font-family:inherit;color:inherit;font-size:inherit}
 button{cursor:pointer;border:none;background:none;transition:.2s var(--ease)}
 input,textarea{outline:none;border:none;background:none}
 ::-webkit-scrollbar{width:0;height:0}
 img{max-width:100%;display:block}
 a{color:var(--gold);text-decoration:none;cursor:pointer}
 .hide{display:none!important}
+.en{direction:ltr;font-family:'Inter',ui-monospace,monospace}
 
 .ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
 .ic-sm{width:18px;height:18px}
 .ic-xs{width:14px;height:14px;flex:0 0 auto}
-.ic-lg{width:26px;height:26px}
 
 .screen{display:none;height:100dvh;width:100%;position:relative;z-index:1}
 .screen.active{display:flex;flex-direction:column}
 
+/* ===== Splash ===== */
 #splash{
   position:fixed;inset:0;z-index:10000;
   background:
-    radial-gradient(900px 700px at 100% 0%,rgba(232,181,103,.15),transparent 60%),
-    radial-gradient(800px 700px at 0% 100%,rgba(124,156,255,.1),transparent 60%),
+    radial-gradient(900px 700px at 100% 0%,rgba(232,181,103,.18),transparent 60%),
+    radial-gradient(800px 700px at 0% 100%,rgba(91,140,255,.1),transparent 60%),
     var(--bg);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
   transition:opacity .5s,visibility .5s;
@@ -119,7 +121,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 }
 #splash .logo::after{
   content:'';position:absolute;inset:-8px;border-radius:36px;
-  background:var(--grad-gold);filter:blur(28px);opacity:.45;z-index:-1;
+  background:var(--grad-gold);filter:blur(28px);opacity:.4;z-index:-1;
 }
 #splash .logo svg{width:54px;height:54px}
 #splash .title{font-size:1.9rem;font-weight:900;letter-spacing:-.5px}
@@ -131,6 +133,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 @keyframes splashBar{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
 @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 
+/* ===== Auth ===== */
 #auth{overflow-y:auto}
 .auth-wrap{margin:auto;width:100%;max-width:440px;padding:36px 24px;position:relative;z-index:1}
 .auth-logo{
@@ -150,6 +153,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   transition:border-color .2s,box-shadow .2s;
 }
 .field input:focus,.field textarea:focus{border-color:var(--gold);box-shadow:0 0 0 4px var(--gold-soft)}
+.field .hint{font-size:.7rem;color:var(--muted);margin-top:6px;padding-inline-start:6px}
 .btn-main{
   width:100%;padding:16px;border-radius:var(--radius);
   background:var(--grad-gold);color:#1a1207;
@@ -161,14 +165,14 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .btn-main:disabled{opacity:.55}
 .err{
   padding:13px 17px;border-radius:var(--radius-sm);
-  background:var(--danger-soft);border:1px solid rgba(255,92,120,.35);
-  color:#ff9aa8;font-size:.85rem;font-weight:600;text-align:center;margin-top:16px;display:none;
+  background:var(--danger-soft);border:1px solid rgba(232,67,95,.35);
+  color:var(--danger);font-size:.85rem;font-weight:600;text-align:center;margin-top:16px;display:none;
 }
 .err.show{display:block}
 .warn-card{
   margin-top:20px;padding:16px;border-radius:var(--radius);
-  background:linear-gradient(135deg,rgba(232,181,103,.08),rgba(232,181,103,.02));
-  border:1px solid rgba(232,181,103,.25);
+  background:linear-gradient(135deg,var(--gold-soft),rgba(232,181,103,.02));
+  border:1px solid rgba(201,143,61,.25);
   display:flex;gap:12px;
 }
 .warn-card .w-icon{
@@ -178,8 +182,9 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 }
 .warn-card .w-icon svg{width:20px;height:20px;stroke-width:2.2}
 .warn-card .w-text{flex:1;font-size:.82rem;line-height:1.75;color:var(--text-2)}
-.warn-card .w-text b{color:var(--gold-2);font-weight:800}
+.warn-card .w-text b{color:var(--gold);font-weight:800}
 
+/* ===== App ===== */
 #app{position:relative;overflow:hidden}
 .tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
 .tab{display:none}
@@ -188,7 +193,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .app-header{
   position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;
   padding:18px 20px 14px;padding-top:calc(18px + env(safe-area-inset-top));
-  background:color-mix(in srgb,var(--bg) 82%,transparent);
+  background:color-mix(in srgb,var(--bg) 85%,transparent);
   backdrop-filter:blur(20px);border-bottom:1px solid var(--border);
 }
 .app-header h1{font-size:1.35rem;font-weight:900;flex:1;letter-spacing:-.3px}
@@ -199,16 +204,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   transition:transform .15s;
 }
 .hbtn:active{transform:scale(.92)}
-.fab{
-  position:absolute;bottom:calc(94px + env(safe-area-inset-bottom));left:20px;
-  width:60px;height:60px;border-radius:50%;
-  background:var(--grad-gold);color:#1a1207;
-  display:grid;place-items:center;
-  box-shadow:0 12px 32px rgba(232,181,103,.45);
-  z-index:55;transition:transform .2s var(--ease);
-}
-.fab svg{width:28px;height:28px;stroke-width:2.6}
-.fab:active{transform:scale(.9) rotate(90deg)}
 .bottom-nav{
   position:absolute;bottom:calc(12px + env(safe-area-inset-bottom));inset-inline:16px;z-index:60;
   display:flex;height:66px;
@@ -231,28 +226,14 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   box-shadow:0 0 0 2px var(--surface);
 }
 .sec-banner{
-  margin:12px 18px 0;padding:11px 14px;border-radius:var(--radius-sm);
-  background:linear-gradient(135deg,var(--success-soft),rgba(52,211,153,.02));
-  border:1px solid rgba(52,211,153,.25);
+  margin:14px 18px;padding:12px 15px;border-radius:var(--radius);
+  background:linear-gradient(135deg,var(--success-soft),rgba(16,185,129,.02));
+  border:1px solid rgba(16,185,129,.25);
   display:flex;align-items:center;gap:10px;
-  font-size:.78rem;color:#7ee7b8;font-weight:600;
+  font-size:.78rem;color:var(--success);font-weight:700;
 }
 .sec-banner svg{width:16px;height:16px;stroke:var(--success);fill:none;stroke-width:2.2;flex:0 0 auto}
-.sec-banner .fp{margin-inline-start:auto;font-family:ui-monospace,monospace;font-size:.68rem;color:var(--muted);letter-spacing:.5px}
-.home-search{
-  display:flex;align-items:center;gap:10px;
-  margin:14px 18px;padding:12px 16px;border-radius:var(--radius);
-  background:var(--surface);border:1.5px solid var(--border-2);
-  transition:border-color .2s;
-}
-.home-search:focus-within{border-color:var(--gold)}
-.home-search input{flex:1;font-size:.94rem}
-.home-search svg{color:var(--muted)}
-.home-search .clear-x{
-  width:22px;height:22px;border-radius:50%;
-  display:grid;place-items:center;
-  background:var(--surface-3);color:var(--muted);font-size:.7rem;cursor:pointer;
-}
+.sec-banner .fp{margin-inline-start:auto;font-family:ui-monospace,monospace;font-size:.66rem;color:var(--muted);letter-spacing:.5px}
 .list-pad{padding:16px 18px;display:flex;flex-direction:column;gap:11px}
 .user-row{
   display:flex;align-items:center;gap:13px;padding:13px;
@@ -265,88 +246,72 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   color:#fff;font-weight:800;font-size:1.05rem;flex:0 0 auto;position:relative;overflow:hidden;
   box-shadow:0 0 0 2px var(--surface);
 }
-.avatar img{width:100%;height:100%;object-fit:cover}
 .avatar .online-dot{
   position:absolute;bottom:0;inset-inline-end:0;
   width:13px;height:13px;border-radius:50%;background:var(--success);
-  border:2.5px solid var(--surface);box-shadow:0 0 8px rgba(52,211,153,.8);z-index:2;
+  border:2.5px solid var(--surface);box-shadow:0 0 8px rgba(16,185,129,.8);z-index:2;
 }
 .user-row .ur-info{flex:1;min-width:0}
 .user-row .ur-name{font-weight:800;font-size:.95rem;display:flex;align-items:center;gap:6px}
 .user-row .ur-sub{font-size:.76rem;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .user-row .ur-sub.online{color:var(--success);font-weight:600}
-.post{
-  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
-  padding:18px;margin-bottom:14px;position:relative;
-  transition:border-color .2s;
+.user-row .ur-unread{
+  background:var(--danger);color:#fff;font-size:.7rem;font-weight:800;
+  padding:3px 9px;border-radius:99px;min-width:22px;text-align:center;
 }
-.post:hover{border-color:var(--border-2)}
-.post-head{display:flex;align-items:center;gap:11px;margin-bottom:13px}
-.post-head .avatar{width:44px;height:44px;font-size:.98rem}
-.post-head .ph-info{flex:1;min-width:0;cursor:pointer}
-.post-head .ph-name{font-weight:800;font-size:.93rem;display:flex;align-items:center;gap:6px}
-.post-head .ph-meta{font-size:.74rem;color:var(--muted);margin-top:2px}
-.post-menu-btn{
-  width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
-  color:var(--muted);flex:0 0 auto;cursor:pointer;transition:.15s;
+
+/* ===== Account Tab ===== */
+.account-wrap{padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:20px}
+.account-avatar{
+  width:100px;height:100px;border-radius:50%;display:grid;place-items:center;
+  background:var(--grad-gold);color:#1a1207;font-weight:900;font-size:2.4rem;
+  box-shadow:var(--shadow-gold);border:4px solid var(--surface);
 }
-.post-menu-btn:active{background:var(--surface-2);transform:scale(.9)}
-.post-body{font-size:.96rem;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:12px;color:var(--text-2)}
-.post-body .htag{color:var(--gold);font-weight:700;cursor:pointer}
-.post-edited{font-size:.7rem;color:var(--muted);font-style:italic;margin-bottom:8px}
-.post-actions{display:flex;align-items:center;gap:8px;padding-top:12px;border-top:1px solid var(--border);margin-top:6px}
-.post-actions button{
-  flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
-  padding:10px;border-radius:var(--radius-sm);color:var(--muted-2);
-  font-size:.83rem;font-weight:700;transition:.2s;
+.account-name{font-size:1.6rem;font-weight:900;text-align:center;letter-spacing:-.3px}
+.account-username{font-size:.9rem;color:var(--muted);margin-top:-14px}
+.qr-card{
+  width:100%;max-width:340px;padding:24px;border-radius:var(--radius-xl);
+  background:var(--surface);border:1px solid var(--border-2);
+  box-shadow:var(--shadow-md);
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  margin-top:8px;
 }
-.post-actions button:hover{background:var(--surface-2)}
-.post-actions button.liked{color:#ff6b8a}
-.post-actions button.liked .ic{fill:currentColor}
-.confirm-backdrop{
-  position:fixed;inset:0;z-index:500;
-  background:rgba(0,0,0,.75);backdrop-filter:blur(10px);
-  display:flex;align-items:center;justify-content:center;padding:20px;
-  animation:fadeIn .2s;
+.qr-card h3{font-size:1rem;font-weight:900;color:var(--text)}
+.qr-wrapper{background:#fff;padding:14px;border-radius:18px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.qr-wrapper canvas,.qr-wrapper img{display:block;border-radius:6px}
+.qr-hint{font-size:.78rem;color:var(--muted);text-align:center;line-height:1.7;max-width:250px}
+.qr-code{
+  width:100%;padding:11px 14px;background:var(--surface-2);border:1px solid var(--border-2);
+  border-radius:var(--radius-sm);font-size:.78rem;color:var(--text-2);
+  font-family:ui-monospace,monospace;text-align:center;direction:ltr;
+  display:flex;align-items:center;justify-content:center;gap:8px;
 }
-.confirm-box{
-  background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius-xl);
-  width:100%;max-width:380px;padding:26px 22px 22px;text-align:center;
-  box-shadow:var(--shadow-lg);animation:popIn .28s var(--ease);
+.btn-copy{
+  width:100%;padding:13px;border-radius:var(--radius);
+  background:var(--grad-gold);color:#1a1207;font-weight:800;font-size:.92rem;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:var(--shadow-gold);transition:transform .15s;
 }
-@keyframes popIn{from{opacity:0;transform:scale(.9) translateY(10px)}to{opacity:1;transform:none}}
-.confirm-icon{
-  width:64px;height:64px;border-radius:50%;margin:0 auto 16px;
-  display:grid;place-items:center;background:var(--gold-soft);color:var(--gold);
+.btn-copy:active{transform:scale(.97)}
+.btn-outline{
+  width:100%;padding:13px;border-radius:var(--radius);
+  background:var(--surface);border:1.5px solid var(--border-2);color:var(--text);
+  font-weight:800;font-size:.92rem;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .15s,background .2s;
 }
-.confirm-icon.danger{background:var(--danger-soft);color:var(--danger)}
-.confirm-icon svg{width:30px;height:30px;stroke-width:2}
-.confirm-title{font-size:1.15rem;font-weight:900;margin-bottom:8px}
-.confirm-text{font-size:.88rem;color:var(--muted);line-height:1.7;margin-bottom:22px;white-space:pre-line}
-.confirm-actions{display:flex;gap:10px}
-.confirm-btn{flex:1;padding:14px;border-radius:var(--radius);font-weight:800;font-size:.92rem;transition:transform .15s}
-.confirm-btn:active{transform:scale(.97)}
-.confirm-btn.cancel{background:var(--surface-2);color:var(--text)}
-.confirm-btn.ok{background:var(--grad-gold);color:#1a1207;box-shadow:var(--shadow-gold)}
-.confirm-btn.danger{background:var(--grad-danger);color:#fff}
-.action-sheet{
-  background:var(--surface);border-radius:var(--radius-xl) var(--radius-xl) 0 0;
-  width:100%;max-width:500px;padding:12px 14px calc(20px + env(safe-area-inset-bottom));
-  animation:slideUp .3s var(--ease);
+.btn-outline:active{transform:scale(.97);background:var(--surface-2)}
+.btn-danger-outline{
+  width:100%;padding:13px;border-radius:var(--radius);
+  background:var(--surface);border:1.5px solid rgba(232,67,95,.3);color:var(--danger);
+  font-weight:800;font-size:.92rem;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .15s,background .2s;
 }
-.action-sheet .handle{width:44px;height:4px;border-radius:99px;background:rgba(255,255,255,.18);margin:4px auto 16px}
-.action-sheet .as-title{text-align:center;font-size:.82rem;color:var(--muted);font-weight:700;margin-bottom:14px}
-.action-item{
-  display:flex;align-items:center;gap:14px;padding:15px;border-radius:var(--radius);
-  width:100%;text-align:start;font-weight:700;font-size:.95rem;color:var(--text);
-  transition:.15s;
-}
-.action-item:active{background:var(--surface-2);transform:scale(.98)}
-.action-item.danger{color:var(--danger)}
-.as-icon{width:42px;height:42px;border-radius:var(--radius-sm);display:grid;place-items:center;flex:0 0 auto}
-.as-icon.edit{background:var(--accent-soft);color:var(--accent)}
-.as-icon.delete{background:var(--danger-soft);color:var(--danger)}
-.as-icon svg{width:20px;height:20px;stroke-width:2.2}
+.btn-danger-outline:active{transform:scale(.97);background:var(--danger-soft)}
+.account-actions{width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px;margin-top:6px}
+
+/* ===== Chat View ===== */
 #chatView{position:fixed;inset:0;z-index:200;background:var(--bg);display:none;flex-direction:column}
 #chatView.open{display:flex}
 .chat-head{
@@ -359,32 +324,20 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   background:var(--surface);border:1px solid var(--border-2);color:var(--text);
 }
 .chat-head .back:active{transform:scale(.92)}
-.chat-head .ch-info{flex:1;min-width:0;display:flex;align-items:center;gap:11px;cursor:pointer}
-.chat-head .ch-info .avatar{width:42px;height:42px;font-size:.92rem}
 .chat-head .ch-text{flex:1;min-width:0}
 .chat-head .ch-name{font-weight:800;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chat-head .ch-sub{font-size:.73rem;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:5px}
 .chat-head .ch-sub.online{color:var(--success);font-weight:600}
-.chat-head .ch-sub.offline{color:var(--muted)}
 .chat-head .ch-sub svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.2}
 .chat-msgs{
   flex:1;overflow-y:auto;padding:20px 14px 12px;
   display:flex;flex-direction:column;gap:12px;
-  background-image:
-    radial-gradient(circle at 20% 30%,rgba(232,181,103,.03),transparent 40%),
-    radial-gradient(circle at 80% 70%,rgba(124,156,255,.03),transparent 40%);
 }
 .cmsg{display:flex;flex-direction:row;gap:9px;max-width:82%;align-items:flex-end;animation:fadeUp .25s var(--ease)}
 .cmsg.other{align-self:flex-start}
 .cmsg.me{align-self:flex-end;flex-direction:row-reverse}
-.cmsg .cmsg-avatar{
-  width:34px;height:34px;border-radius:50%;flex:0 0 auto;
-  display:grid;place-items:center;color:#fff;font-weight:800;font-size:.82rem;
-  overflow:hidden;box-shadow:0 0 0 2px var(--bg);
-}
-.cmsg .cmsg-avatar img{width:100%;height:100%;object-fit:cover}
-.cmsg-body{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
-.cmsg .cmeta{font-size:.7rem;color:var(--muted);padding:0 10px;display:flex;align-items:center;gap:6px}
+.cmsg-body{display:flex;flex-direction:column;gap:5px;min-width:0}
+.cmsg .cmeta{font-size:.68rem;color:var(--muted);padding:0 10px}
 .cmsg .cbubble{
   padding:11px 15px;border-radius:18px;font-size:.93rem;line-height:1.7;
   white-space:pre-wrap;overflow-wrap:anywhere;position:relative;
@@ -395,17 +348,15 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   border-start-end-radius:5px;box-shadow:var(--shadow-gold);font-weight:500;
 }
 .cmsg[data-local="1"] .cbubble{opacity:.75}
-.cbubble .htag{color:var(--gold);font-weight:700;cursor:pointer}
-.cmsg.me .cbubble .htag{color:#5c3d10;font-weight:800}
-.cmsg .read-marks{font-size:.75rem;padding:0 10px;display:flex;gap:2px;justify-content:flex-start;font-weight:700;line-height:1}
-.cmsg .read-marks.sent{color:var(--muted)}
-.cmsg .read-marks.delivered{color:var(--success)}
-.cmsg .read-marks.read{color:var(--accent)}
 .cbubble .lock-ic{
   display:inline-block;width:11px;height:11px;vertical-align:middle;
   margin-inline-end:4px;opacity:.7;
   stroke:currentColor;fill:none;stroke-width:2.5;
 }
+.cmsg .read-marks{font-size:.72rem;padding:0 10px;font-weight:700;line-height:1}
+.cmsg .read-marks.sent{color:var(--muted)}
+.cmsg .read-marks.delivered{color:var(--success)}
+.cmsg .read-marks.read{color:var(--accent)}
 .chat-input-row{
   padding:12px 14px calc(14px + env(safe-area-inset-bottom));
   border-top:1px solid var(--border);background:var(--bg);
@@ -425,69 +376,10 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   box-shadow:var(--shadow-gold);transition:transform .15s;
 }
 .send:active{transform:scale(.9)}
-.profile-cover{
-  height:180px;position:relative;
-  background:linear-gradient(135deg,#f4a261 0%,#e8b567 40%,#7c9cff 100%);
-  overflow:hidden;
-}
-.profile-cover img{width:100%;height:100%;object-fit:cover}
-.profile-cover::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(11,13,20,.6) 100%)}
-.cover-edit-btn{
-  position:absolute;bottom:14px;inset-inline-end:14px;
-  width:40px;height:40px;border-radius:50%;
-  background:rgba(0,0,0,.55);color:#fff;
-  display:grid;place-items:center;backdrop-filter:blur(10px);
-  border:1px solid rgba(255,255,255,.18);z-index:2;
-}
-.cover-edit-btn svg{width:20px;height:20px;stroke-width:2}
-.profile-body{padding:0 20px 24px;position:relative}
-.profile-avatar-wrap{position:relative;width:112px;margin-top:-56px;margin-bottom:4px}
-.profile-avatar{
-  width:112px;height:112px;border-radius:50%;
-  display:grid;place-items:center;color:#1a1207;font-weight:900;font-size:2.6rem;
-  border:4px solid var(--bg);background:var(--grad-gold);
-  position:relative;overflow:hidden;
-  box-shadow:0 12px 32px rgba(0,0,0,.35);
-}
-.profile-avatar img{width:100%;height:100%;object-fit:cover}
-.avatar-edit-btn{
-  position:absolute;bottom:-2px;inset-inline-start:-2px;
-  width:38px;height:38px;border-radius:50%;
-  background:var(--grad-gold);color:#1a1207;
-  display:grid;place-items:center;border:3px solid var(--bg);
-  box-shadow:0 6px 18px rgba(232,181,103,.4);z-index:2;
-}
-.avatar-edit-btn svg{width:18px;height:18px;stroke-width:2.4}
-.profile-name{font-size:1.4rem;font-weight:900;margin-top:14px;display:flex;align-items:center;gap:8px}
-.profile-user{color:var(--muted);font-size:.9rem;margin-top:3px}
-.profile-bio{margin-top:16px;font-size:.93rem;line-height:1.7;color:var(--text-2)}
-.profile-meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:16px;font-size:.83rem;color:var(--muted)}
-.profile-meta span{display:flex;align-items:center;gap:6px}
-.profile-meta svg{stroke:currentColor;fill:none}
-.profile-stats{display:flex;gap:24px;margin-top:20px;padding:18px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-.profile-stats .stat{flex:1;text-align:center}
-.profile-stats .stat .num{font-size:1.35rem;font-weight:900;color:var(--gold)}
-.profile-stats .stat .lbl{font-size:.75rem;color:var(--muted);margin-top:3px;font-weight:600}
-.profile-actions{display:flex;gap:11px;margin-top:20px}
-.profile-actions button{
-  flex:1;padding:14px;border-radius:var(--radius);font-weight:800;font-size:.9rem;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  transition:transform .15s;
-}
-.profile-actions button:active{transform:scale(.97)}
-.btn-fill{background:var(--grad-gold);color:#1a1207;box-shadow:var(--shadow-gold)}
-.btn-ghost{background:var(--surface);border:1px solid var(--border-2);color:var(--text)}
-.profile-tabs{
-  display:flex;margin-top:16px;border-bottom:1px solid var(--border);
-  position:sticky;top:0;background:var(--bg);z-index:10;
-}
-.profile-tabs button{
-  flex:1;padding:14px;font-weight:800;font-size:.88rem;color:var(--muted);
-  border-bottom:2.5px solid transparent;transition:.2s;
-}
-.profile-tabs button.on{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* ===== Modal ===== */
 .modal{
-  position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+  position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
   display:none;align-items:flex-end;justify-content:center;
 }
 .modal.open{display:flex}
@@ -499,14 +391,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   animation:slideUp .3s var(--ease);
 }
 .modal.center .modal-card{border-radius:var(--radius-xl);margin:20px;border:1px solid var(--border-2)}
-.modal-list{display:flex;flex-direction:column;gap:6px}
-.modal-item{
-  display:flex;align-items:center;gap:14px;padding:14px;border-radius:var(--radius);
-  background:transparent;font-weight:700;font-size:.94rem;text-align:start;width:100%;color:var(--text);
-}
-.modal-item:active{background:var(--surface-2)}
-.modal-item.danger{color:var(--danger)}
-.modal-item .arrow{margin-inline-start:auto;color:var(--muted-2)}
 .modal-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
 .modal-header .back-btn{
   width:40px;height:40px;border-radius:13px;display:grid;place-items:center;
@@ -516,61 +400,25 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .modal-header .back-btn svg{width:20px;height:20px;stroke-width:2.2}
 .modal-header .title{flex:1;text-align:center;font-size:1.08rem;font-weight:900}
 .modal-header .spacer{width:40px;flex:0 0 auto}
-.menu-sheet{
-  background:var(--surface);border-radius:var(--radius-xl) var(--radius-xl) 0 0;
-  width:100%;max-width:500px;max-height:88vh;overflow-y:auto;
-  padding:8px 14px calc(20px + env(safe-area-inset-bottom));
-  animation:slideUp .3s var(--ease);
+.modal-list{display:flex;flex-direction:column;gap:8px}
+.modal-item{
+  display:flex;align-items:center;gap:14px;padding:15px;border-radius:var(--radius);
+  background:var(--surface-2);font-weight:700;font-size:.94rem;text-align:start;width:100%;color:var(--text);
+  transition:.15s;
 }
-.menu-handle{width:44px;height:4px;border-radius:99px;background:rgba(255,255,255,.18);margin:8px auto 12px}
-.menu-header{
-  display:flex;align-items:center;gap:14px;padding:14px;
-  background:linear-gradient(135deg,var(--gold-soft),rgba(124,156,255,.06));
-  border:1px solid var(--border-2);border-radius:var(--radius-lg);margin-bottom:14px;
+.modal-item:active{background:var(--surface-3);transform:scale(.98)}
+.modal-item .mi-icon{
+  width:40px;height:40px;border-radius:12px;
+  display:grid;place-items:center;flex:0 0 auto;
+  background:var(--grad-gold);color:#1a1207;
 }
-.menu-header .avatar{width:54px;height:54px;font-size:1.2rem}
-.menu-header-info{flex:1;min-width:0}
-.menu-header-name{font-weight:900;font-size:1.05rem;display:flex;align-items:center;gap:6px}
-.menu-header-handle{font-size:.78rem;color:var(--muted);margin-top:3px;direction:ltr;text-align:right}
-.menu-section-title{padding:12px 14px 8px;font-size:.72rem;font-weight:800;color:var(--muted-2);text-transform:uppercase;letter-spacing:1px}
-.menu-icon{
-  width:42px;height:42px;border-radius:14px;display:grid;place-items:center;
-  flex:0 0 auto;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.25);
-}
-.menu-icon svg{width:20px;height:20px;stroke-width:2.2}
-.menu-icon.gold{background:linear-gradient(135deg,#f4c885,#e8b567);color:#1a1207}
-.menu-icon.blue{background:linear-gradient(135deg,#8fa9ff,#5b8cff)}
-.menu-icon.teal{background:linear-gradient(135deg,#4ecdc4,#22d3ee)}
-.menu-icon.rose{background:linear-gradient(135deg,#ff6b8a,#e11d48)}
-.menu-icon.violet{background:linear-gradient(135deg,#c084fc,#7c5cff)}
-.menu-icon.green{background:linear-gradient(135deg,#34d399,#22c55e)}
-.menu-row{
-  display:flex;align-items:center;gap:14px;padding:11px 12px;border-radius:var(--radius);
-  width:100%;text-align:start;color:var(--text);font-weight:700;font-size:.94rem;
-}
-.menu-row:active{background:var(--surface-2)}
-.menu-row .mr-info{flex:1;min-width:0}
-.menu-row .mr-title{font-weight:700;font-size:.94rem}
-.menu-row .mr-sub{font-size:.73rem;color:var(--muted);margin-top:2px;font-weight:500}
-.menu-row.danger .mr-title{color:var(--danger)}
-.menu-row.danger .menu-icon{background:var(--grad-danger)}
-.menu-divider{height:1px;background:var(--border);margin:10px 8px}
-.menu-close-hint{text-align:center;color:var(--muted-2);font-size:.72rem;padding:12px 0 4px}
-.modal-card.menu-sheet-wrap{background:transparent;padding:0;border:none;border-radius:0;max-height:none;box-shadow:none;max-width:100%}
-.qr-box{
-  background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius-xl);
-  padding:24px;text-align:center;
-  display:flex;flex-direction:column;align-items:center;gap:18px;
-}
-.qr-wrapper{background:#fff;padding:16px;border-radius:20px;box-shadow:0 8px 30px rgba(0,0,0,.15)}
-.qr-wrapper canvas, .qr-wrapper img{display:block;border-radius:8px}
-.qr-hint{font-size:.82rem;color:var(--muted);line-height:1.6;max-width:280px}
-.qr-link{
-  width:100%;padding:12px 16px;background:var(--surface-2);border:1px solid var(--border-2);
-  border-radius:var(--radius);font-size:.78rem;color:var(--text-2);word-break:break-all;
-  font-family:ui-monospace,monospace;text-align:center;direction:ltr;
-}
+.modal-item .mi-icon svg{width:20px;height:20px;stroke-width:2.2}
+.modal-item .mi-info{flex:1;min-width:0}
+.modal-item .mi-title{font-weight:800;font-size:.94rem}
+.modal-item .mi-sub{font-size:.72rem;color:var(--muted);margin-top:3px;font-weight:500}
 #qrReader{width:100%;max-width:400px;margin:0 auto;border-radius:var(--radius-lg);overflow:hidden}
+
+/* ===== Toasts ===== */
 #toasts{
   position:fixed;top:calc(16px + env(safe-area-inset-top));inset-inline:16px;z-index:999;
   display:flex;flex-direction:column;gap:9px;align-items:center;pointer-events:none;
@@ -583,14 +431,14 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   display:flex;align-items:center;gap:10px;max-width:100%;pointer-events:auto;
   animation:slideDown .3s var(--ease);
 }
-.toast.ok{border-color:rgba(52,211,153,.35);color:#7ee7b8}
-.toast.err{border-color:rgba(255,92,120,.35);color:#ff9aa8}
-.toast.info{border-color:rgba(232,181,103,.35);color:var(--gold-2)}
+.toast.ok{border-color:rgba(16,185,129,.35);color:var(--success)}
+.toast.err{border-color:rgba(232,67,95,.35);color:var(--danger)}
+.toast.info{border-color:rgba(201,143,61,.35);color:var(--gold)}
 @keyframes slideDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
 .spinner{
-  width:22px;height:22px;border:2.5px solid rgba(232,181,103,.2);
+  width:22px;height:22px;border:2.5px solid var(--gold-soft);
   border-top-color:var(--gold);border-radius:50%;
   animation:spin .8s linear infinite;display:inline-block;
 }
@@ -602,22 +450,20 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   padding-top:calc(11px + env(safe-area-inset-top));
 }
 #netBanner.show{display:flex}
-#netBanner button{background:rgba(255,255,255,.2);color:#fff;border-radius:9px;padding:6px 13px;font-weight:800;font-size:.78rem}
 .empty{padding:70px 30px;text-align:center;color:var(--muted)}
 .empty svg{width:64px;height:64px;opacity:.3;margin:0 auto 18px;stroke:currentColor;fill:none;stroke-width:1.5}
 .empty p{font-size:.92rem;line-height:1.65}
-.sec-title{padding:20px 20px 10px;font-size:.82rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+
 @media(min-width:720px){
   .modal{align-items:center}
   .modal-card{border-radius:var(--radius-xl);margin:20px}
   .bottom-nav{inset-inline:auto;left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 32px))}
-  .fab{left:calc(50% - 250px)}
-  .action-sheet,.menu-sheet{border-radius:var(--radius-xl);margin:20px}
 }
 </style>
 </head>
 <body>
 
+<!-- Splash -->
 <div id="splash">
   <div class="logo">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -637,6 +483,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 <div id="netBanner"><span>لا يوجد اتصال بالإنترنت</span><button onclick="document.getElementById('netBanner').classList.remove('show')">إغلاق</button></div>
 <div id="toasts"></div>
 
+<!-- Auth -->
 <div id="auth" class="screen">
   <div class="auth-wrap">
     <div class="auth-logo">
@@ -647,11 +494,12 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
       </svg>
     </div>
     <h1 class="auth-title">Dust<span>.</span></h1>
-    <p class="auth-sub">تطبيق مشفر وآمن — ادخل اسمك وابدأ</p>
+    <p class="auth-sub">تطبيق مشفر وآمن — اختر اسمك وابدأ</p>
 
     <div class="field">
-      <label>اسمك</label>
-      <input id="rgName" placeholder="مثال: أحمد" maxlength="20" autocomplete="off" />
+      <label>اسم المستخدم (إنجليزي فقط)</label>
+      <input id="rgName" placeholder="ahmed_ali" maxlength="20" autocomplete="off" class="en" dir="ltr" style="text-align:left" />
+      <div class="hint">أحرف إنجليزية، أرقام، و _ فقط (مثال: ahmed_92)</div>
     </div>
 
     <button id="btnRegister" class="btn-main">
@@ -677,89 +525,51 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   </div>
 </div>
 
+<!-- App -->
 <div id="app" class="screen">
   <div class="tab-content">
-    <div id="tab-home" class="tab active">
+    <!-- Chats tab (default) -->
+    <div id="tab-chats" class="tab active">
       <header class="app-header">
-        <h1>Dust<span class="brand-dot">.</span></h1>
-        <button class="hbtn" id="btnMenu">
-          <svg class="ic" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>
-      </header>
-
-      <div class="sec-banner" id="secBanner">
-        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <span>التشفير مُفعّل</span>
-        <span class="fp" id="fpText">—</span>
-      </div>
-
-      <div class="home-search">
-        <svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="searchInput" placeholder="ابحث عن أشخاص أو #هاشتاقات..." />
-        <div class="clear-x hide" id="clearSearch">✕</div>
-      </div>
-      <div id="suggestionsSection"></div>
-      <div class="list-pad" id="homeFeed"></div>
-    </div>
-
-    <div id="tab-chats" class="tab">
-      <header class="app-header"><h1>الرسائل</h1></header>
-      <div class="list-pad" id="chatsList"></div>
-    </div>
-
-    <div id="tab-friends" class="tab">
-      <header class="app-header">
-        <h1>الأصدقاء</h1>
+        <h1>الرسائل</h1>
         <button class="hbtn" id="btnAddFriend" title="إضافة صديق">
           <svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
       </header>
-      <div class="list-pad" id="friendsList"></div>
+      <div class="list-pad" id="chatsList"></div>
     </div>
 
-    <div id="tab-profile" class="tab"><div id="profileContent"></div></div>
+    <!-- Account tab -->
+    <div id="tab-account" class="tab">
+      <header class="app-header"><h1>حسابي</h1></header>
+      <div class="account-wrap" id="accountContent"></div>
+    </div>
   </div>
 
-  <button class="fab" id="fabNewPost">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-    </svg>
-  </button>
-
   <nav class="bottom-nav">
-    <button type="button" data-tab="home" class="on">
-      <svg class="ic" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <span>الرئيسية</span>
-    </button>
-    <button type="button" data-tab="chats">
+    <button type="button" data-tab="chats" class="on">
       <svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span>الرسائل</span>
       <span class="badge hide" id="chatBadge">0</span>
     </button>
-    <button type="button" data-tab="friends">
-      <svg class="ic" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      <span>الأصدقاء</span>
-    </button>
-    <button type="button" data-tab="profile">
+    <button type="button" data-tab="account">
       <svg class="ic" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <span>حسابي</span>
     </button>
   </nav>
 </div>
 
+<!-- Chat View -->
 <div id="chatView">
   <header class="chat-head">
     <button class="back" id="chatBack">
       <svg class="ic" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div class="ch-info" id="chatInfo">
-      <div class="avatar" id="chatAvatar" style="display:none">?</div>
-      <div class="ch-text">
-        <div class="ch-name" id="chatName">—</div>
-        <div class="ch-sub" id="chatSub">
-          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          ...
-        </div>
+    <div class="ch-text">
+      <div class="ch-name" id="chatName">—</div>
+      <div class="ch-sub" id="chatSub">
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        ...
       </div>
     </div>
   </header>
@@ -776,31 +586,11 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 </div>
 
 <div class="modal" id="modal"><div class="modal-card" id="modalBody"></div></div>
-<div class="modal center" id="cropModal">
-  <div class="modal-card">
-    <div style="font-weight:900;margin-bottom:14px;text-align:center">قص الصورة</div>
-    <div style="max-height:60vh;overflow:hidden;border-radius:16px;background:#000">
-      <img id="cropImage" alt="crop" style="max-width:100%;display:block" />
-    </div>
-    <div style="display:flex;gap:10px;margin-top:16px">
-      <button class="confirm-btn cancel" id="cropCancel">إلغاء</button>
-      <button class="confirm-btn ok" id="cropConfirm">حفظ</button>
-    </div>
-  </div>
-</div>
-<div class="modal" id="dmAlert">
-  <div class="modal-card" style="text-align:center">
-    <div style="font-size:1.1rem;font-weight:900;margin-bottom:12px" id="dmAlertTitle">تنبيه</div>
-    <p style="color:var(--muted);font-size:.9rem;line-height:1.7;margin-bottom:20px" id="dmAlertText"></p>
-    <button class="btn-main" onclick="document.getElementById('dmAlert').classList.remove('open')">فهمت</button>
-  </div>
-</div>
 
 <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(function(regs){
     regs.forEach(function(r){ r.unregister(); });
-    caches.keys().then(function(names){ names.forEach(function(n){ caches.delete(n); }); });
   });
 }
 </script>
@@ -808,7 +598,6 @@ if ('serviceWorker' in navigator) {
 <script>
 (function(){
 'use strict';
-var CFG = JSON.parse(document.getElementById('app-config').textContent);
 var socket = io({ transports: ['websocket', 'polling'] });
 var $ = function(id){ return document.getElementById(id); };
 var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
@@ -817,109 +606,71 @@ var ME = null, TOKEN = localStorage.getItem('token');
 var CURRENT_DM = null;
 var soundOn = true;
 var dmTypingTimer = null;
-var currentTab = 'home';
-var searchDebounce = null;
-var currentSearchQuery = '';
+var currentTab = 'chats';
 var chatBadgeCount = 0;
 var onlineUsers = {};
-var currentProfileTab = 'info';
-var lastProfilePosts = [];
 var globalPollInterval = null;
 var lastConvData = null;
 var qrScanner = null;
+var qrFileInput = null;
 
-/* ============================================================
-   Dust E2EE Engine - محرك التشفير من الطرف إلى الطرف
-   ============================================================ */
+/* ========== E2EE Engine ========== */
 var E2EE = {
-  key: null,
-  ready: false,
-  fingerprint: null,
+  key: null, ready: false, fingerprint: null,
 
   deriveKey: async function(seed) {
     var enc = new TextEncoder();
-    var keyMaterial = await crypto.subtle.importKey(
-      'raw', enc.encode(seed),
-      { name: 'PBKDF2' }, false, ['deriveKey']
-    );
-    var salt = enc.encode('Dust-Salt-v7-' + (ME ? ME.id : 'anon'));
+    var km = await crypto.subtle.importKey('raw', enc.encode(seed), { name: 'PBKDF2' }, false, ['deriveKey']);
     return crypto.subtle.deriveKey(
-      { name: 'PBKDF2', salt: salt, iterations: 250000, hash: 'SHA-256' },
-      keyMaterial,
-      { name: 'AES-GCM', length: 256 },
-      true,
-      ['encrypt', 'decrypt']
+      { name: 'PBKDF2', salt: enc.encode('Dust-Salt-v8-' + (ME ? ME.id : 'anon')), iterations: 250000, hash: 'SHA-256' },
+      km, { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']
     );
   },
-
   encrypt: async function(plainText) {
     if (!this.key) throw new Error('no_key');
     var enc = new TextEncoder();
     var iv = crypto.getRandomValues(new Uint8Array(12));
-    var cipher = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv: iv, tagLength: 128 },
-      this.key,
-      enc.encode(plainText)
-    );
+    var cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, this.key, enc.encode(plainText));
     var combined = new Uint8Array(iv.length + cipher.byteLength);
-    combined.set(iv, 0);
-    combined.set(new Uint8Array(cipher), iv.length);
+    combined.set(iv, 0); combined.set(new Uint8Array(cipher), iv.length);
     return '🔒' + btoa(String.fromCharCode.apply(null, combined));
   },
-
   decrypt: async function(payload) {
     if (!this.key) throw new Error('no_key');
     if (!payload || payload.indexOf('🔒') !== 0) return payload;
     try {
       var raw = Uint8Array.from(atob(payload.substring(2)), function(c){ return c.charCodeAt(0); });
-      var iv = raw.slice(0, 12);
-      var cipher = raw.slice(12);
+      var iv = raw.slice(0, 12), cipher = raw.slice(12);
       var dec = new TextDecoder();
-      var plain = await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv: iv, tagLength: 128 },
-        this.key,
-        cipher
-      );
+      var plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, this.key, cipher);
       return dec.decode(plain);
-    } catch(e) {
-      return '[🔒 رسالة مشفرة — تعذر فك التشفير]';
-    }
+    } catch(e) { return '[🔒 تعذر فك التشفير]'; }
   },
-
   computeFingerprint: async function() {
     if (!this.key) return null;
-    var exported = await crypto.subtle.exportKey('raw', this.key);
-    var hash = await crypto.subtle.digest('SHA-256', exported);
+    var exp = await crypto.subtle.exportKey('raw', this.key);
+    var hash = await crypto.subtle.digest('SHA-256', exp);
     var bytes = new Uint8Array(hash).slice(0, 6);
     return Array.from(bytes).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('').match(/.{1,4}/g).join(' ');
   },
-
   init: async function(token) {
     try {
       var seed = localStorage.getItem('dust_e2ee_pwd');
       if (!seed) {
-        seed = Array.from(crypto.getRandomValues(new Uint8Array(32)))
-          .map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+        seed = Array.from(crypto.getRandomValues(new Uint8Array(32))).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
         localStorage.setItem('dust_e2ee_pwd', seed);
       }
       this.key = await this.deriveKey(seed + '::' + token);
       this.fingerprint = await this.computeFingerprint();
       this.ready = true;
-      console.log('🔐 Dust E2EE Ready. FP:', this.fingerprint);
       return true;
-    } catch(e) {
-      console.error('E2EE init failed:', e);
-      this.ready = false;
-      return false;
-    }
+    } catch(e) { this.ready = false; return false; }
   }
 };
 
-/* ============================================================
-   Helpers
-   ============================================================ */
+/* ========== Helpers ========== */
 var esc = function(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
-var initial = function(n){ return (n||'؟').trim().charAt(0).toUpperCase(); };
+var initial = function(n){ return (n||'?').trim().charAt(0).toUpperCase(); };
 var fmtTime = function(ts){ return new Intl.DateTimeFormat('ar-EG',{hour:'2-digit',minute:'2-digit'}).format(new Date(ts)); };
 var fmtDate = function(ts){
   if(!ts) return '';
@@ -932,26 +683,24 @@ var fmtDate = function(ts){
   return new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'short'}).format(d);
 };
 var fmtLastSeen = function(ts){
-  if(!ts) return 'آخر ظهور غير معروف';
+  if(!ts) return 'غير معروف';
   var diff = (Date.now() - ts)/1000;
-  if(diff < 60) return 'آخر ظهور منذ لحظات';
-  if(diff < 3600) return 'آخر ظهور منذ ' + Math.floor(diff/60) + ' دقيقة';
-  if(diff < 86400) return 'آخر ظهور منذ ' + Math.floor(diff/3600) + ' ساعة';
-  if(diff < 172800) return 'آخر ظهور أمس';
-  return 'آخر ظهور ' + new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'short'}).format(new Date(ts));
+  if(diff < 60) return 'منذ لحظات';
+  if(diff < 3600) return 'منذ ' + Math.floor(diff/60) + ' دقيقة';
+  if(diff < 86400) return 'منذ ' + Math.floor(diff/3600) + ' ساعة';
+  if(diff < 172800) return 'أمس';
+  return new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'short'}).format(new Date(ts));
 };
 
 function linkify(text){
   var s = esc(text);
   s = s.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
-  s = s.replace(/#([\u0600-\u06FF\w_]{1,40})/g, '<span class="htag" data-tag="$1">#$1</span>');
   return s;
 }
 function avatarHTML(user, size){
   var color = (user && user.color) || '#e8b567';
   var sz = size ? 'width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size*0.42) + 'px' : '';
   var dot = (user && user.online) ? '<span class="online-dot"></span>' : '';
-  if(user && user.avatar) return '<div class="avatar" style="' + sz + '"><img src="' + esc(user.avatar) + '" />' + dot + '</div>';
   var nm = (user && user.display_name) ? user.display_name : '';
   return '<div class="avatar" style="background:linear-gradient(135deg,' + color + ',#d4a574);' + sz + '">' + esc(initial(nm)) + dot + '</div>';
 }
@@ -988,18 +737,9 @@ async function api(path, opts){
   if(!res.ok) throw new Error((data && data.error) || ('http_' + res.status));
   return data;
 }
-async function uploadImage(fileOrBlob, filename){
-  var fd = new FormData();
-  fd.append('image', fileOrBlob, filename || 'image.jpg');
-  var headers = {};
-  if(TOKEN) headers['Authorization'] = 'Bearer ' + TOKEN;
-  var res = await fetch('/upload', { method: 'POST', body: fd, headers: headers });
-  if(!res.ok) throw new Error('upload_failed');
-  return res.json();
-}
 function handleApiError(e){
   if(e.message === 'session_expired' || e.message === 'invalid_token' || e.message === 'user_not_found'){
-    toast('انتهت الجلسة. الرجاء الدخول من جديد', 'err');
+    toast('انتهت الجلسة', 'err');
     localStorage.removeItem('token');
     TOKEN = null;
     setTimeout(function(){ location.reload(); }, 1500);
@@ -1007,51 +747,23 @@ function handleApiError(e){
   }
   return false;
 }
-function urlBase64ToUint8Array(b64){
-  var padding = '='.repeat((4 - b64.length % 4) % 4);
-  var base64 = (b64 + padding).replace(/-/g, '+').replace(/_/g, '/');
-  var raw = window.atob(base64);
-  var arr = new Uint8Array(raw.length);
-  for(var i = 0; i < raw.length; ++i) arr[i] = raw.charCodeAt(i);
-  return arr;
-}
-async function setupPush(){
-  if(!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-  try {
-    var r = await fetch('/api/vapid-public');
-    var j = await r.json();
-    if(!j.key) return;
-    var reg = await navigator.serviceWorker.register('/service-worker.js');
-    await navigator.serviceWorker.ready;
-    var sub = await reg.pushManager.getSubscription();
-    if(!sub){
-      if(Notification.permission !== 'granted'){
-        var p = await Notification.requestPermission();
-        if(p !== 'granted') return;
-      }
-      sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(j.key) });
-    }
-    await api('/push/subscribe', { method: 'POST', body: JSON.stringify(sub.toJSON()) });
-  } catch(e){ console.warn('Push error:', e.message); }
-}
 
-window.addEventListener('online', function(){ $('netBanner').classList.remove('show'); toast('عاد الاتصال', 'ok'); });
-window.addEventListener('offline', function(){ $('netBanner').classList.add('show'); toast('انقطع الاتصال', 'err'); });
+window.addEventListener('online', function(){ $('netBanner').classList.remove('show'); });
+window.addEventListener('offline', function(){ $('netBanner').classList.add('show'); });
 
-/* ============ AUTH ============ */
+/* ========== AUTH ========== */
 $('btnRegister').addEventListener('click', async function(){
-  var name = $('rgName').value.trim();
-  if(!name || name.length < 2) return showErr('اكتب اسمك (حرفين على الأقل)');
+  var name = $('rgName').value.trim().toLowerCase();
+  // English only: letters, numbers, underscore
+  if(!/^[a-z][a-z0-9_]{1,19}$/.test(name)){
+    return showErr('الاسم يجب أن يبدأ بحرف إنجليزي ويحتوي على حروف وأرقام و _ فقط (2-20 حرف)');
+  }
   this.disabled = true;
-
-  // اختيار لون عشوائي جميل
   var niceColors = ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399"];
   var randomColor = niceColors[Math.floor(Math.random() * niceColors.length)];
-
   try {
     var r = await api('/register', { method: 'POST', body: JSON.stringify({ name: name, color: randomColor }) });
     TOKEN = r.token; localStorage.setItem('token', TOKEN);
-    if(r.isDuplicate){ toast('الاسم مستخدم، أضفنا رقماً للتمييز', 'info'); }
     await enterApp(r.user);
   } catch(e) {
     showErr(e.message === 'name_required' ? 'الاسم مطلوب' : e.message);
@@ -1062,30 +774,24 @@ $('btnRegister').addEventListener('click', async function(){
 async function enterApp(user){
   ME = user;
   soundOn = user.sound !== false;
-  applyTheme(user.theme || 'dark');
+  // default light mode
+  applyTheme(user.theme || 'light');
 
-  var ok = await E2EE.init(TOKEN);
-  if (ok && E2EE.fingerprint) {
-    $('fpText').textContent = E2EE.fingerprint;
-  } else {
-    $('secBanner').style.background = 'linear-gradient(135deg,rgba(255,92,120,.12),rgba(255,92,120,.02))';
-    $('secBanner').style.borderColor = 'rgba(255,92,120,.3)';
-    $('secBanner').querySelector('span').textContent = 'تعذر تفعيل التشفير';
-  }
+  await E2EE.init(TOKEN);
 
   $('auth').classList.remove('active');
   $('app').classList.add('active');
   socket.emit('auth', { token: TOKEN });
-  setTimeout(setupPush, 1500);
   lastConvData = null;
+  loadAccount();
 }
-function applyTheme(theme){ document.body.classList.toggle('light', theme === 'light'); }
+function applyTheme(theme){ document.body.classList.toggle('dark', theme === 'dark'); }
 
-/* ============ SOCKET ============ */
+/* ========== SOCKET ========== */
 socket.on('auth-error', function(data){
   var err = data && data.error;
   if(err === 'session_expired' || err === 'invalid_token' || err === 'user_not_found'){
-    toast('انتهت الجلسة. الرجاء الدخول من جديد', 'err');
+    toast('انتهت الجلسة', 'err');
     localStorage.removeItem('token');
     TOKEN = null;
     setTimeout(function(){ location.reload(); }, 1500);
@@ -1093,8 +799,8 @@ socket.on('auth-error', function(data){
 });
 socket.on('auth-ok', function(data){ ME = data.user; loadEverything(); });
 
-socket.on('user-online', function(d){ onlineUsers[d.userId] = true; refreshStatuses(); });
-socket.on('user-offline', function(d){ delete onlineUsers[d.userId]; refreshStatuses(); });
+socket.on('user-online', function(d){ onlineUsers[d.userId] = true; if(currentTab === 'chats') loadChats(); });
+socket.on('user-offline', function(d){ delete onlineUsers[d.userId]; if(currentTab === 'chats') loadChats(); });
 socket.on('user-deleted', function(d){
   delete onlineUsers[d.userId];
   if(CURRENT_DM && CURRENT_DM.user.id === d.userId){
@@ -1102,30 +808,7 @@ socket.on('user-deleted', function(d){
     $('chatView').classList.remove('open');
     CURRENT_DM = null;
   }
-  loadChats(); loadFriends();
-});
-
-function refreshStatuses(){
-  if(currentTab === 'chats') loadChats();
-  if(currentTab === 'friends') loadFriends();
-  if(CURRENT_DM) updateChatStatus(CURRENT_DM.user.id);
-}
-async function updateChatStatus(userId){
-  if(onlineUsers[userId]){ $('chatSub').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/></svg>متصل الآن'; $('chatSub').className = 'ch-sub online'; }
-  else {
-    try { var r = await api('/users/' + userId); $('chatSub').textContent = r.user.online ? 'متصل الآن' : fmtLastSeen(r.user.last_seen); $('chatSub').className = 'ch-sub ' + (r.user.online ? 'online' : 'offline'); } catch(_){}
-  }
-}
-
-socket.on('notification', function(n){
-  if(n.type === 'dm'){
-    if(soundOn) playBeep();
-    if(currentTab === 'chats') loadChats();
-    if(CURRENT_DM && n.from && CURRENT_DM.user.id === n.from.id) pollCurrentChat();
-  } else {
-    toast(n.text || 'إشعار جديد', 'info');
-    if(currentTab === 'friends') loadFriends();
-  }
+  loadChats();
 });
 
 socket.on('dm-message', async function(m){
@@ -1134,9 +817,7 @@ socket.on('dm-message', async function(m){
   if(isCur){
     if(isMine && !m._local){
       var locals = $('chatMsgs').querySelectorAll('.cmsg[data-local="1"]');
-      for(var i = locals.length - 1; i >= 0; i--){
-        locals[i].remove(); break;
-      }
+      for(var i = locals.length - 1; i >= 0; i--){ locals[i].remove(); break; }
     }
     if(!$('chatMsgs').querySelector('.cmsg[data-id="' + m.id + '"]')){
       await renderDMMsg(m);
@@ -1166,7 +847,14 @@ socket.on('dm-typing', function(d){
   }
 });
 
-/* ============ POLL ============ */
+async function updateChatStatus(userId){
+  if(onlineUsers[userId]){ $('chatSub').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/></svg>متصل الآن'; $('chatSub').className = 'ch-sub online'; }
+  else {
+    try { var r = await api('/users/' + userId); $('chatSub').textContent = r.user.online ? 'متصل الآن' : fmtLastSeen(r.user.last_seen); $('chatSub').className = 'ch-sub ' + (r.user.online ? 'online' : 'offline'); } catch(_){}
+  }
+}
+
+/* ========== POLL ========== */
 async function pollCurrentChat(){
   if(!CURRENT_DM) return;
   var userId = CURRENT_DM.user.id;
@@ -1179,9 +867,7 @@ async function pollCurrentChat(){
       if(!existing){
         if(m.from_id === ME.id){
           var locals = $('chatMsgs').querySelectorAll('.cmsg[data-local="1"]');
-          for(var j = locals.length - 1; j >= 0; j--){
-            locals[j].remove(); break;
-          }
+          for(var j = locals.length - 1; j >= 0; j--){ locals[j].remove(); break; }
         }
         await renderDMMsg(m);
         scrollChat();
@@ -1208,28 +894,16 @@ async function globalPoll(){
     if(lastConvData){
       var prevUnread = 0;
       lastConvData.forEach(function(c){ prevUnread += (c.unread || 0); });
-      if(totalUnread > prevUnread && soundOn){
-        playBeep();
-        toast('لديك ' + (totalUnread - prevUnread) + ' رسالة جديدة', 'info');
-      }
+      if(totalUnread > prevUnread && soundOn) playBeep();
     }
     lastConvData = r.conversations;
-    if(currentTab === 'chats'){
-      var el = $('chatsList');
-      if(el){
-        el.innerHTML = r.conversations.length ? r.conversations.map(function(c){
-          var online = c.user.online;
-          return '<div class="user-row" data-dmuid="' + c.user.id + '">' + avatarHTML(c.user) + '<div class="ur-info"><div class="ur-name">' + esc(c.user.display_name) + '</div><div class="ur-sub' + (online ? ' online' : '') + '">' + (online ? 'متصل الآن' : esc((c.last && c.last.text) || 'لا توجد رسائل').slice(0, 45)) + '</div></div>' + (c.unread ? '<span style="background:var(--danger);color:#fff;font-size:.7rem;font-weight:800;padding:3px 8px;border-radius:99px">' + c.unread + '</span>' : '') + '</div>';
-        }).join('') : '<div class="empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><p>لا توجد محادثات بعد</p></div>';
-        el.querySelectorAll('[data-dmuid]').forEach(function(r2){ r2.addEventListener('click', function(){ openDMById(parseInt(r2.dataset.dmuid)); }); });
-      }
-    }
+    if(currentTab === 'chats') loadChats();
     if(CURRENT_DM) await pollCurrentChat();
   } catch(e){ if(!handleApiError(e)){} }
 }
 
 async function loadEverything(){
-  loadPosts(); loadSuggestions(); loadChats(); loadFriends(); loadProfile();
+  loadChats();
   if(globalPollInterval) clearInterval(globalPollInterval);
   globalPollInterval = setInterval(globalPoll, 2000);
 }
@@ -1239,201 +913,12 @@ function switchTab(name){
   $$('.tab').forEach(function(t){ t.classList.remove('active'); });
   var el = $('tab-' + name); if(el) el.classList.add('active');
   $$('.bottom-nav button').forEach(function(b){ b.classList.toggle('on', b.dataset.tab === name); });
-  $('fabNewPost').style.display = (name === 'home') ? '' : 'none';
-  if(name === 'home'){ loadPosts(); loadSuggestions(); }
   if(name === 'chats'){ updateChatBadge(0); loadChats(); }
-  if(name === 'friends'){ loadFriends(); }
-  if(name === 'profile'){ loadProfile(); }
+  if(name === 'account'){ loadAccount(); }
 }
 $$('.bottom-nav button').forEach(function(b){ b.addEventListener('click', function(){ switchTab(b.dataset.tab); }); });
 
-/* ============ FEED ============ */
-async function loadPosts(hashtag){
-  if(currentSearchQuery && !hashtag) return;
-  try { var q = hashtag ? '?hashtag=' + encodeURIComponent(hashtag) : ''; var r = await api('/posts' + q); renderPosts(r.posts); }
-  catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
-}
-function renderPosts(posts){
-  var el = $('homeFeed');
-  if(!posts.length){ el.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><p>لا توجد منشورات بعد</p></div>'; return; }
-  el.innerHTML = posts.map(function(p){
-    var isMine = ME && p.user.id === ME.id;
-    var menuBtn = isMine ? '<button class="post-menu-btn" data-menu-pid="' + p.id + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/></svg></button>' : '';
-    var editedHtml = p.edited ? '<div class="post-edited">تم التعديل</div>' : '';
-    return '<article class="post" data-post-id="' + p.id + '">' +
-      '<div class="post-head">' + avatarHTML(p.user, 44) + '<div class="ph-info" data-uid="' + p.user.id + '"><div class="ph-name">' + esc(p.user.display_name) + '</div><div class="ph-meta">@' + esc(p.user.username) + ' · ' + fmtDate(p.time) + '</div></div>' + menuBtn + '</div>' +
-      '<div class="post-body">' + linkify(p.text) + '</div>' + editedHtml +
-      '<div class="post-actions"><button class="like-btn ' + (p.liked ? 'liked' : '') + '" data-pid="' + p.id + '"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>' + p.likes + '</span></button><button class="comment-btn" data-pid="' + p.id + '"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg><span>' + p.comments + '</span></button></div></article>';
-  }).join('');
-  el.querySelectorAll('.post-body .htag').forEach(function(t){ t.addEventListener('click', function(){ doSearch('#' + t.dataset.tag); }); });
-  el.querySelectorAll('.ph-info').forEach(function(b){ b.addEventListener('click', function(){ openUserById(parseInt(b.dataset.uid)); }); });
-  el.querySelectorAll('.post-menu-btn').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); openPostMenu(parseInt(b.dataset.menuPid)); }); });
-  el.querySelectorAll('.like-btn').forEach(function(b){ b.addEventListener('click', async function(){
-    try { var r = await api('/posts/' + b.dataset.pid + '/like', { method: 'POST' }); b.classList.toggle('liked', r.liked); b.querySelector('span').textContent = r.likes; } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
-  }); });
-  el.querySelectorAll('.comment-btn').forEach(function(b){ b.addEventListener('click', function(){ openComments(parseInt(b.dataset.pid)); }); });
-}
-
-function openPostMenu(postId){
-  var p = lastProfilePosts.find(function(x){ return x.id === postId; });
-  if(!p){
-    api('/posts?user_id=' + ME.id + '&limit=100').then(function(r){
-      var found = (r.posts || []).find(function(x){ return x.id === postId; });
-      if(!found) return toast('المنشور غير موجود', 'err');
-      openPostMenuSheet(found);
-    }).catch(function(){ toast('فشل التحميل', 'err'); });
-    return;
-  }
-  openPostMenuSheet(p);
-}
-function openPostMenuSheet(p){
-  var sheet = document.createElement('div');
-  sheet.className = 'modal open';
-  sheet.innerHTML = '<div class="action-sheet" onclick="event.stopPropagation()">' +
-    '<div class="handle"></div>' +
-    '<div class="as-title">خيارات المنشور</div>' +
-    '<button class="action-item" id="asEdit"><div class="as-icon edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div><span>تعديل المنشور</span></button>' +
-    '<button class="action-item danger" id="asDelete"><div class="as-icon delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></div><span>حذف المنشور</span></button>' +
-  '</div>';
-  document.body.appendChild(sheet);
-  var close = function(){ sheet.remove(); };
-  sheet.addEventListener('click', function(e){ if(e.target === sheet) close(); });
-  sheet.querySelector('#asEdit').addEventListener('click', function(){ close(); openEditPostModal(p.id, p.text); });
-  sheet.querySelector('#asDelete').addEventListener('click', function(){
-    close();
-    showConfirm({
-      icon: 'trash', title: 'حذف المنشور', text: 'هل أنت متأكد؟ لا يمكن استرجاع المنشور.', confirmText: 'حذف', danger: true,
-      onConfirm: async function(){
-        try { await api('/posts/' + p.id, { method: 'DELETE' }); loadPosts(); loadProfile(); toast('تم الحذف', 'ok'); } catch(e){ if(!handleApiError(e)) toast(e.message, 'err'); }
-      }
-    });
-  });
-}
-function openEditPostModal(postId, currentText){
-  showModal(
-    '<div class="modal-header"><button class="back-btn" id="epmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">تعديل المنشور</div><div class="spacer"></div></div>' +
-    '<div class="field"><textarea id="epmText" maxlength="1000" style="min-height:160px">' + esc(currentText) + '</textarea></div>' +
-    '<button class="btn-main" id="epmSave">حفظ التعديل</button>'
-  );
-  $('epmBack').addEventListener('click', closeModal);
-  setTimeout(function(){ var t = $('epmText'); if(t) t.focus(); }, 200);
-  $('epmSave').addEventListener('click', async function(){
-    var txt = $('epmText').value.trim();
-    if(!txt) return toast('اكتب شيئاً', 'err');
-    var btn = $('epmSave');
-    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div>';
-    btn.disabled = true;
-    try { await api('/posts/' + postId, { method: 'PUT', body: JSON.stringify({ text: txt }) }); closeModal(); loadPosts(); loadProfile(); toast('تم التعديل', 'ok'); }
-    catch(e){ toast(e.message, 'err'); btn.disabled = false; btn.textContent = 'حفظ التعديل'; }
-  });
-}
-function showConfirm(opts){
-  var backdrop = document.createElement('div');
-  backdrop.className = 'confirm-backdrop';
-  var iconHTML;
-  if(opts.icon === 'trash'){
-    iconHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
-  } else if(opts.icon === 'logout'){
-    iconHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
-  } else {
-    iconHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
-  }
-  backdrop.innerHTML = '<div class="confirm-box">' +
-    '<div class="confirm-icon ' + (opts.danger ? 'danger' : '') + '">' + iconHTML + '</div>' +
-    '<div class="confirm-title">' + esc(opts.title) + '</div>' +
-    '<div class="confirm-text">' + esc(opts.text || '') + '</div>' +
-    '<div class="confirm-actions">' +
-      '<button class="confirm-btn cancel" id="cfCancel">إلغاء</button>' +
-      '<button class="confirm-btn ' + (opts.danger ? 'danger' : 'ok') + '" id="cfOk">' + esc(opts.confirmText || 'تأكيد') + '</button>' +
-    '</div>' +
-  '</div>';
-  document.body.appendChild(backdrop);
-  backdrop.addEventListener('click', function(e){ if(e.target === backdrop) backdrop.remove(); });
-  backdrop.querySelector('#cfCancel').addEventListener('click', function(){ backdrop.remove(); });
-  backdrop.querySelector('#cfOk').addEventListener('click', function(){
-    backdrop.remove();
-    if(opts.onConfirm) opts.onConfirm();
-  });
-}
-
-/* ============ SEARCH ============ */
-$('searchInput').addEventListener('input', function(e){
-  var q = e.target.value.trim();
-  currentSearchQuery = q;
-  $('clearSearch').classList.toggle('hide', !q);
-  clearTimeout(searchDebounce);
-  searchDebounce = setTimeout(function(){ doSearch(q); }, 350);
-});
-$('clearSearch').addEventListener('click', function(){ $('searchInput').value = ''; currentSearchQuery = ''; $('clearSearch').classList.add('hide'); $('suggestionsSection').style.display = ''; loadPosts(); });
-function doSearch(q){
-  if(!q){ $('suggestionsSection').style.display = ''; loadPosts(); return; }
-  $('suggestionsSection').style.display = 'none';
-  if(q.charAt(0) === '#'){
-    var tag = q.slice(1).trim();
-    if(!tag){ $('homeFeed').innerHTML = ''; return; }
-    api('/posts?hashtag=' + encodeURIComponent(tag)).then(function(r){ renderPosts(r.posts); }).catch(function(){});
-  } else {
-    api('/users/search?q=' + encodeURIComponent(q)).then(function(r){
-      var el = $('homeFeed');
-      if(!r.users.length){ el.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>لا توجد نتائج</p></div>'; return; }
-      el.innerHTML = r.users.map(function(u){
-        return '<div class="user-row" data-uid="' + u.id + '">' + avatarHTML(u) + '<div class="ur-info"><div class="ur-name">' + esc(u.display_name) + '</div><div class="ur-sub' + (u.online ? ' online' : '') + '">' + (u.online ? 'متصل الآن' : '@' + esc(u.username)) + '</div></div></div>';
-      }).join('');
-      el.querySelectorAll('.user-row').forEach(function(r2){ r2.addEventListener('click', function(){ openUserById(parseInt(r2.dataset.uid)); }); });
-    }).catch(function(){});
-  }
-}
-
-async function loadSuggestions(){
-  try {
-    var r = await api('/suggestions');
-    var el = $('suggestionsSection');
-    if(!r.users.length){ el.innerHTML = ''; return; }
-    el.innerHTML = '<div class="sec-title">أشخاص قد تعرفهم</div><div style="display:flex;gap:11px;overflow-x:auto;padding:0 18px 8px">' + r.users.map(function(u){
-      return '<div style="min-width:150px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;text-align:center;display:flex;flex-direction:column;gap:10px" data-sug="' + u.id + '">' + avatarHTML(u, 58) + '<div style="font-weight:800;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(u.display_name) + '</div><button style="padding:8px;border-radius:11px;background:var(--grad-gold);color:#1a1207;font-weight:800;font-size:.78rem" data-add="' + u.id + '">+ إضافة</button></div>';
-    }).join('') + '</div>';
-    el.querySelectorAll('[data-sug]').forEach(function(card){ card.addEventListener('click', function(e){ if(e.target.closest('[data-add]')) return; openUserById(parseInt(card.dataset.sug)); }); });
-    el.querySelectorAll('[data-add]').forEach(function(b){ b.addEventListener('click', async function(e){
-      e.stopPropagation();
-      try { await api('/friends/request/' + b.dataset.add, { method: 'POST' }); toast('تم الإرسال', 'ok'); b.textContent = '✓'; b.disabled = true; } catch(err){ toast(err.message, 'err'); }
-    }); });
-  } catch(_){}
-}
-
-$('fabNewPost').addEventListener('click', function(){
-  showModal('<div class="modal-header"><button class="back-btn" id="npBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">منشور جديد</div><div class="spacer"></div></div><div class="field"><textarea id="npText" placeholder="ماذا يجري؟" maxlength="1000" style="min-height:150px"></textarea></div><button class="btn-main" id="npSubmit">نشر</button>');
-  $('npBack').addEventListener('click', closeModal);
-  setTimeout(function(){ var t = $('npText'); if(t) t.focus(); }, 200);
-  $('npSubmit').addEventListener('click', async function(){
-    var text = $('npText').value.trim();
-    if(!text) return toast('اكتب شيئاً', 'err');
-    var btn = $('npSubmit');
-    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div>';
-    btn.disabled = true;
-    try { await api('/posts', { method: 'POST', body: JSON.stringify({ text: text }) }); closeModal(); loadPosts(); toast('تم النشر', 'ok'); }
-    catch(e) { toast(e.message, 'err'); btn.disabled = false; btn.textContent = 'نشر'; }
-  });
-});
-
-async function openComments(pid){
-  showModal('<div class="modal-header"><button class="back-btn" id="cmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">التعليقات</div><div class="spacer"></div></div><div id="cmList" style="margin-bottom:12px"></div><div class="field"><input id="cmInput" placeholder="أضف تعليقاً..." /></div><button class="btn-main" id="cmSubmit">إرسال</button>');
-  $('cmBack').addEventListener('click', closeModal);
-  try { var r = await api('/posts/' + pid + '/comments'); renderComments(r.comments || []); } catch(_){ renderComments([]); }
-  $('cmSubmit').addEventListener('click', async function(){
-    var text = $('cmInput').value.trim();
-    if(!text) return;
-    try { var r = await api('/posts/' + pid + '/comment', { method: 'POST', body: JSON.stringify({ text: text }) }); renderComments(r.comments); $('cmInput').value = ''; } catch(e) { toast(e.message, 'err'); }
-  });
-}
-function renderComments(list){
-  var el = $('cmList'); if(!el) return;
-  if(!list.length){ el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:14px;font-size:.85rem">لا توجد تعليقات</div>'; return; }
-  el.innerHTML = list.map(function(c){
-    return '<div style="padding:12px;background:var(--surface-2);border-radius:var(--radius);margin-bottom:9px"><div style="display:flex;gap:9px;align-items:center;margin-bottom:7px">' + avatarHTML(c.user, 30) + '<b style="font-size:.86rem">' + esc(c.user.display_name) + '</b><span style="color:var(--muted);font-size:.72rem;margin-inline-start:auto">' + fmtDate(c.time) + '</span></div><div style="font-size:.89rem;line-height:1.65">' + esc(c.text) + '</div></div>';
-  }).join('');
-}
-
-/* ============ CHATS ============ */
+/* ========== CHATS ========== */
 async function loadChats(){
   try {
     var r = await api('/dm-conversations');
@@ -1443,87 +928,178 @@ async function loadChats(){
     updateChatBadge(totalUnread);
     $('chatsList').innerHTML = r.conversations.length ? r.conversations.map(function(c){
       var online = c.user.online;
-      return '<div class="user-row" data-dmuid="' + c.user.id + '">' + avatarHTML(c.user) + '<div class="ur-info"><div class="ur-name">' + esc(c.user.display_name) + '</div><div class="ur-sub' + (online ? ' online' : '') + '">' + (online ? 'متصل الآن' : esc((c.last && c.last.text) || 'لا توجد رسائل').slice(0, 45)) + '</div></div>' + (c.unread ? '<span style="background:var(--danger);color:#fff;font-size:.7rem;font-weight:800;padding:3px 8px;border-radius:99px">' + c.unread + '</span>' : '') + '</div>';
-    }).join('') : '<div class="empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><p>لا توجد محادثات بعد</p></div>';
+      return '<div class="user-row" data-dmuid="' + c.user.id + '">' + avatarHTML(c.user) + '<div class="ur-info"><div class="ur-name">' + esc(c.user.display_name) + '</div><div class="ur-sub' + (online ? ' online' : '') + '">' + (online ? 'متصل الآن' : esc((c.last && c.last.text) || 'لا توجد رسائل').slice(0, 45)) + '</div></div>' + (c.unread ? '<span class="ur-unread">' + c.unread + '</span>' : '') + '</div>';
+    }).join('') : '<div class="empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><p>لا توجد محادثات بعد<br><br>اضغط زر + لإضافة صديق</p></div>';
     $('chatsList').querySelectorAll('[data-dmuid]').forEach(function(r2){ r2.addEventListener('click', function(){ openDMById(parseInt(r2.dataset.dmuid)); }); });
   } catch(_){}
 }
 
-/* ============ FRIENDS ============ */
-async function loadFriends(){
+/* ========== ACCOUNT ========== */
+async function loadAccount(){
   try {
-    var r = await api('/friends');
-    $('friendsList').innerHTML = r.friends.length ? r.friends.map(function(u){
-      var online = u.online;
-      return '<div class="user-row" data-fuid="' + u.id + '">' + avatarHTML(u) + '<div class="ur-info"><div class="ur-name">' + esc(u.display_name) + '</div><div class="ur-sub' + (online ? ' online' : '') + '">' + (online ? 'متصل الآن' : '@' + esc(u.username)) + '</div></div><button style="padding:8px 12px;border-radius:11px;background:var(--grad-gold);color:#1a1207;font-weight:800;font-size:.9rem" data-msg="' + u.id + '">💬</button></div>';
-    }).join('') : '<div class="empty"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>لا يوجد أصدقاء — أضف صديقاً بالـ QR</p></div>';
-    $('friendsList').querySelectorAll('[data-fuid]').forEach(function(card){ card.addEventListener('click', function(e){ if(e.target.closest('[data-msg]')) return; openUserById(parseInt(card.dataset.fuid)); }); });
-    $('friendsList').querySelectorAll('[data-msg]').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); openDMById(parseInt(b.dataset.msg)); }); });
-  } catch(_){}
+    var r = await api('/me');
+    ME = r.user;
+    var box = $('accountContent');
+    box.innerHTML =
+      '<div class="account-avatar">' + esc(initial(ME.display_name)) + '</div>' +
+      '<div class="account-name en">' + esc(ME.display_name) + '</div>' +
+      '<div class="account-username en">@' + esc(ME.username) + '</div>' +
+
+      '<div class="qr-card">' +
+        '<h3>شارك كودك لإضافة الأصدقاء</h3>' +
+        '<div class="qr-wrapper" id="qrWrapper"><div class="spinner"></div></div>' +
+        '<div class="qr-hint">دع صديقك يمسح الكود أو حمّله من الاستوديو</div>' +
+        '<button class="btn-copy" id="btnCopyQr">' +
+          '<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
+          'نسخ رابط QR' +
+        '</button>' +
+      '</div>' +
+
+      '<div class="account-actions">' +
+        '<button class="btn-outline" id="btnDownloadQr">' +
+          '<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+          'تحميل صورة QR' +
+        '</button>' +
+        '<button class="btn-outline" id="btnThemeToggle">' +
+          (document.body.classList.contains('dark') ? '☀️ الوضع النهاري' : '🌙 الوضع الليلي') +
+        '</button>' +
+        '<button class="btn-outline" id="btnSound">' +
+          (soundOn ? '🔊 إيقاف الأصوات' : '🔇 تفعيل الأصوات') +
+        '</button>' +
+        '<button class="btn-danger-outline" id="btnLogout">' +
+          '<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
+          'تسجيل الخروج (حذف الحساب)' +
+        '</button>' +
+      '</div>';
+
+    // جلب QR
+    try {
+      var q = await api('/qr/image');
+      $('qrWrapper').innerHTML = '<img src="' + q.qr + '" alt="QR" style="width:200px;height:200px" data-qr-url="' + q.link + '" />';
+      var btnCopy = $('btnCopyQr');
+      btnCopy.addEventListener('click', function(){
+        navigator.clipboard.writeText(q.link).then(function(){ toast('تم نسخ الرابط', 'ok'); }).catch(function(){ toast('فشل النسخ', 'err'); });
+      });
+      $('btnDownloadQr').addEventListener('click', function(){
+        var a = document.createElement('a');
+        a.href = q.qr;
+        a.download = 'dust-qr-' + ME.username + '.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        toast('تم تحميل الصورة', 'ok');
+      });
+    } catch(e) {
+      $('qrWrapper').innerHTML = '<div style="color:var(--muted);font-size:.8rem;text-align:center;padding:20px">فشل توليد QR</div>';
+    }
+
+    $('btnThemeToggle').addEventListener('click', async function(){
+      var isDark = document.body.classList.contains('dark');
+      applyTheme(isDark ? 'light' : 'dark');
+      try { await api('/me', { method: 'PUT', body: JSON.stringify({ theme: isDark ? 'light' : 'dark' }) }); } catch(_){}
+      loadAccount();
+    });
+    $('btnSound').addEventListener('click', async function(){
+      soundOn = !soundOn;
+      try { await api('/me', { method: 'PUT', body: JSON.stringify({ sound: soundOn }) }); } catch(_){}
+      toast(soundOn ? 'الأصوات مفعّلة' : 'الأصوات معطّلة', 'ok');
+      loadAccount();
+    });
+    $('btnLogout').addEventListener('click', function(){
+      showConfirm({
+        title: 'تسجيل الخروج',
+        text: '⚠️ سيتم حذف حسابك وكل رسائلك ومفاتيحك نهائياً. لا يمكن استرجاعها.',
+        confirmText: 'حذف الحساب',
+        danger: true,
+        onConfirm: async function(){
+          try { await api('/logout', { method: 'POST' }); } catch(_){}
+          localStorage.removeItem('token');
+          localStorage.removeItem('dust_e2ee_pwd');
+          TOKEN = null; ME = null;
+          toast('تم حذف حسابك', 'ok');
+          setTimeout(function(){ location.reload(); }, 1200);
+        }
+      });
+    });
+  } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
 }
 
+/* ========== ADD FRIEND ========== */
 $('btnAddFriend').addEventListener('click', function(){ showAddFriendMenu(); });
 
 function showAddFriendMenu(){
-  showModal('<div class="modal-header"><button class="back-btn" id="afmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">إضافة صديق</div><div class="spacer"></div></div>' +
-  '<div class="modal-list">' +
-  '<button class="modal-item" id="afmScan">📷 مسح QR (كاميرا)</button>' +
-  '<button class="modal-item" id="afmEnter">🔢 إدخال كود QR</button>' +
-  '<button class="modal-item" id="afmMyQr">📤 عرض QR الخاص بي</button>' +
-  '</div>');
+  showModal(
+    '<div class="modal-header">' +
+      '<button class="back-btn" id="afmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
+      '<div class="title">إضافة صديق</div>' +
+      '<div class="spacer"></div>' +
+    '</div>' +
+    '<div class="modal-list">' +
+      '<button class="modal-item" id="afmUpload">' +
+        '<div class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>' +
+        '<div class="mi-info"><div class="mi-title">تحميل QR من الاستوديو</div><div class="mi-sub">اختر صورة QR محفوظة</div></div>' +
+      '</button>' +
+      '<button class="modal-item" id="afmCamera">' +
+        '<div class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>' +
+        '<div class="mi-info"><div class="mi-title">مسح بالكاميرا</div><div class="mi-sub">افتح الكاميرا لمسح QR</div></div>' +
+      '</button>' +
+      '<button class="modal-item" id="afmCode">' +
+        '<div class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>' +
+        '<div class="mi-info"><div class="mi-title">إدخال الكود يدوياً</div><div class="mi-sub">الصق كود QR مباشرة</div></div>' +
+      '</button>' +
+    '</div>'
+  );
   $('afmBack').addEventListener('click', closeModal);
-  $('afmScan').addEventListener('click', function(){ closeModal(); startQrScanner(); });
-  $('afmEnter').addEventListener('click', function(){ closeModal(); showEnterQrId(); });
-  $('afmMyQr').addEventListener('click', function(){ closeModal(); showMyQr(); });
+  $('afmUpload').addEventListener('click', function(){ closeModal(); setTimeout(openQrUpload, 150); });
+  $('afmCamera').addEventListener('click', function(){ closeModal(); setTimeout(startQrCamera, 150); });
+  $('afmCode').addEventListener('click', function(){ closeModal(); setTimeout(showEnterQrId, 150); });
 }
 
-async function showMyQr(){
-  showModal('<div class="modal-header"><button class="back-btn" id="qrBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">QR الخاص بي</div><div class="spacer"></div></div><div id="qrContent"><div style="text-align:center;padding:20px"><div class="spinner"></div></div></div>');
-  $('qrBack').addEventListener('click', closeModal);
-  try {
-    var r = await api('/qr/image');
-    var html = '<div class="qr-box">' +
-      '<div class="qr-wrapper"><img src="' + r.qr + '" alt="QR" style="width:220px;height:220px" /></div>' +
-      '<div class="qr-hint">دع صديقك يمسح هذا الكود لإضافتك</div>' +
-      '<div class="qr-link" id="qrLink">' + esc(r.link) + '</div>' +
-      '<button class="btn-main" id="copyQr" style="max-width:240px">📋 نسخ الرابط</button>' +
-    '</div>';
-    $('qrContent').innerHTML = html;
-    $('copyQr').addEventListener('click', function(){
-      navigator.clipboard.writeText(r.link).then(function(){ toast('تم نسخ الرابط', 'ok'); }).catch(function(){ toast('فشل النسخ', 'err'); });
-    });
-  } catch(e) {
-    $('qrContent').innerHTML = '<div class="empty"><p>فشل توليد QR</p></div>';
+/* --- Upload QR from gallery --- */
+function openQrUpload(){
+  if(!qrFileInput){
+    qrFileInput = document.createElement('input');
+    qrFileInput.type = 'file';
+    qrFileInput.accept = 'image/*';
+    qrFileInput.style.display = 'none';
+    document.body.appendChild(qrFileInput);
   }
-}
-
-function showEnterQrId(){
-  showModal('<div class="modal-header"><button class="back-btn" id="eqrBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">إدخال كود QR</div><div class="spacer"></div></div>' +
-  '<div class="field"><label>كود QR</label><input id="eqrInput" placeholder="a3f9b2e8c4d1" maxlength="32" style="direction:ltr;text-align:left;font-family:ui-monospace,monospace" /></div>' +
-  '<button class="btn-main" id="eqrSubmit">إضافة صديق</button>');
-  $('eqrBack').addEventListener('click', closeModal);
-  $('eqrSubmit').addEventListener('click', async function(){
-    var id = $('eqrInput').value.trim().toLowerCase();
-    if(!id) return toast('أدخل الكود', 'err');
+  qrFileInput.value = '';
+  qrFileInput.onchange = async function(e){
+    var f = e.target.files[0]; if(!f) return;
+    toast('جارٍ قراءة QR...', 'info');
     try {
-      var r = await api('/friends/add-by-qr', { method: 'POST', body: JSON.stringify({ qr_id: id }) });
-      if(r.status === 'already_friends') toast('صديقك بالفعل', 'info');
-      else if(r.status === 'added') toast('تمت إضافة ' + (r.user ? r.user.display_name : ''), 'ok');
-      closeModal(); loadFriends();
-    } catch(e) {
-      if(e.message === 'user_not_found') toast('لم يتم العثور على المستخدم', 'err');
-      else if(e.message === 'self') toast('لا يمكنك إضافة نفسك', 'err');
-      else if(e.message === 'blocked') toast('لا يمكن إضافة هذا المستخدم', 'err');
-      else toast(e.message, 'err');
+      var scanner = new Html5Qrcode("qrHiddenReader", { verbose: false });
+      var decoded = await scanner.scanFile(f, false);
+      try { scanner.clear(); } catch(_){}
+      var qrId = extractQrId(decoded);
+      if(!qrId) return toast('لم يتم العثور على QR صالح', 'err');
+      await addFriendByQrId(qrId);
+    } catch(err) {
+      toast('تعذر قراءة الصورة', 'err');
     }
-  });
+  };
+  qrFileInput.click();
 }
 
-async function startQrScanner(){
-  showModal('<div class="modal-header"><button class="back-btn" id="scanBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">مسح QR</div><div class="spacer"></div></div>' +
-  '<div id="qrReader"></div>' +
-  '<div style="text-align:center;padding:12px;color:var(--muted);font-size:.82rem">وجّه الكاميرا نحو الكود</div>');
-  $('scanBack').addEventListener('click', function(){ stopQrScanner(); closeModal(); });
+/* عنصر مخفي مطلوب لمكتبة Html5Qrcode */
+if(!document.getElementById('qrHiddenReader')){
+  var hiddenDiv = document.createElement('div');
+  hiddenDiv.id = 'qrHiddenReader';
+  hiddenDiv.style.display = 'none';
+  document.body.appendChild(hiddenDiv);
+}
+
+/* --- Camera scanning --- */
+async function startQrCamera(){
+  showModal(
+    '<div class="modal-header">' +
+      '<button class="back-btn" id="scanBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
+      '<div class="title">مسح QR</div>' +
+      '<div class="spacer"></div>' +
+    '</div>' +
+    '<div id="qrReader"></div>' +
+    '<div style="text-align:center;padding:12px;color:var(--muted);font-size:.82rem">وجّه الكاميرا نحو الكود</div>'
+  );
+  $('scanBack').addEventListener('click', function(){ stopQrCamera(); closeModal(); });
 
   setTimeout(async function(){
     try {
@@ -1532,20 +1108,10 @@ async function startQrScanner(){
         { facingMode: "environment" },
         { fps: 10, qrbox: { width: 250, height: 250 } },
         async function(decodedText) {
-          await stopQrScanner();
+          await stopQrCamera();
           var qrId = extractQrId(decodedText);
           if(!qrId){ toast('QR غير صالح', 'err'); closeModal(); return; }
-          try {
-            var r = await api('/friends/add-by-qr', { method: 'POST', body: JSON.stringify({ qr_id: qrId }) });
-            if(r.status === 'already_friends') toast('صديقك بالفعل', 'info');
-            else if(r.status === 'added') toast('تمت إضافة ' + (r.user ? r.user.display_name : ''), 'ok');
-            closeModal(); loadFriends();
-          } catch(e) {
-            if(e.message === 'user_not_found') toast('QR غير موجود', 'err');
-            else if(e.message === 'self') toast('هذا كودك!', 'err');
-            else toast(e.message, 'err');
-            closeModal();
-          }
+          await addFriendByQrId(qrId);
         },
         function(){}
       );
@@ -1556,26 +1122,63 @@ async function startQrScanner(){
   }, 300);
 }
 
-async function stopQrScanner(){
+async function stopQrCamera(){
   if(qrScanner){
     try { await qrScanner.stop(); qrScanner.clear(); } catch(_){}
     qrScanner = null;
   }
 }
 
+/* --- Manual code --- */
+function showEnterQrId(){
+  showModal(
+    '<div class="modal-header">' +
+      '<button class="back-btn" id="eqrBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
+      '<div class="title">إدخال كود QR</div>' +
+      '<div class="spacer"></div>' +
+    '</div>' +
+    '<div class="field"><label>كود QR أو الرابط</label><input id="eqrInput" placeholder="a3f9b2e8c4d1 أو رابط" maxlength="200" style="direction:ltr;text-align:left;font-family:ui-monospace,monospace" /></div>' +
+    '<button class="btn-main" id="eqrSubmit">إضافة صديق</button>'
+  );
+  $('eqrBack').addEventListener('click', closeModal);
+  $('eqrSubmit').addEventListener('click', async function(){
+    var raw = $('eqrInput').value.trim();
+    if(!raw) return toast('أدخل الكود', 'err');
+    var qrId = extractQrId(raw);
+    if(!qrId) return toast('الكود غير صالح', 'err');
+    await addFriendByQrId(qrId);
+  });
+}
+
+async function addFriendByQrId(qrId){
+  try {
+    var r = await api('/friends/add-by-qr', { method: 'POST', body: JSON.stringify({ qr_id: qrId }) });
+    if(r.status === 'already_friends') toast('صديقك بالفعل', 'info');
+    else if(r.status === 'added') toast('تمت إضافة ' + (r.user ? r.user.display_name : ''), 'ok');
+    closeModal();
+    loadChats();
+    if(r.user && r.user.id) setTimeout(function(){ openDMById(r.user.id); }, 400);
+  } catch(e) {
+    if(e.message === 'user_not_found') toast('لم يتم العثور على المستخدم', 'err');
+    else if(e.message === 'self') toast('لا يمكنك إضافة نفسك', 'err');
+    else if(e.message === 'blocked') toast('لا يمكن الإضافة', 'err');
+    else toast(e.message, 'err');
+    closeModal();
+  }
+}
+
 function extractQrId(text){
   if(!text) return null;
-  var m = text.match(/[?&]qr=([a-f0-9]{8,32})/i);
+  text = String(text).trim();
+  // رابط مع ?qr=xxxx
+  var m = text.match(/[?&]qr=([a-z0-9]{8,32})/i);
   if(m) return m[1].toLowerCase();
-  try {
-    var obj = JSON.parse(text);
-    if(obj && obj.qr) return String(obj.qr).toLowerCase();
-  } catch(_){}
-  if(/^[a-f0-9]{8,32}$/i.test(text.trim())) return text.trim().toLowerCase();
+  // نص مباشر
+  if(/^[a-z0-9]{8,32}$/i.test(text)) return text.toLowerCase();
   return null;
 }
 
-/* ============ CHAT ============ */
+/* ========== CHAT ========== */
 function scrollChat(inst){
   var el = $('chatMsgs');
   requestAnimationFrame(function(){ el.scrollTo({ top: el.scrollHeight, behavior: inst ? 'auto' : 'smooth' }); });
@@ -1587,32 +1190,22 @@ async function renderDMMsg(m){
   el.className = 'cmsg ' + (mine ? 'me' : 'other');
   el.dataset.id = m.id;
   if(m._local) el.dataset.local = '1';
-  var other = CURRENT_DM ? CURRENT_DM.user : ME;
-  var u = mine ? ME : other;
-  var av = document.createElement('div');
-  av.className = 'cmsg-avatar';
-  if(u && u.avatar) av.innerHTML = '<img src="' + esc(u.avatar) + '" />';
-  else { av.style.background = 'linear-gradient(135deg,' + ((u && u.color) || '#e8b567') + ',#d4a574)'; av.textContent = initial(u && u.display_name); }
-  el.appendChild(av);
+
   var body = document.createElement('div');
   body.className = 'cmsg-body';
   var meta = document.createElement('div');
   meta.className = 'cmeta';
-  meta.innerHTML = '<span>' + fmtTime(m.time) + '</span>';
+  meta.textContent = fmtTime(m.time);
   var bubble = document.createElement('div');
   bubble.className = 'cbubble';
 
   var displayText = m.text || '';
   var isEncrypted = displayText.indexOf('🔒') === 0;
-  if (isEncrypted && E2EE.ready) {
-    displayText = await E2EE.decrypt(displayText);
-  } else if (isEncrypted && !E2EE.ready) {
-    displayText = '[🔒 رسالة مشفرة]';
-  }
+  if (isEncrypted && E2EE.ready) displayText = await E2EE.decrypt(displayText);
+  else if (isEncrypted && !E2EE.ready) displayText = '[🔒 رسالة مشفرة]';
 
   var lockIcon = isEncrypted ? '<svg class="lock-ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' : '';
   if(displayText) bubble.innerHTML = lockIcon + linkify(displayText);
-  bubble.querySelectorAll('.htag').forEach(function(t){ t.addEventListener('click', function(){ doSearch('#' + t.dataset.tag); }); });
   body.appendChild(meta); body.appendChild(bubble);
   if(mine){
     var mk = document.createElement('div');
@@ -1630,7 +1223,6 @@ $('chatBack').addEventListener('click', function(){
   $('chatView').classList.remove('open');
   CURRENT_DM = null;
 });
-$('chatInfo').addEventListener('click', function(){ if(CURRENT_DM) openUserById(CURRENT_DM.user.id); });
 
 function autoGrow(){ var t = $('chatInput'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px'; }
 $('chatInput').addEventListener('input', function(){
@@ -1668,193 +1260,6 @@ async function sendChat(){
   $('chatInput').value = ''; autoGrow();
 }
 
-/* ============ PROFILE ============ */
-async function loadProfile(){
-  try {
-    var r = await api('/me');
-    ME = r.user;
-    var stats = { friends: 0, posts: 0 };
-    try { var s = await api('/me/stats'); stats = { friends: s.friends || 0, posts: s.posts || 0 }; } catch(_){}
-    var myPosts = [];
-    try { var mp = await api('/posts?user_id=' + ME.id + '&limit=100'); myPosts = mp.posts || []; } catch(_){}
-    lastProfilePosts = myPosts;
-    renderProfile(r.user, true, stats, myPosts);
-  } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
-}
-function renderProfile(u, isMe, stats, myPosts){
-  var el = $('profileContent');
-  stats = stats || { friends: 0, posts: 0 };
-  myPosts = myPosts || [];
-  var locSvg = '<svg class="ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
-  var calSvg = '<svg class="ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
-  el.innerHTML =
-  '<div class="profile-cover" id="profCover">' + (u.cover ? '<img src="' + esc(u.cover) + '" />' : '') +
-    (isMe ? '<button class="cover-edit-btn" id="editCover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>' : '') +
-  '</div>' +
-  '<div class="profile-body">' +
-    '<div class="profile-avatar-wrap"><div class="profile-avatar" id="profAvatar">' + (u.avatar ? '<img src="' + esc(u.avatar) + '" />' : esc(initial(u.display_name))) + '</div>' +
-      (isMe ? '<button class="avatar-edit-btn" id="avatarEditBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>' : '') +
-    '</div>' +
-    '<div class="profile-name">' + esc(u.display_name) + '</div>' +
-    '<div class="profile-user">@' + esc(u.username) + '</div>' +
-    (u.bio ? '<div class="profile-bio">' + esc(u.bio) + '</div>' : '') +
-    '<div class="profile-meta">' +
-      (u.location ? '<span>' + locSvg + ' ' + esc(u.location) + '</span>' : '') +
-      '<span>' + calSvg + ' ' + fmtDate(u.created_at) + '</span>' +
-    '</div>' +
-    '<div class="profile-stats"><div class="stat"><div class="num">' + stats.friends + '</div><div class="lbl">صديق</div></div><div class="stat"><div class="num">' + stats.posts + '</div><div class="lbl">منشور</div></div></div>' +
-    '<div class="profile-actions">' +
-      (isMe ? '<button class="btn-fill" id="btnMyQr"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> QR</button>' : '') +
-      (isMe ? '<button class="btn-ghost" id="btnEditProfile">✏️ تعديل</button>' : '<button class="btn-fill" id="btnMsgUser">💬 رسالة</button>') +
-    '</div>' +
-    (isMe ? '<div class="profile-tabs"><button data-ptab="info" class="' + (currentProfileTab === 'info' ? 'on' : '') + '">معلوماتي</button><button data-ptab="posts" class="' + (currentProfileTab === 'posts' ? 'on' : '') + '">منشوراتي (' + myPosts.length + ')</button></div><div id="profileTabContent" style="margin-top:16px"></div>' : '') +
-  '</div>';
-  if(isMe){
-    $('btnEditProfile').addEventListener('click', function(){ openEditProfile(ME); });
-    if($('btnMyQr')) $('btnMyQr').addEventListener('click', function(){ showMyQr(); });
-    $('profAvatar').addEventListener('click', function(){ avatarInput.click(); });
-    if($('avatarEditBtn')) $('avatarEditBtn').addEventListener('click', function(e){ e.stopPropagation(); avatarInput.click(); });
-    if($('editCover')) $('editCover').addEventListener('click', function(){ coverInput.click(); });
-  } else {
-    $('btnMsgUser').addEventListener('click', function(){ openDM(u); });
-  }
-  el.querySelectorAll('[data-ptab]').forEach(function(b){
-    b.addEventListener('click', function(){
-      currentProfileTab = b.dataset.ptab;
-      el.querySelectorAll('[data-ptab]').forEach(function(x){ x.classList.remove('on'); });
-      b.classList.add('on');
-      renderProfileTabContent(myPosts);
-    });
-  });
-  if(isMe) renderProfileTabContent(myPosts);
-}
-function renderProfileTabContent(myPosts){
-  var box = $('profileTabContent'); if(!box) return;
-  if(currentProfileTab === 'posts'){
-    if(!myPosts.length){ box.innerHTML = '<div class="empty"><p>لا توجد منشورات</p></div>'; return; }
-    box.innerHTML = myPosts.map(function(p){
-      var editedHtml = p.edited ? '<div class="post-edited">تم التعديل</div>' : '';
-      return '<article class="post"><div class="post-head"><div class="ph-info" style="cursor:default"><div class="ph-meta">' + fmtDate(p.time) + '</div></div><button class="post-menu-btn" data-menu-pid="' + p.id + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/></svg></button></div><div class="post-body">' + linkify(p.text) + '</div>' + editedHtml + '</article>';
-    }).join('');
-    box.querySelectorAll('.post-menu-btn').forEach(function(b){ b.addEventListener('click', function(){ openPostMenu(parseInt(b.dataset.menuPid)); }); });
-  } else {
-    box.innerHTML = '<div style="padding:14px;background:var(--surface-2);border-radius:var(--radius);font-size:.85rem;line-height:1.9;color:var(--muted)">' +
-      '👤 اسمك: <b style="color:var(--text)">' + esc(ME.display_name) + '</b><br>' +
-      '📛 المعرّف: <b style="color:var(--text)">@' + esc(ME.username) + '</b><br>' +
-      '📅 انضم: ' + fmtDate(ME.created_at) + '<br>' +
-      '🔐 بصمة التشفير: <b style="color:var(--success);font-family:ui-monospace,monospace;font-size:.75rem">' + (E2EE.fingerprint || '—') + '</b>' +
-    '</div>';
-  }
-}
-
-async function openUserById(id){
-  if(ME && id === ME.id){ switchTab('profile'); return; }
-  try { var r = await api('/users/' + id); openUserModal(r.user, r.isFriend, r.blocked, r.stats); } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
-}
-function openUserModal(u, isFriend, blocked, stats){
-  stats = stats || { friends: 0, posts: 0 };
-  var statusText = u.online ? 'متصل الآن' : fmtLastSeen(u.last_seen);
-  showModal('<div class="modal-header"><button class="back-btn" id="umBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">المستخدم</div><div class="spacer"></div></div>' +
-  '<div style="text-align:center;padding:8px 0">' + avatarHTML(u, 84) +
-  '<div style="font-weight:900;font-size:1.2rem;margin-top:14px">' + esc(u.display_name) + '</div>' +
-  '<div style="color:var(--muted);font-size:.85rem">@' + esc(u.username) + '</div>' +
-  '<div style="font-size:.82rem;margin-top:6px;color:' + (u.online ? 'var(--success)' : 'var(--muted)') + '">' + statusText + '</div>' +
-  '</div><div class="modal-list" style="margin-top:14px">' +
-    '<button class="modal-item" id="umMsg">💬 رسالة مشفرة</button>' +
-    (isFriend ? '<button class="modal-item danger" id="umUnfriend">🚫 إزالة</button>' : '<button class="modal-item" id="umAdd">+ إضافة</button>') +
-    (blocked ? '<button class="modal-item" id="umUnblock">✅ إلغاء الحظر</button>' : '<button class="modal-item danger" id="umBlock">🚫 حظر</button>') +
-  '</div>');
-  $('umBack').addEventListener('click', closeModal);
-  $('umMsg').addEventListener('click', function(){ closeModal(); openDM(u); });
-  if($('umAdd')) $('umAdd').addEventListener('click', async function(){
-    try {
-      await api('/friends/add-by-qr', { method: 'POST', body: JSON.stringify({ qr_id: u.qr_id }) });
-      toast('تمت الإضافة', 'ok'); closeModal(); loadFriends();
-    } catch(e) { toast(e.message, 'err'); }
-  });
-  if($('umUnfriend')) $('umUnfriend').addEventListener('click', async function(){
-    closeModal();
-    showConfirm({ icon: 'trash', title: 'إزالة صديق', text: 'إزالة ' + u.display_name + '؟', confirmText: 'إزالة', danger: true,
-      onConfirm: async function(){ try { await api('/friends/' + u.id, { method: 'DELETE' }); loadFriends(); } catch(e){} } });
-  });
-  if($('umBlock')) $('umBlock').addEventListener('click', async function(){
-    closeModal();
-    showConfirm({ icon: 'trash', title: 'حظر', text: 'حظر ' + u.display_name + '؟', confirmText: 'حظر', danger: true,
-      onConfirm: async function(){ try { await api('/block/' + u.id, { method: 'POST' }); } catch(e){} } });
-  });
-  if($('umUnblock')) $('umUnblock').addEventListener('click', async function(){ try { await api('/unblock/' + u.id, { method: 'POST' }); closeModal(); } catch(e){} });
-}
-
-function openEditProfile(u){
-  showModal('<div class="modal-header"><button class="back-btn" id="epBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">تعديل الملف</div><div class="spacer"></div></div>' +
-  '<div class="field"><label>الاسم</label><input id="epName" value="' + esc(u.display_name) + '" maxlength="20" /></div>' +
-  '<div class="field"><label>نبذة</label><textarea id="epBio" maxlength="200">' + esc(u.bio || '') + '</textarea></div>' +
-  '<div class="field"><label>المحافظة</label><input id="epLoc" value="' + esc(u.location || '') + '" /></div>' +
-  '<button class="btn-main" id="epSubmit">حفظ</button>');
-  $('epBack').addEventListener('click', closeModal);
-  $('epSubmit').addEventListener('click', async function(){
-    var btn = $('epSubmit');
-    var nameVal = $('epName').value.trim();
-    if(!nameVal){ toast('الاسم مطلوب', 'err'); return; }
-    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div>';
-    btn.disabled = true;
-    try {
-      var body = { display_name: nameVal, bio: $('epBio').value.trim(), location: $('epLoc').value.trim() };
-      var r = await api('/me', { method: 'PUT', body: JSON.stringify(body) });
-      ME = r.user; closeModal(); loadProfile(); toast('تم الحفظ', 'ok');
-    } catch(e) {
-      toast(e.message || 'خطأ', 'err');
-      btn.disabled = false; btn.textContent = 'حفظ';
-    }
-  });
-}
-
-function openSettings(){
-  showModal('<div class="modal-header"><button class="back-btn" id="stBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">الإعدادات</div><div class="spacer"></div></div>' +
-  '<div class="modal-list">' +
-  '<button class="modal-item" id="setTheme"><span style="font-size:1.3rem">🌙</span> الوضع الليلي</button>' +
-  '<button class="modal-item" id="setSound"><span style="font-size:1.3rem">🔊</span> الأصوات</button>' +
-  '<button class="modal-item" id="setPush"><span style="font-size:1.3rem">🔔</span> الإشعارات</button>' +
-  '<button class="modal-item" id="setPrivacy"><span style="font-size:1.3rem">🛡️</span> الخصوصية والأمان</button>' +
-  '<button class="modal-item danger" id="setLogout"><span style="font-size:1.3rem">🚪</span> تسجيل الخروج (يحذف الحساب)</button>' +
-  '</div>');
-  $('stBack').addEventListener('click', closeModal);
-  $('setTheme').addEventListener('click', async function(){ var light = !document.body.classList.contains('light'); applyTheme(light ? 'light' : 'dark'); try { await api('/me', { method: 'PUT', body: JSON.stringify({ theme: light ? 'light' : 'dark' }) }); } catch(_){} closeModal(); });
-  $('setSound').addEventListener('click', async function(){ soundOn = !soundOn; try { await api('/me', { method: 'PUT', body: JSON.stringify({ sound: soundOn }) }); } catch(_){} toast(soundOn ? 'الأصوات مفعّلة' : 'الأصوات معطّلة', 'ok'); closeModal(); });
-  $('setPush').addEventListener('click', async function(){ if(Notification.permission !== 'granted') await Notification.requestPermission(); await setupPush(); toast('تم', 'ok'); closeModal(); });
-  $('setPrivacy').addEventListener('click', function(){ closeModal(); setTimeout(showPrivacy, 150); });
-  $('setLogout').addEventListener('click', function(){ closeModal(); setTimeout(confirmLogout, 150); });
-}
-function showPrivacy(){
-  showModal('<div class="modal-header"><button class="back-btn" id="pvBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">الخصوصية والأمان</div><div class="spacer"></div></div>' +
-  '<div style="font-size:.88rem;line-height:1.95;color:var(--text-2)">' +
-  '<p>🔐 <b>التشفير:</b> AES-256-GCM من الطرف إلى الطرف (E2EE).</p>' +
-  '<p style="margin-top:10px">🔑 <b>بصمة مفتاحك:</b> <span style="font-family:ui-monospace,monospace;color:var(--success);font-size:.75rem">' + (E2EE.fingerprint || '—') + '</span></p>' +
-  '<p style="margin-top:10px">👤 <b>الحساب:</b> مؤقت — يُحذف عند تسجيل الخروج.</p>' +
-  '<p style="margin-top:10px">🗑️ <b>الحذف التلقائي:</b> بعد 7 أيام عدم استخدام.</p>' +
-  '<p style="margin-top:10px">⏱️ <b>الرسائل:</b> تُحذف من الخادم بعد 48 ساعة.</p>' +
-  '<p style="margin-top:10px">🛡️ <b>تلميح:</b> قارن بصمة مفتاحك مع صديقك شفهياً للتأكد من عدم وجود تجسس.</p>' +
-  '</div>');
-  $('pvBack').addEventListener('click', closeModal);
-}
-
-function confirmLogout(){
-  showConfirm({
-    icon: 'trash', title: 'تسجيل الخروج',
-    text: '⚠️ سيتم حذف حسابك وكل رسائلك ومفاتيحك نهائياً.\n\nهل أنت متأكد؟',
-    confirmText: 'حذف الحساب',
-    danger: true,
-    onConfirm: async function(){
-      try { await api('/logout', { method: 'POST' }); } catch(_){}
-      localStorage.removeItem('token');
-      localStorage.removeItem('dust_e2ee_pwd');
-      TOKEN = null; ME = null;
-      toast('تم حذف حسابك', 'ok');
-      setTimeout(function(){ location.reload(); }, 1200);
-    }
-  });
-}
-
 async function openDMById(userId){
   if(ME && userId === ME.id) return toast('لا يمكنك مراسلة نفسك', 'err');
   try { var r = await api('/users/' + userId); openDM(r.user); } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
@@ -1865,9 +1270,6 @@ async function openDM(user){
   $('chatName').textContent = user.display_name;
   if(user.online){ $('chatSub').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/></svg>متصل الآن'; $('chatSub').className = 'ch-sub online'; }
   else { $('chatSub').textContent = fmtLastSeen(user.last_seen); $('chatSub').className = 'ch-sub offline'; }
-  $('chatAvatar').style.display = 'grid';
-  $('chatAvatar').innerHTML = user.avatar ? '<img src="' + esc(user.avatar) + '" />' : initial(user.display_name);
-  $('chatAvatar').style.background = 'linear-gradient(135deg,' + (user.color || '#e8b567') + ',#d4a574)';
   $('chatView').classList.add('open');
   $('chatMsgs').innerHTML = '';
   try {
@@ -1880,105 +1282,37 @@ async function openDM(user){
   } catch(_){}
 }
 
-function closeModal(){ $('modal').classList.remove('open'); $('modalBody').classList.remove('menu-sheet-wrap'); }
-function showModal(html){ $('modalBody').innerHTML = html; $('modalBody').classList.remove('menu-sheet-wrap'); $('modal').classList.add('open'); }
+/* ========== MODAL / CONFIRM ========== */
+function closeModal(){ $('modal').classList.remove('open'); }
+function showModal(html){ $('modalBody').innerHTML = html; $('modal').classList.add('open'); }
 $('modal').addEventListener('click', function(e){ if(e.target === $('modal')) closeModal(); });
 
-/* ============ MENU ============ */
-$('btnMenu').addEventListener('click', function(){
-  var u = ME || {};
-  var av = u.avatar ? '<div class="avatar"><img src="' + esc(u.avatar) + '" /></div>' : '<div class="avatar" style="background:linear-gradient(135deg,' + (u.color || '#e8b567') + ',#d4a574)">' + esc(initial(u.display_name)) + '</div>';
-  var html = '<div class="menu-sheet" onclick="event.stopPropagation()"><div class="menu-handle"></div>' +
-    '<div class="menu-header">' + av + '<div class="menu-header-info"><div class="menu-header-name">' + esc(u.display_name || 'مستخدم') + '</div><div class="menu-header-handle">@' + esc(u.username || 'user') + '</div></div></div>' +
-    '<div class="menu-section-title">الحساب</div>' +
-    '<button class="menu-row" id="mProfile"><div class="menu-icon gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="mr-info"><div class="mr-title">ملفي الشخصي</div></div></button>' +
-    '<button class="menu-row" id="mMyQr"><div class="menu-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/></svg></div><div class="mr-info"><div class="mr-title">QR الخاص بي</div><div class="mr-sub">شارك كودك مع أصدقائك</div></div></button>' +
-    '<button class="menu-row" id="mAddFriend"><div class="menu-icon violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div><div class="mr-info"><div class="mr-title">إضافة صديق</div><div class="mr-sub">مسح أو إدخال QR</div></div></button>' +
-    '<div class="menu-divider"></div>' +
-    '<div class="menu-section-title">الإعدادات</div>' +
-    '<button class="menu-row" id="mSettings"><div class="menu-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><div class="mr-info"><div class="mr-title">الإعدادات</div></div></button>' +
-    '<button class="menu-row" id="mPrivacy"><div class="menu-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="mr-info"><div class="mr-title">الخصوصية والأمان</div></div></button>' +
-    '<div class="menu-divider"></div>' +
-    '<button class="menu-row danger" id="mLogout"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div><div class="mr-info"><div class="mr-title">تسجيل الخروج</div><div class="mr-sub">⚠️ يحذف الحساب نهائياً</div></div></button>' +
-    '<div class="menu-close-hint">اضغط خارجاً للإغلاق</div></div>';
-  $('modalBody').innerHTML = html;
-  $('modalBody').classList.add('menu-sheet-wrap');
-  $('modal').classList.add('open');
-  $('mProfile').addEventListener('click', function(){ closeModal(); switchTab('profile'); });
-  $('mMyQr').addEventListener('click', function(){ closeModal(); setTimeout(showMyQr, 150); });
-  $('mAddFriend').addEventListener('click', function(){ closeModal(); setTimeout(showAddFriendMenu, 150); });
-  $('mSettings').addEventListener('click', function(){ closeModal(); setTimeout(openSettings, 150); });
-  $('mPrivacy').addEventListener('click', function(){ closeModal(); setTimeout(showPrivacy, 150); });
-  $('mLogout').addEventListener('click', function(){ closeModal(); setTimeout(confirmLogout, 150); });
-});
-
-/* ============ IMAGES ============ */
-var avatarInput = document.createElement('input');
-avatarInput.type = 'file'; avatarInput.accept = 'image/*'; avatarInput.style.display = 'none';
-document.body.appendChild(avatarInput);
-var coverInput = document.createElement('input');
-coverInput.type = 'file'; coverInput.accept = 'image/*'; coverInput.style.display = 'none';
-document.body.appendChild(coverInput);
-
-var cropperInstance = null;
-async function openCropModal(file){
-  if(!window.Cropper){ try { await window.__cropReady; } catch(_){} }
-  if(!window.Cropper){ toast('تعذر تحميل أداة القص', 'err'); throw new Error('cropper_unavailable'); }
-  return new Promise(function(resolve, reject){
-    var reader = new FileReader();
-    reader.onload = function(e){
-      var img = $('cropImage');
-      img.src = e.target.result;
-      $('cropModal').classList.add('open');
-      if(cropperInstance){ try { cropperInstance.destroy(); } catch(_){} cropperInstance = null; }
-      img.onload = function(){
-        cropperInstance = new Cropper(img, { aspectRatio: 1, viewMode: 1, dragMode: 'move', autoCropArea: 0.9, background: false, guides: false, center: true, highlight: false, cropBoxMovable: false, cropBoxResizable: false, responsive: true });
-      };
-    };
-    reader.readAsDataURL(file);
-    $('cropCancel').onclick = function(){ closeCropModal(); reject(new Error('cancelled')); };
-    $('cropConfirm').onclick = function(){
-      if(!cropperInstance) return;
-      var canvas = cropperInstance.getCroppedCanvas({ width: 512, height: 512, imageSmoothingQuality: 'high' });
-      canvas.toBlob(function(blob){ if(!blob){ reject(new Error('crop_failed')); return; } closeCropModal(); resolve(blob); }, 'image/jpeg', 0.75);
-    };
-  });
-}
-function closeCropModal(){
-  $('cropModal').classList.remove('open');
-  if(cropperInstance){ try { cropperInstance.destroy(); } catch(_){} cropperInstance = null; }
+function showConfirm(opts){
+  var backdrop = document.createElement('div');
+  backdrop.className = 'confirm-backdrop';
+  backdrop.style.cssText = 'position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:20px;';
+  var danger = opts.danger;
+  backdrop.innerHTML =
+    '<div style="background:var(--surface);border:1px solid var(--border-2);border-radius:22px;width:100%;max-width:380px;padding:26px 22px 22px;text-align:center;box-shadow:var(--shadow-lg)">' +
+      '<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;background:' + (danger ? 'var(--danger-soft);color:var(--danger)' : 'var(--gold-soft);color:var(--gold)') + '">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:30px;height:30px">' +
+          (danger ? '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>') +
+        '</svg>' +
+      '</div>' +
+      '<div style="font-size:1.15rem;font-weight:900;margin-bottom:8px">' + esc(opts.title) + '</div>' +
+      '<div style="font-size:.88rem;color:var(--muted);line-height:1.7;margin-bottom:22px;white-space:pre-line">' + esc(opts.text || '') + '</div>' +
+      '<div style="display:flex;gap:10px">' +
+        '<button id="cfCancel" style="flex:1;padding:14px;border-radius:16px;font-weight:800;background:var(--surface-2);color:var(--text)">إلغاء</button>' +
+        '<button id="cfOk" style="flex:1;padding:14px;border-radius:16px;font-weight:800;background:' + (danger ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 'var(--grad-gold)') + ';color:' + (danger ? '#fff' : '#1a1207') + '">' + esc(opts.confirmText || 'تأكيد') + '</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener('click', function(e){ if(e.target === backdrop) backdrop.remove(); });
+  backdrop.querySelector('#cfCancel').addEventListener('click', function(){ backdrop.remove(); });
+  backdrop.querySelector('#cfOk').addEventListener('click', function(){ backdrop.remove(); if(opts.onConfirm) opts.onConfirm(); });
 }
 
-avatarInput.onchange = async function(e){
-  var f = e.target.files[0]; if(!f) return;
-  if(f.size > 8 * 1024 * 1024) return toast('الحد 8 ميجا', 'err');
-  e.target.value = '';
-  var cropped;
-  try { cropped = await openCropModal(f); } catch(_) { return; }
-  toast('جارٍ الرفع...', 'info');
-  try {
-    var d = await uploadImage(cropped, 'avatar.jpg');
-    if(d.url){
-      var resp = await api('/me', { method: 'PUT', body: JSON.stringify({ avatar: d.url }) });
-      ME = resp.user; loadProfile(); toast('تم', 'ok');
-    }
-  } catch(_){ toast('فشل', 'err'); }
-};
-coverInput.onchange = async function(e){
-  var f = e.target.files[0]; if(!f) return;
-  if(f.size > 4 * 1024 * 1024) return toast('الحد 4 ميجا', 'err');
-  e.target.value = '';
-  toast('جارٍ الرفع...', 'info');
-  try {
-    var d = await uploadImage(f);
-    if(d.url){
-      var resp = await api('/me', { method: 'PUT', body: JSON.stringify({ cover: d.url }) });
-      ME = resp.user; loadProfile(); toast('تم', 'ok');
-    }
-  } catch(_){ toast('فشل', 'err'); }
-};
-
-/* ============ BEEP ============ */
+/* ========== BEEP ========== */
 var audioCtx = null;
 function getAudioCtx(){ var Ctx = window.AudioContext || window.webkitAudioContext; if(!Ctx) return null; if(!audioCtx) audioCtx = new Ctx(); if(audioCtx.state === 'suspended') audioCtx.resume(); return audioCtx; }
 function playBeep(){
@@ -1997,7 +1331,7 @@ function playBeep(){
   } catch(_){}
 }
 
-/* ============ INIT ============ */
+/* ========== INIT ========== */
 (async function(){
   var minWait = new Promise(function(r){ setTimeout(r, 800); });
   try {
@@ -2011,18 +1345,5 @@ function playBeep(){
 
 })();
 </script>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" media="print" onload="this.media='all'">
-<script>
-window.__cropReady = new Promise(function(resolve){
-  var s = document.createElement('script');
-  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js';
-  s.async = true;
-  s.onload = function(){ resolve(true); };
-  s.onerror = function(){ resolve(false); };
-  document.head.appendChild(s);
-});
-</script>
-
 </body>
 </html>
