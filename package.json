@@ -1,11 +1,23 @@
-"dependencies": {
-  "express": "^4.19.2",
-  "socket.io": "^4.7.5",
-  "multer": "^1.4.5-lts.1",
-  "cors": "^2.8.5",
-  "express-rate-limit": "^7.4.0",
-  "dotenv": "^16.4.5",
-  "@libsql/client": "^0.14.0",
-  "web-push": "^3.6.7",
-  "qrcode": "^1.5.3"
+{
+  "name": "iraq-chat",
+  "version": "6.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "multer": "^1.4.5-lts.1",
+    "cors": "^2.8.5",
+    "express-rate-limit": "^7.4.0",
+    "dotenv": "^16.4.5",
+    "@libsql/client": "^0.14.0",
+    "web-push": "^3.6.7",
+    "qrcode": "^1.5.3"
+  },
+  "engines": {
+    "node": "20.x"
+  }
 }
