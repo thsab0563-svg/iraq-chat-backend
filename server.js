@@ -281,8 +281,7 @@ app.put('/api/me/public-key', authRequired,
 app.get('/api/users/:id', authRequired, (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (!id) return res.status(400).json({ error: 'invalid_id' });
-  const row = db.prepare('SELECT * FROM users WHERE id = ? AND deleted = 0').get(id);
-  if (!row) return res.status(404).json({ error: 'user_not_found' });
+  const row = db.prepare('SELECT * FROM users WHERE id = ?').get(id);  if (!row) return res.status(404).json({ error: 'user_not_found' });
   const blocked = !!db.prepare('SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)').get(req.userId, id, id, req.userId);
   const isFriend = !!db.prepare('SELECT 1 FROM friendships WHERE user_id = ? AND friend_id = ? AND status = ?').get(req.userId, id, 'accepted');
   const stats = {
