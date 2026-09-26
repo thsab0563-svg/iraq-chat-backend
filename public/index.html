@@ -5,17 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
 <meta name="theme-color" content="#0a0b10" />
 <title>دردشة العراق | Iraq Chat</title>
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="/socket.io/socket.io.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <script id="app-config" type="application/json">
 {
-  "app": { "name_ar": "دردشة العراق", "version": "5.4.0" },
+  "app": { "name_ar": "دردشة العراق", "version": "6.0.0" },
   "colors": ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399","#22d3ee","#e11d48"],
   "emojis": ["😀","😂","🥰","😎","🤔","😢","😡","👍","👎","❤️","🔥","🎉","✨","🙏","👏","💪","🌹","☕","🍕","⚽","🎵","📚","💡","🚀","💯","🤝","🙌","😍"]
 }
@@ -55,20 +56,17 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 @keyframes splashBar{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
 @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 
+/* ===== AUTH — NAME ONLY ===== */
 #auth{overflow-y:auto}
 .auth-wrap{margin:auto;width:100%;max-width:440px;padding:36px 24px;position:relative;z-index:1}
 .auth-logo{width:88px;height:88px;margin:0 auto 20px;border-radius:26px;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;box-shadow:var(--shadow-gold)}
 .auth-logo svg{width:44px;height:44px}
 .auth-title{font-size:1.7rem;font-weight:900;text-align:center}
 .auth-sub{text-align:center;color:var(--muted);font-size:.9rem;margin:10px 0 32px}
-.auth-tabs{display:flex;background:var(--surface);border:1px solid var(--border-2);border-radius:16px;padding:5px;margin-bottom:26px}
-.auth-tabs button{flex:1;padding:12px;border-radius:12px;font-weight:700;font-size:.9rem;color:var(--muted)}
-.auth-tabs button.active{background:var(--grad-gold);color:#1a1207;box-shadow:var(--shadow-gold);font-weight:800}
 .field{margin-bottom:16px}
 .field label{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:9px;padding-inline-start:6px}
 .field input,.field textarea{width:100%;padding:15px 17px;border-radius:15px;background:var(--surface);border:1.5px solid var(--border-2);color:var(--text);font-size:.95rem}
 .field input:focus,.field textarea:focus{border-color:var(--gold);box-shadow:0 0 0 4px var(--gold-soft)}
-.field small{display:block;font-size:.72rem;color:var(--muted-2);margin-top:6px;padding-inline-start:6px}
 .color-row{display:flex;gap:12px;flex-wrap:wrap;padding:4px 0}
 .color-row button{width:38px;height:38px;border-radius:50%;border:2.5px solid transparent}
 .color-row button.on{border-color:var(--text);transform:scale(1.15)}
@@ -78,6 +76,19 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .err{padding:13px 17px;border-radius:14px;background:var(--danger-soft);border:1px solid rgba(255,92,120,.35);color:#ff9aa8;font-size:.85rem;font-weight:600;text-align:center;margin-top:16px;display:none}
 .err.show{display:block}
 
+/* Warning card */
+.warn-card{
+  margin-top:20px;padding:16px;border-radius:16px;
+  background:linear-gradient(135deg,rgba(255,92,120,.12),rgba(255,92,120,.05));
+  border:1px solid rgba(255,92,120,.35);
+  display:flex;gap:12px;
+}
+.warn-card .w-icon{width:36px;height:36px;border-radius:10px;background:var(--danger-soft);color:var(--danger);display:grid;place-items:center;flex:0 0 auto}
+.warn-card .w-icon svg{width:20px;height:20px;stroke-width:2.2}
+.warn-card .w-text{flex:1;font-size:.82rem;line-height:1.7;color:#ff9aa8}
+.warn-card .w-text b{color:#ffb3c0;font-weight:800}
+
+/* ===== APP ===== */
 #app{position:relative;overflow:hidden}
 .tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
 .tab{display:none}
@@ -104,7 +115,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .user-row:active{transform:scale(.98)}
 .avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:1.05rem;flex:0 0 auto;position:relative;overflow:hidden;box-shadow:0 0 0 2px var(--surface)}
 .avatar img{width:100%;height:100%;object-fit:cover}
-.avatar .vbadge{position:absolute;bottom:-2px;inset-inline-end:-2px;width:18px;height:18px;border-radius:50%;background:var(--gold);color:#1a1207;display:grid;place-items:center;border:2px solid var(--surface);font-size:.55rem;font-weight:900}
 .avatar .online-dot{position:absolute;bottom:0;inset-inline-end:0;width:13px;height:13px;border-radius:50%;background:var(--green);border:2.5px solid var(--surface);box-shadow:0 0 8px rgba(52,211,153,.8);z-index:2}
 .user-row .ur-info{flex:1;min-width:0}
 .user-row .ur-name{font-weight:800;font-size:.95rem;display:flex;align-items:center;gap:6px}
@@ -151,16 +161,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .as-icon.edit{background:rgba(124,156,255,.18);color:#7c9cff}
 .as-icon.delete{background:var(--danger-soft);color:var(--danger)}
 .as-icon svg{width:20px;height:20px;stroke-width:2.2}
-
-.privacy-content{font-size:.88rem;line-height:1.95;color:var(--text-2);display:flex;flex-direction:column;gap:16px}
-.privacy-item{display:flex;gap:12px;padding:14px;background:var(--surface-2);border-radius:14px}
-.privacy-item .p-icon{width:36px;height:36px;border-radius:10px;background:var(--gold-soft);color:var(--gold);display:grid;place-items:center;flex:0 0 auto}
-.privacy-item .p-icon svg{width:18px;height:18px;stroke-width:2.2}
-.privacy-item .p-info{flex:1}
-.privacy-item .p-title{font-weight:800;font-size:.9rem;color:var(--text);margin-bottom:4px}
-.privacy-item .p-desc{font-size:.82rem;color:var(--muted);line-height:1.6}
-
-.block-item{display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:10px}
 
 #chatView{position:fixed;inset:0;z-index:200;background:var(--bg);display:none;flex-direction:column}
 #chatView.open{display:flex}
@@ -259,6 +259,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .menu-icon.teal{background:linear-gradient(135deg,#4ecdc4,#22d3ee)}
 .menu-icon.rose{background:linear-gradient(135deg,#ff6b8a,#e11d48)}
 .menu-icon.violet{background:linear-gradient(135deg,#c084fc,#7c5cff)}
+.menu-icon.green{background:linear-gradient(135deg,#34d399,#22c55e)}
 .menu-row{display:flex;align-items:center;gap:14px;padding:11px 12px;border-radius:16px;width:100%;text-align:start;color:var(--text);font-weight:700;font-size:.94rem}
 .menu-row:active{background:var(--surface-2)}
 .menu-row .mr-info{flex:1;min-width:0}
@@ -269,19 +270,27 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .menu-divider{height:1px;background:var(--border);margin:10px 8px}
 .menu-close-hint{text-align:center;color:var(--muted-2);font-size:.72rem;padding:12px 0 4px}
 .modal-card.menu-sheet-wrap{background:transparent;padding:0;border:none;border-radius:0;max-height:none;box-shadow:none;max-width:100%}
-#cropModal .modal-card{padding:0;overflow:hidden;max-width:520px;background:var(--surface)}
-#cropModal .crop-head{padding:18px;text-align:center;font-weight:900;font-size:1.05rem;border-bottom:1px solid var(--border)}
-#cropModal .crop-stage{height:60vh;max-height:520px;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
-#cropModal .crop-stage img{max-width:100%;max-height:100%;display:block}
-#cropModal .crop-actions{padding:16px;display:flex;gap:10px}
-#cropModal .crop-actions button{flex:1;padding:14px;border-radius:14px;font-weight:800;font-size:.92rem}
 
-.notif-item{display:flex;align-items:flex-start;gap:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:14px;position:relative}
-.notif-item.unread{border-color:rgba(232,181,103,.35);background:linear-gradient(135deg,rgba(232,181,103,.08),transparent)}
-.notif-item .notif-info{flex:1;min-width:0}
-.notif-item .notif-text{font-size:.9rem;font-weight:600;line-height:1.55;color:var(--text)}
-.notif-item .notif-time{font-size:.72rem;color:var(--muted);margin-top:5px}
-.notif-item .notif-del{position:absolute;top:8px;inset-inline-end:8px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);color:var(--muted);font-size:.8rem}
+/* QR */
+.qr-box{
+  background:var(--surface);border:1px solid var(--border-2);border-radius:24px;
+  padding:24px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:18px;
+}
+.qr-wrapper{
+  background:#fff;padding:16px;border-radius:20px;
+  box-shadow:0 8px 30px rgba(0,0,0,.15);
+}
+.qr-wrapper canvas, .qr-wrapper img{display:block;border-radius:8px}
+.qr-hint{font-size:.82rem;color:var(--muted);line-height:1.6;max-width:280px}
+.qr-link{
+  width:100%;padding:12px 16px;background:var(--surface-2);border:1px solid var(--border-2);
+  border-radius:14px;font-size:.78rem;color:var(--text-2);word-break:break-all;
+  font-family:monospace;text-align:center;direction:ltr;
+}
+#qrReader{
+  width:100%;max-width:400px;margin:0 auto;border-radius:20px;overflow:hidden;
+}
 
 #toasts{position:fixed;top:calc(16px + env(safe-area-inset-top));inset-inline:16px;z-index:999;display:flex;flex-direction:column;gap:9px;align-items:center;pointer-events:none}
 .toast{padding:13px 20px;border-radius:15px;background:color-mix(in srgb,var(--surface) 96%,transparent);backdrop-filter:blur(20px);border:1px solid var(--border-2);box-shadow:var(--shadow-lg);font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:10px;max-width:100%;pointer-events:auto;animation:slideDown .3s var(--ease)}
@@ -315,36 +324,45 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 <div id="netBanner"><span>لا يوجد اتصال بالإنترنت</span><button onclick="document.getElementById('netBanner').classList.remove('show')">إغلاق</button></div>
 <div id="toasts"></div>
 
+<!-- AUTH — NAME ONLY -->
 <div id="auth" class="screen">
   <div class="auth-wrap">
     <div class="auth-logo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 5.94 2 10.8c0 2.7 1.36 5.1 3.5 6.7V22l4.03-2.2c.79.16 1.61.25 2.47.25 5.52 0 10-3.94 10-8.8S17.52 2 12 2z"/></svg></div>
     <h1 class="auth-title">دردشة العراق</h1>
-    <p class="auth-sub">تواصل مع الجميع في العراق</p>
-    <div class="auth-tabs">
-      <button type="button" id="tabLogin" class="active">دخول</button>
-      <button type="button" id="tabRegister">حساب جديد</button>
+    <p class="auth-sub">ادخل اسمك وابدأ الدردشة فوراً</p>
+
+    <div class="field">
+      <label>اسمك</label>
+      <input id="rgName" placeholder="مثال: أحمد" maxlength="20" autocomplete="off" />
     </div>
-    <div id="loginForm">
-      <div class="field"><label>اسم المستخدم</label><input id="liUser" placeholder="اكتب اسمك..." autocomplete="username" /></div>
-      <div class="field"><label>كلمة المرور</label><input id="liPass" type="password" placeholder="••••••" autocomplete="current-password" /></div>
-      <button id="btnLogin" class="btn-main">تسجيل الدخول</button>
+
+    <div class="field">
+      <label>لون اسمك</label>
+      <div class="color-row" id="colorRow"></div>
     </div>
-    <div id="regForm" class="hide">
-      <div class="field"><label>الاسم الظاهر</label><input id="rgName" placeholder="مثال: أحمد" maxlength="30" /></div>
-      <div class="field">
-        <label>كلمة المرور</label>
-        <input id="rgPass" type="password" placeholder="••••••" />
-        <small>8 أحرف على الأقل، تحتوي على حروف وأرقام</small>
+
+    <button id="btnRegister" class="btn-main">🚀 ابدأ الدردشة</button>
+
+    <div class="warn-card">
+      <div class="w-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
       </div>
-      <div class="field"><label>رقم الهاتف (اختياري)</label><input id="rgPhone" type="tel" placeholder="+964..." /></div>
-      <div class="field"><label>المحافظة</label><input id="rgLocation" placeholder="بغداد" /></div>
-      <div class="field"><label>لون اسمك</label><div class="color-row" id="colorRow"></div></div>
-      <button id="btnRegister" class="btn-main">إنشاء حساب</button>
+      <div class="w-text">
+        <b>تحذير مهم:</b><br>
+        عند <b>تسجيل الخروج</b> سيتم حذف حسابك وكل رسائلك وأصدقائك نهائياً.<br>
+        <b>لا تقلق</b> — إغلاق التطبيق لا يحذف شيئاً.
+      </div>
     </div>
+
     <div class="err" id="authErr"></div>
   </div>
 </div>
 
+<!-- APP -->
 <div id="app" class="screen">
   <div class="tab-content">
     <div id="tab-home" class="tab active">
@@ -367,16 +385,13 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
     </div>
 
     <div id="tab-friends" class="tab">
-      <header class="app-header"><h1>الأصدقاء</h1></header>
-      <div class="list-pad" id="friendsList"></div>
-    </div>
-
-    <div id="tab-notifs" class="tab">
       <header class="app-header">
-        <h1>الإشعارات</h1>
-        <button class="hbtn" id="clearNotifsBtn"><svg class="ic" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+        <h1>الأصدقاء</h1>
+        <button class="hbtn" id="btnAddFriend" title="إضافة صديق">
+          <svg class="ic" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
       </header>
-      <div class="list-pad" id="notifsList"></div>
+      <div class="list-pad" id="friendsList"></div>
     </div>
 
     <div id="tab-profile" class="tab"><div id="profileContent"></div></div>
@@ -388,7 +403,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
     <button type="button" data-tab="home" class="on"><svg class="ic" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>الرئيسية</span></button>
     <button type="button" data-tab="chats"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>الرسائل</span><span class="badge hide" id="chatBadge">0</span></button>
     <button type="button" data-tab="friends"><svg class="ic" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>الأصدقاء</span></button>
-    <button type="button" data-tab="notifs"><svg class="ic" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>الإشعارات</span><span class="badge hide" id="notifBadge">0</span></button>
     <button type="button" data-tab="profile"><svg class="ic" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>حسابي</span></button>
   </nav>
 </div>
@@ -439,12 +453,12 @@ var currentTab = 'home';
 var searchDebounce = null;
 var currentSearchQuery = '';
 var chatBadgeCount = 0;
-var notifBadgeCount = 0;
 var onlineUsers = {};
 var currentProfileTab = 'info';
 var lastProfilePosts = [];
 var globalPollInterval = null;
 var lastConvData = null;
+var qrScanner = null;
 
 var esc = function(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
 var initial = function(n){ return (n||'؟').trim().charAt(0).toUpperCase(); };
@@ -466,7 +480,6 @@ var fmtLastSeen = function(ts){
   if(diff < 3600) return 'آخر ظهور منذ ' + Math.floor(diff/60) + ' دقيقة';
   if(diff < 86400) return 'آخر ظهور منذ ' + Math.floor(diff/3600) + ' ساعة';
   if(diff < 172800) return 'آخر ظهور أمس';
-  if(diff < 604800) return 'آخر ظهور منذ ' + Math.floor(diff/86400) + ' أيام';
   return 'آخر ظهور ' + new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'short'}).format(new Date(ts));
 };
 
@@ -479,11 +492,10 @@ function linkify(text){
 function avatarHTML(user, size){
   var color = (user && user.color) || '#e8b567';
   var sz = size ? 'width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size*0.42) + 'px' : '';
-  var vb = (user && user.verified) ? '<span class="vbadge">✓</span>' : '';
   var dot = (user && user.online) ? '<span class="online-dot"></span>' : '';
-  if(user && user.avatar) return '<div class="avatar" style="' + sz + '"><img src="' + esc(user.avatar) + '" />' + vb + dot + '</div>';
+  if(user && user.avatar) return '<div class="avatar" style="' + sz + '"><img src="' + esc(user.avatar) + '" />' + dot + '</div>';
   var nm = (user && user.display_name) ? user.display_name : '';
-  return '<div class="avatar" style="background:linear-gradient(135deg,' + color + ',#d4a574);' + sz + '">' + esc(initial(nm)) + vb + dot + '</div>';
+  return '<div class="avatar" style="background:linear-gradient(135deg,' + color + ',#d4a574);' + sz + '">' + esc(initial(nm)) + dot + '</div>';
 }
 function toast(text, type){
   var c = $('toasts');
@@ -507,12 +519,6 @@ function updateChatBadge(n){
   if(chatBadgeCount > 0){ b.textContent = chatBadgeCount > 99 ? '99+' : chatBadgeCount; b.classList.remove('hide'); }
   else b.classList.add('hide');
 }
-function updateNotifBadge(n){
-  var b = $('notifBadge');
-  notifBadgeCount = Math.max(0, n);
-  if(notifBadgeCount > 0){ b.textContent = notifBadgeCount > 99 ? '99+' : notifBadgeCount; b.classList.remove('hide'); }
-  else b.classList.add('hide');
-}
 
 async function api(path, opts){
   opts = opts || {};
@@ -524,8 +530,6 @@ async function api(path, opts){
   try { data = await res.json(); } catch(_){}
   if(!res.ok) {
     var err = new Error((data && data.error) || ('http_' + res.status));
-    if(data && data.days_left) err.days_left = data.days_left;
-    if(data && data.minutes_left) err.minutes_left = data.minutes_left;
     throw err;
   }
   return data;
@@ -541,23 +545,11 @@ async function uploadImage(fileOrBlob, filename){
 }
 
 function handleApiError(e){
-  if(e.message === 'token_expired' || e.message === 'invalid_token'){
-    toast('انتهت الجلسة. الرجاء تسجيل الدخول مجدداً', 'err');
+  if(e.message === 'session_expired' || e.message === 'invalid_token' || e.message === 'user_not_found'){
+    toast('انتهت الجلسة. الرجاء الدخول من جديد', 'err');
     localStorage.removeItem('token');
     TOKEN = null;
     setTimeout(function(){ location.reload(); }, 1500);
-    return true;
-  }
-  if(e.message === 'account_locked'){
-    showErr('الحساب مقفل مؤقتاً. حاول بعد ' + (e.minutes_left || 15) + ' دقيقة');
-    return true;
-  }
-  if(e.message === 'password_too_weak'){
-    showErr('كلمة المرور ضعيفة. استخدم حروف وأرقام');
-    return true;
-  }
-  if(e.message === 'password_too_short'){
-    showErr('كلمة المرور قصيرة (8 أحرف على الأقل)');
     return true;
   }
   return false;
@@ -606,42 +598,18 @@ CFG.colors.forEach(function(c, i){
   });
   colorRow.appendChild(b);
 });
-$('tabLogin').addEventListener('click', function(){ $('tabLogin').classList.add('active'); $('tabRegister').classList.remove('active'); $('loginForm').classList.remove('hide'); $('regForm').classList.add('hide'); });
-$('tabRegister').addEventListener('click', function(){ $('tabRegister').classList.add('active'); $('tabLogin').classList.remove('active'); $('regForm').classList.remove('hide'); $('loginForm').classList.add('hide'); });
 
-$('btnLogin').addEventListener('click', async function(){
-  var u = $('liUser').value.trim(), p = $('liPass').value;
-  if(!u || !p) return showErr('الرجاء تعبئة الحقول');
-  this.disabled = true;
-  try {
-    var r = await api('/login', { method: 'POST', body: JSON.stringify({ username: u, password: p }) });
-    TOKEN = r.token; localStorage.setItem('token', TOKEN);
-    enterApp(r.user);
-  } catch(e) {
-    if(!handleApiError(e)){
-      showErr(e.message === 'invalid_credentials' ? 'بيانات الدخول غير صحيحة' : e.message);
-    }
-  }
-  this.disabled = false;
-});
 $('btnRegister').addEventListener('click', async function(){
-  var name = $('rgName').value.trim(), pass = $('rgPass').value;
-  if(!name) return showErr('الاسم مطلوب');
-  if(pass.length < 8) return showErr('كلمة المرور قصيرة (8 أحرف على الأقل)');
-  if(!/[a-zA-Z\u0600-\u06FF]/.test(pass)) return showErr('كلمة المرور يجب أن تحتوي على حرف واحد على الأقل');
-  if(!/\d/.test(pass)) return showErr('كلمة المرور يجب أن تحتوي على رقم واحد على الأقل');
+  var name = $('rgName').value.trim();
+  if(!name || name.length < 2) return showErr('اكتب اسمك (حرفين على الأقل)');
   this.disabled = true;
   try {
-    var r = await api('/register', { method: 'POST', body: JSON.stringify({
-      display_name: name, password: pass, color: selectedColor,
-      phone: $('rgPhone').value.trim(), location: $('rgLocation').value.trim(), country: 'العراق'
-    }) });
+    var r = await api('/register', { method: 'POST', body: JSON.stringify({ name: name, color: selectedColor }) });
     TOKEN = r.token; localStorage.setItem('token', TOKEN);
+    if(r.isDuplicate){ toast('الاسم مستخدم، أضفنا رقماً للتمييز', 'info'); }
     enterApp(r.user);
   } catch(e) {
-    if(!handleApiError(e)){
-      showErr(e.message === 'name_taken' ? 'الاسم مستخدم' : e.message);
-    }
+    showErr(e.message === 'name_required' ? 'الاسم مطلوب' : e.message);
   }
   this.disabled = false;
 });
@@ -661,8 +629,8 @@ function applyTheme(theme){ document.body.classList.toggle('light', theme === 'l
 /* SOCKET */
 socket.on('auth-error', function(data){
   var err = data && data.error;
-  if(err === 'token_expired' || err === 'invalid_token'){
-    toast('انتهت الجلسة. الرجاء تسجيل الدخول مجدداً', 'err');
+  if(err === 'session_expired' || err === 'invalid_token' || err === 'user_not_found'){
+    toast('انتهت الجلسة. الرجاء الدخول من جديد', 'err');
     localStorage.removeItem('token');
     TOKEN = null;
     setTimeout(function(){ location.reload(); }, 1500);
@@ -672,6 +640,15 @@ socket.on('auth-ok', function(data){ ME = data.user; loadEverything(); });
 
 socket.on('user-online', function(d){ onlineUsers[d.userId] = true; refreshStatuses(); });
 socket.on('user-offline', function(d){ delete onlineUsers[d.userId]; refreshStatuses(); });
+socket.on('user-deleted', function(d){
+  delete onlineUsers[d.userId];
+  if(CURRENT_DM && CURRENT_DM.user.id === d.userId){
+    toast('المستخدم حذف حسابه', 'err');
+    $('chatView').classList.remove('open');
+    CURRENT_DM = null;
+  }
+  loadChats(); loadFriends();
+});
 
 function refreshStatuses(){
   if(currentTab === 'chats') loadChats();
@@ -691,9 +668,7 @@ socket.on('notification', function(n){
     if(currentTab === 'chats') loadChats();
     if(CURRENT_DM && n.from && CURRENT_DM.user.id === n.from.id) pollCurrentChat();
   } else {
-    updateNotifBadge(notifBadgeCount + 1);
     toast(n.text || 'إشعار جديد', 'info');
-    if(currentTab === 'notifs') loadNotifs();
     if(currentTab === 'friends') loadFriends();
   }
 });
@@ -787,9 +762,8 @@ async function globalPoll(){
       var prevUnread = 0;
       lastConvData.forEach(function(c){ prevUnread += (c.unread || 0); });
       if(totalUnread > prevUnread && soundOn){
-        var newCount = totalUnread - prevUnread;
         playBeep();
-        toast('لديك ' + newCount + ' رسالة جديدة', 'info');
+        toast('لديك ' + (totalUnread - prevUnread) + ' رسالة جديدة', 'info');
       }
     }
     lastConvData = r.conversations;
@@ -810,7 +784,7 @@ async function globalPoll(){
 }
 
 async function loadEverything(){
-  loadPosts(); loadSuggestions(); loadChats(); loadFriends(); loadNotifs(); loadProfile();
+  loadPosts(); loadSuggestions(); loadChats(); loadFriends(); loadProfile();
   if(globalPollInterval) clearInterval(globalPollInterval);
   globalPollInterval = setInterval(globalPoll, 2000);
 }
@@ -824,7 +798,6 @@ function switchTab(name){
   if(name === 'home'){ loadPosts(); loadSuggestions(); }
   if(name === 'chats'){ updateChatBadge(0); loadChats(); }
   if(name === 'friends'){ loadFriends(); }
-  if(name === 'notifs'){ updateNotifBadge(0); loadNotifs(); }
   if(name === 'profile'){ loadProfile(); }
 }
 $$('.bottom-nav button').forEach(function(b){ b.addEventListener('click', function(){ switchTab(b.dataset.tab); }); });
@@ -843,7 +816,7 @@ function renderPosts(posts){
     var menuBtn = isMine ? '<button class="post-menu-btn" data-menu-pid="' + p.id + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/></svg></button>' : '';
     var editedHtml = p.edited ? '<div class="post-edited">تم التعديل</div>' : '';
     return '<article class="post" data-post-id="' + p.id + '">' +
-      '<div class="post-head">' + avatarHTML(p.user, 44) + '<div class="ph-info" data-uid="' + p.user.id + '"><div class="ph-name">' + esc(p.user.display_name) + (p.user.verified ? ' ✓' : '') + '</div><div class="ph-meta">@' + esc(p.user.username) + ' · ' + fmtDate(p.time) + '</div></div>' + menuBtn + '</div>' +
+      '<div class="post-head">' + avatarHTML(p.user, 44) + '<div class="ph-info" data-uid="' + p.user.id + '"><div class="ph-name">' + esc(p.user.display_name) + '</div><div class="ph-meta">@' + esc(p.user.username) + ' · ' + fmtDate(p.time) + '</div></div>' + menuBtn + '</div>' +
       '<div class="post-body">' + linkify(p.text) + '</div>' + editedHtml +
       '<div class="post-actions"><button class="like-btn ' + (p.liked ? 'liked' : '') + '" data-pid="' + p.id + '"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>' + p.likes + '</span></button><button class="comment-btn" data-pid="' + p.id + '"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg><span>' + p.comments + '</span></button></div></article>';
   }).join('');
@@ -971,13 +944,13 @@ async function loadSuggestions(){
     var r = await api('/suggestions');
     var el = $('suggestionsSection');
     if(!r.users.length){ el.innerHTML = ''; return; }
-    el.innerHTML = '<div class="sec-title">أشخاص قد تعرفهم</div><div style="display:flex;gap:11px;overflow-x:auto;padding:0 18px 8px">' + r.users.map(function(u){
+    el.innerHTML = '<div class="sec-title">أشخاص</div><div style="display:flex;gap:11px;overflow-x:auto;padding:0 18px 8px">' + r.users.map(function(u){
       return '<div style="min-width:140px;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:16px;text-align:center;display:flex;flex-direction:column;gap:10px" data-sug="' + u.id + '">' + avatarHTML(u, 58) + '<div style="font-weight:800;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(u.display_name) + '</div><button style="padding:8px;border-radius:11px;background:var(--grad-gold);color:#1a1207;font-weight:800;font-size:.78rem" data-add="' + u.id + '">+ إضافة</button></div>';
     }).join('') + '</div>';
     el.querySelectorAll('[data-sug]').forEach(function(card){ card.addEventListener('click', function(e){ if(e.target.closest('[data-add]')) return; openUserById(parseInt(card.dataset.sug)); }); });
     el.querySelectorAll('[data-add]').forEach(function(b){ b.addEventListener('click', async function(e){
       e.stopPropagation();
-      try { await api('/friends/request/' + b.dataset.add, { method: 'POST' }); toast('تم الإرسال', 'ok'); b.textContent = '✓'; b.disabled = true; } catch(err){ toast(err.message === 'exists' ? 'الطلب موجود' : err.message, 'err'); }
+      try { await api('/friends/request/' + b.dataset.add, { method: 'POST' }); toast('تم', 'ok'); b.textContent = '✓'; b.disabled = true; } catch(err){ toast(err.message, 'err'); }
     }); });
   } catch(_){}
 }
@@ -1038,51 +1011,128 @@ async function loadFriends(){
     $('friendsList').innerHTML = r.friends.length ? r.friends.map(function(u){
       var online = u.online;
       return '<div class="user-row" data-fuid="' + u.id + '">' + avatarHTML(u) + '<div class="ur-info"><div class="ur-name">' + esc(u.display_name) + '</div><div class="ur-sub' + (online ? ' online' : '') + '">' + (online ? 'متصل الآن' : '@' + esc(u.username)) + '</div></div><button style="padding:8px 12px;border-radius:11px;background:var(--surface-2);font-weight:800;font-size:.78rem" data-msg="' + u.id + '">💬</button></div>';
-    }).join('') : '<div class="empty"><p>لا يوجد أصدقاء</p></div>';
+    }).join('') : '<div class="empty"><p>لا يوجد أصدقاء — أضف صديقاً بالـ QR</p></div>';
     $('friendsList').querySelectorAll('[data-fuid]').forEach(function(card){ card.addEventListener('click', function(e){ if(e.target.closest('[data-msg]')) return; openUserById(parseInt(card.dataset.fuid)); }); });
     $('friendsList').querySelectorAll('[data-msg]').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); openDMById(parseInt(b.dataset.msg)); }); });
   } catch(_){}
 }
 
-/* NOTIFS */
-async function loadNotifs(){
+$('btnAddFriend').addEventListener('click', function(){ showAddFriendMenu(); });
+
+function showAddFriendMenu(){
+  showModal('<div class="modal-header"><button class="back-btn" id="afmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">إضافة صديق</div><div class="spacer"></div></div>' +
+  '<div class="modal-list">' +
+  '<button class="modal-item" id="afmScan">📷 مسح QR (كاميرا)</button>' +
+  '<button class="modal-item" id="afmEnter">🔢 إدخال كود QR</button>' +
+  '<button class="modal-item" id="afmMyQr">📤 عرض QR الخاص بي</button>' +
+  '</div>');
+  $('afmBack').addEventListener('click', closeModal);
+  $('afmScan').addEventListener('click', function(){ closeModal(); startQrScanner(); });
+  $('afmEnter').addEventListener('click', function(){ closeModal(); showEnterQrId(); });
+  $('afmMyQr').addEventListener('click', function(){ closeModal(); showMyQr(); });
+}
+
+async function showMyQr(){
+  showModal('<div class="modal-header"><button class="back-btn" id="qrBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">QR الخاص بي</div><div class="spacer"></div></div><div id="qrContent"><div style="text-align:center;padding:20px"><div class="spinner"></div></div></div>');
+  $('qrBack').addEventListener('click', closeModal);
   try {
-    var r = await api('/notifications');
-    var notifs = r.notifications || [];
-    if(!notifs.length){
-      $('notifsList').innerHTML = '<div class="empty"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><p>لا توجد إشعارات</p></div>';
-      return;
-    }
-    $('notifsList').innerHTML = notifs.map(function(n){
-      var icon = n.type === 'like' ? '❤️' : n.type === 'comment' ? '💬' : n.type === 'friend_request' ? '👥' : n.type === 'friend_accept' ? '✅' : '🔔';
-      return '<div class="notif-item ' + (n.read ? '' : 'unread') + '" data-nid="' + n.id + '">' +
-        (n.from ? avatarHTML(n.from, 44) : '<div class="avatar" style="background:var(--gold-soft);color:var(--gold);font-size:1.3rem">' + icon + '</div>') +
-        '<div class="notif-info"><div class="notif-text">' + esc(n.text || 'إشعار') + '</div><div class="notif-time">' + fmtDate(n.time) + '</div></div>' +
-        '<button class="notif-del" data-dnid="' + n.id + '">✕</button>' +
-      '</div>';
-    }).join('');
-    $('notifsList').querySelectorAll('[data-dnid]').forEach(function(b){
-      b.addEventListener('click', async function(e){
-        e.stopPropagation();
-        try { await api('/notifications/' + b.dataset.dnid, { method: 'DELETE' }); loadNotifs(); } catch(_){}
-      });
+    var r = await api('/qr/image');
+    var html = '<div class="qr-box">' +
+      '<div class="qr-wrapper"><img src="' + r.qr + '" alt="QR" style="width:220px;height:220px" /></div>' +
+      '<div class="qr-hint">دع صديقك يمسح هذا الكود لإضافتك</div>' +
+      '<div class="qr-link" id="qrLink">' + esc(r.link) + '</div>' +
+      '<button class="btn-main" id="copyQr" style="max-width:240px">📋 نسخ الرابط</button>' +
+    '</div>';
+    $('qrContent').innerHTML = html;
+    $('copyQr').addEventListener('click', function(){
+      navigator.clipboard.writeText(r.link).then(function(){ toast('تم نسخ الرابط', 'ok'); }).catch(function(){ toast('فشل النسخ', 'err'); });
     });
-    try { await api('/notifications/read', { method: 'POST' }); } catch(_){}
-  } catch(_){
-    $('notifsList').innerHTML = '<div class="empty"><p>فشل التحميل</p></div>';
+  } catch(e) {
+    $('qrContent').innerHTML = '<div class="empty"><p>فشل توليد QR</p></div>';
   }
 }
 
-$('clearNotifsBtn').addEventListener('click', function(){
-  showConfirm({
-    icon: 'trash', title: 'حذف جميع الإشعارات',
-    text: 'هل أنت متأكد من حذف كل الإشعارات؟',
-    confirmText: 'حذف الكل', danger: true,
-    onConfirm: async function(){
-      try { await api('/notifications/all', { method: 'DELETE' }); loadNotifs(); toast('تم الحذف', 'ok'); } catch(_){}
+function showEnterQrId(){
+  showModal('<div class="modal-header"><button class="back-btn" id="eqrBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">إدخال كود QR</div><div class="spacer"></div></div>' +
+  '<div class="field"><label>كود QR (16 حرف)</label><input id="eqrInput" placeholder="مثال: a3f9b2e8c4d1" maxlength="32" style="direction:ltr;text-align:left;font-family:monospace" /></div>' +
+  '<button class="btn-main" id="eqrSubmit">إضافة صديق</button>');
+  $('eqrBack').addEventListener('click', closeModal);
+  $('eqrSubmit').addEventListener('click', async function(){
+    var id = $('eqrInput').value.trim().toLowerCase();
+    if(!id) return toast('أدخل الكود', 'err');
+    try {
+      var r = await api('/friends/add-by-qr', { method: 'POST', body: JSON.stringify({ qr_id: id }) });
+      if(r.status === 'already_friends') toast('صديقك بالفعل', 'info');
+      else if(r.status === 'added') toast('تمت إضافة ' + (r.user ? r.user.display_name : ''), 'ok');
+      closeModal(); loadFriends();
+    } catch(e) {
+      if(e.message === 'user_not_found') toast('لم يتم العثور على المستخدم', 'err');
+      else if(e.message === 'self') toast('لا يمكنك إضافة نفسك', 'err');
+      else if(e.message === 'blocked') toast('لا يمكن إضافة هذا المستخدم', 'err');
+      else toast(e.message, 'err');
     }
   });
-});
+}
+
+async function startQrScanner(){
+  showModal('<div class="modal-header"><button class="back-btn" id="scanBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">مسح QR</div><div class="spacer"></div></div>' +
+  '<div id="qrReader"></div>' +
+  '<div style="text-align:center;padding:12px;color:var(--muted);font-size:.82rem">وجّه الكاميرا نحو الكود</div>');
+  $('scanBack').addEventListener('click', function(){ stopQrScanner(); closeModal(); });
+
+  setTimeout(async function(){
+    try {
+      qrScanner = new Html5Qrcode("qrReader");
+      await qrScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        async function(decodedText) {
+          await stopQrScanner();
+          var qrId = extractQrId(decodedText);
+          if(!qrId){ toast('QR غير صالح', 'err'); closeModal(); return; }
+          try {
+            var r = await api('/friends/add-by-qr', { method: 'POST', body: JSON.stringify({ qr_id: qrId }) });
+            if(r.status === 'already_friends') toast('صديقك بالفعل', 'info');
+            else if(r.status === 'added') toast('تمت إضافة ' + (r.user ? r.user.display_name : ''), 'ok');
+            closeModal(); loadFriends();
+          } catch(e) {
+            if(e.message === 'user_not_found') toast('QR غير موجود', 'err');
+            else if(e.message === 'self') toast('هذا كودك!', 'err');
+            else if(e.message === 'blocked') toast('محظور', 'err');
+            else toast(e.message, 'err');
+            closeModal();
+          }
+        },
+        function(){ /* ignore per frame errors */ }
+      );
+    } catch(e){
+      toast('لا يمكن الوصول للكاميرا', 'err');
+      closeModal();
+    }
+  }, 300);
+}
+
+async function stopQrScanner(){
+  if(qrScanner){
+    try { await qrScanner.stop(); qrScanner.clear(); } catch(_){}
+    qrScanner = null;
+  }
+}
+
+function extractQrId(text){
+  if(!text) return null;
+  // إذا كان رابط: https://app.com/?qr=xxxxx
+  var m = text.match(/[?&]qr=([a-f0-9]{8,32})/i);
+  if(m) return m[1].toLowerCase();
+  // إذا كان JSON
+  try {
+    var obj = JSON.parse(text);
+    if(obj && obj.qr) return String(obj.qr).toLowerCase();
+  } catch(_){}
+  // إذا كان نص مباشر (hex 16)
+  if(/^[a-f0-9]{8,32}$/i.test(text.trim())) return text.trim().toLowerCase();
+  return null;
+}
 
 /* CHAT */
 function scrollChat(inst){
@@ -1164,8 +1214,8 @@ async function loadProfile(){
   try {
     var r = await api('/me');
     ME = r.user;
-    var stats = { friends: 0, posts: 0, views: 0 };
-    try { var s = await api('/me/stats'); stats = { friends: s.friends || 0, posts: s.posts || 0, views: s.views || 0 }; } catch(_){}
+    var stats = { friends: 0, posts: 0 };
+    try { var s = await api('/me/stats'); stats = { friends: s.friends || 0, posts: s.posts || 0 }; } catch(_){}
     var myPosts = [];
     try { var mp = await api('/posts?user_id=' + ME.id + '&limit=100'); myPosts = mp.posts || []; } catch(_){}
     lastProfilePosts = myPosts;
@@ -1174,10 +1224,9 @@ async function loadProfile(){
 }
 function renderProfile(u, isMe, stats, myPosts){
   var el = $('profileContent');
-  stats = stats || { friends: 0, posts: 0, views: 0 };
+  stats = stats || { friends: 0, posts: 0 };
   myPosts = myPosts || [];
   var locSvg = '<svg class="ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
-  var globeSvg = '<svg class="ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
   var calSvg = '<svg class="ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
   el.innerHTML =
   '<div class="profile-cover" id="profCover">' + (u.cover ? '<img src="' + esc(u.cover) + '" />' : '') +
@@ -1187,24 +1236,23 @@ function renderProfile(u, isMe, stats, myPosts){
     '<div class="profile-avatar-wrap"><div class="profile-avatar" id="profAvatar">' + (u.avatar ? '<img src="' + esc(u.avatar) + '" />' : esc(initial(u.display_name))) + '</div>' +
       (isMe ? '<button class="avatar-edit-btn" id="avatarEditBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>' : '') +
     '</div>' +
-    '<div class="profile-name">' + esc(u.display_name) + (u.verified ? ' <svg class="ic" style="color:var(--gold)" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="10" opacity=".25"/><polyline points="20 6 9 17 4 12" stroke="#e8b567" stroke-width="3" fill="none" stroke-linecap="round"/></svg>' : '') + '</div>' +
+    '<div class="profile-name">' + esc(u.display_name) + '</div>' +
     '<div class="profile-user">@' + esc(u.username) + '</div>' +
     (u.bio ? '<div class="profile-bio">' + esc(u.bio) + '</div>' : '') +
     '<div class="profile-meta">' +
       (u.location ? '<span>' + locSvg + ' ' + esc(u.location) + '</span>' : '') +
-      (u.country ? '<span>' + globeSvg + ' ' + esc(u.country) + '</span>' : '') +
       '<span>' + calSvg + ' ' + fmtDate(u.created_at) + '</span>' +
     '</div>' +
-    '<div class="profile-stats"><div class="stat"><div class="num">' + stats.friends + '</div><div class="lbl">صديق</div></div><div class="stat"><div class="num">' + stats.posts + '</div><div class="lbl">منشور</div></div><div class="stat"><div class="num">' + stats.views + '</div><div class="lbl">زيارة</div></div></div>' +
-    '<div class="profile-actions">' + (isMe ? '<button class="btn-fill" id="btnEditProfile">تعديل الملف</button>' : '<button class="btn-fill" id="btnMsgUser">💬 رسالة</button>') + '</div>' +
-    '<div class="profile-tabs">' +
-      '<button data-ptab="info" class="' + (currentProfileTab === 'info' ? 'on' : '') + '">معلوماتي</button>' +
-      '<button data-ptab="posts" class="' + (currentProfileTab === 'posts' ? 'on' : '') + '">منشوراتي (' + myPosts.length + ')</button>' +
+    '<div class="profile-stats"><div class="stat"><div class="num">' + stats.friends + '</div><div class="lbl">صديق</div></div><div class="stat"><div class="num">' + stats.posts + '</div><div class="lbl">منشور</div></div></div>' +
+    '<div class="profile-actions">' +
+      (isMe ? '<button class="btn-fill" id="btnMyQr"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> QR</button>' : '') +
+      (isMe ? '<button class="btn-ghost" id="btnEditProfile">✏️ تعديل</button>' : '<button class="btn-fill" id="btnMsgUser">💬 رسالة</button>') +
     '</div>' +
-    '<div id="profileTabContent" style="margin-top:16px"></div>' +
+    (isMe ? '<div class="profile-tabs"><button data-ptab="info" class="' + (currentProfileTab === 'info' ? 'on' : '') + '">معلوماتي</button><button data-ptab="posts" class="' + (currentProfileTab === 'posts' ? 'on' : '') + '">منشوراتي (' + myPosts.length + ')</button></div><div id="profileTabContent" style="margin-top:16px"></div>' : '') +
   '</div>';
   if(isMe){
     $('btnEditProfile').addEventListener('click', function(){ openEditProfile(ME); });
+    if($('btnMyQr')) $('btnMyQr').addEventListener('click', function(){ showMyQr(); });
     $('profAvatar').addEventListener('click', function(){ avatarInput.click(); });
     if($('avatarEditBtn')) $('avatarEditBtn').addEventListener('click', function(e){ e.stopPropagation(); avatarInput.click(); });
     if($('editCover')) $('editCover').addEventListener('click', function(){ coverInput.click(); });
@@ -1219,7 +1267,7 @@ function renderProfile(u, isMe, stats, myPosts){
       renderProfileTabContent(myPosts);
     });
   });
-  renderProfileTabContent(myPosts);
+  if(isMe) renderProfileTabContent(myPosts);
 }
 function renderProfileTabContent(myPosts){
   var box = $('profileTabContent'); if(!box) return;
@@ -1227,31 +1275,15 @@ function renderProfileTabContent(myPosts){
     if(!myPosts.length){ box.innerHTML = '<div class="empty"><p>لا توجد منشورات</p></div>'; return; }
     box.innerHTML = myPosts.map(function(p){
       var editedHtml = p.edited ? '<div class="post-edited">تم التعديل</div>' : '';
-      return '<article class="post" data-post-id="' + p.id + '">' +
-        '<div class="post-head"><div class="ph-info" style="cursor:default"><div class="ph-meta">' + fmtDate(p.time) + '</div></div><button class="post-menu-btn" data-menu-pid="' + p.id + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/></svg></button></div>' +
-        '<div class="post-body">' + linkify(p.text) + '</div>' + editedHtml +
-        '<div class="post-actions"><button class="like-btn ' + (p.liked ? 'liked' : '') + '" data-pid="' + p.id + '"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>' + p.likes + '</span></button><button class="comment-btn" data-pid="' + p.id + '"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg><span>' + p.comments + '</span></button></div></article>';
+      return '<article class="post"><div class="post-head"><div class="ph-info" style="cursor:default"><div class="ph-meta">' + fmtDate(p.time) + '</div></div><button class="post-menu-btn" data-menu-pid="' + p.id + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/></svg></button></div><div class="post-body">' + linkify(p.text) + '</div>' + editedHtml + '</article>';
     }).join('');
-    box.querySelectorAll('.post-body .htag').forEach(function(t){ t.addEventListener('click', function(){ doSearch('#' + t.dataset.tag); }); });
     box.querySelectorAll('.post-menu-btn').forEach(function(b){ b.addEventListener('click', function(){ openPostMenu(parseInt(b.dataset.menuPid)); }); });
-    box.querySelectorAll('.like-btn').forEach(function(b){ b.addEventListener('click', async function(){
-      try { var r = await api('/posts/' + b.dataset.pid + '/like', { method: 'POST' }); b.classList.toggle('liked', r.liked); b.querySelector('span').textContent = r.likes; } catch(e) { toast(e.message, 'err'); }
-    }); });
-    box.querySelectorAll('.comment-btn').forEach(function(b){ b.addEventListener('click', function(){ openComments(parseInt(b.dataset.pid)); }); });
   } else {
-    var phoneSvg = '<svg class="ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
-    var mailSvg = '<svg class="ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
-    box.innerHTML =
-      '<div style="display:flex;flex-direction:column;gap:12px">' +
-        '<div style="display:flex;gap:12px;align-items:center;padding:14px;background:var(--surface-2);border-radius:14px">' +
-          '<div style="width:36px;height:36px;border-radius:10px;background:var(--gold-soft);color:var(--gold);display:grid;place-items:center">' + mailSvg + '</div>' +
-          '<div><div style="font-weight:800;font-size:.9rem">اسم المستخدم</div><div style="font-size:.82rem;color:var(--muted)">@' + esc(ME.username) + '</div></div>' +
-        '</div>' +
-        '<div style="display:flex;gap:12px;align-items:center;padding:14px;background:var(--surface-2);border-radius:14px">' +
-          '<div style="width:36px;height:36px;border-radius:10px;background:var(--gold-soft);color:var(--gold);display:grid;place-items:center">' + phoneSvg + '</div>' +
-          '<div><div style="font-weight:800;font-size:.9rem">رقم الهاتف</div><div style="font-size:.82rem;color:var(--muted)">' + (ME.phone ? esc(ME.phone) : 'غير محدد') + '</div></div>' +
-        '</div>' +
-      '</div>';
+    box.innerHTML = '<div style="padding:14px;background:var(--surface-2);border-radius:14px;font-size:.85rem;line-height:1.9;color:var(--muted)">' +
+      '👤 اسمك: <b style="color:var(--text)">' + esc(ME.display_name) + '</b><br>' +
+      '📛 المعرّف: <b style="color:var(--text)">@' + esc(ME.username) + '</b><br>' +
+      '📅 انضم: ' + fmtDate(ME.created_at) +
+    '</div>';
   }
 }
 
@@ -1260,7 +1292,7 @@ async function openUserById(id){
   try { var r = await api('/users/' + id); openUserModal(r.user, r.isFriend, r.blocked, r.stats); } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
 }
 function openUserModal(u, isFriend, blocked, stats){
-  stats = stats || { friends: 0, posts: 0, views: 0 };
+  stats = stats || { friends: 0, posts: 0 };
   var statusText = u.online ? 'متصل الآن' : fmtLastSeen(u.last_seen);
   showModal('<div class="modal-header"><button class="back-btn" id="umBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">المستخدم</div><div class="spacer"></div></div>' +
   '<div style="text-align:center;padding:8px 0">' + avatarHTML(u, 84) +
@@ -1269,12 +1301,18 @@ function openUserModal(u, isFriend, blocked, stats){
   '<div style="font-size:.82rem;margin-top:6px;color:' + (u.online ? 'var(--green)' : 'var(--muted)') + '">' + statusText + '</div>' +
   '</div><div class="modal-list" style="margin-top:14px">' +
     '<button class="modal-item" id="umMsg">💬 رسالة</button>' +
-    (isFriend ? '<button class="modal-item danger" id="umUnfriend">🚫 إزالة من الأصدقاء</button>' : '<button class="modal-item" id="umAdd">+ إضافة صديق</button>') +
+    (isFriend ? '<button class="modal-item danger" id="umUnfriend">🚫 إزالة</button>' : '<button class="modal-item" id="umAdd">+ إضافة</button>') +
     (blocked ? '<button class="modal-item" id="umUnblock">✅ إلغاء الحظر</button>' : '<button class="modal-item danger" id="umBlock">🚫 حظر</button>') +
   '</div>');
   $('umBack').addEventListener('click', closeModal);
   $('umMsg').addEventListener('click', function(){ closeModal(); openDM(u); });
-  if($('umAdd')) $('umAdd').addEventListener('click', async function(){ try { await api('/friends/request/' + u.id, { method: 'POST' }); toast('تم', 'ok'); closeModal(); } catch(e) { toast(e.message, 'err'); } });
+  if($('umAdd')) $('umAdd').addEventListener('click', async function(){
+    try {
+      var me = ME;
+      var r = await api('/friends/add-by-qr', { method: 'POST', body: JSON.stringify({ qr_id: u.qr_id }) });
+      toast('تمت الإضافة', 'ok'); closeModal(); loadFriends();
+    } catch(e) { toast(e.message, 'err'); }
+  });
   if($('umUnfriend')) $('umUnfriend').addEventListener('click', async function(){
     closeModal();
     showConfirm({ icon: 'trash', title: 'إزالة صديق', text: 'إزالة ' + u.display_name + '؟', confirmText: 'إزالة', danger: true,
@@ -1282,7 +1320,7 @@ function openUserModal(u, isFriend, blocked, stats){
   });
   if($('umBlock')) $('umBlock').addEventListener('click', async function(){
     closeModal();
-    showConfirm({ icon: 'trash', title: 'حظر المستخدم', text: 'حظر ' + u.display_name + '؟', confirmText: 'حظر', danger: true,
+    showConfirm({ icon: 'trash', title: 'حظر', text: 'حظر ' + u.display_name + '؟', confirmText: 'حظر', danger: true,
       onConfirm: async function(){ try { await api('/block/' + u.id, { method: 'POST' }); } catch(e){} } });
   });
   if($('umUnblock')) $('umUnblock').addEventListener('click', async function(){ try { await api('/unblock/' + u.id, { method: 'POST' }); closeModal(); } catch(e){} });
@@ -1290,31 +1328,23 @@ function openUserModal(u, isFriend, blocked, stats){
 
 function openEditProfile(u){
   showModal('<div class="modal-header"><button class="back-btn" id="epBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">تعديل الملف</div><div class="spacer"></div></div>' +
-  '<div class="field"><label>الاسم الظاهر</label><input id="epName" value="' + esc(u.display_name) + '" maxlength="30" /></div>' +
-  '<div class="field"><label>اسم المستخدم (بدون @)</label><input id="epUsername" value="' + esc(u.username) + '" maxlength="20" /></div>' +
+  '<div class="field"><label>الاسم</label><input id="epName" value="' + esc(u.display_name) + '" maxlength="20" /></div>' +
   '<div class="field"><label>نبذة</label><textarea id="epBio" maxlength="200">' + esc(u.bio || '') + '</textarea></div>' +
   '<div class="field"><label>المحافظة</label><input id="epLoc" value="' + esc(u.location || '') + '" /></div>' +
-  '<div class="field"><label>رقم الهاتف</label><input id="epPhone" value="' + esc(u.phone || '') + '" /></div>' +
   '<button class="btn-main" id="epSubmit">حفظ</button>');
   $('epBack').addEventListener('click', closeModal);
   $('epSubmit').addEventListener('click', async function(){
     var btn = $('epSubmit');
     var nameVal = $('epName').value.trim();
-    var userVal = $('epUsername').value.trim().toLowerCase();
     if(!nameVal){ toast('الاسم مطلوب', 'err'); return; }
     btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div>';
     btn.disabled = true;
     try {
-      var body = { display_name: nameVal, bio: $('epBio').value.trim(), location: $('epLoc').value.trim(), phone: $('epPhone').value.trim() };
-      if(userVal && userVal !== u.username) body.username = userVal;
+      var body = { display_name: nameVal, bio: $('epBio').value.trim(), location: $('epLoc').value.trim() };
       var r = await api('/me', { method: 'PUT', body: JSON.stringify(body) });
       ME = r.user; closeModal(); loadProfile(); toast('تم الحفظ', 'ok');
     } catch(e) {
-      if(e.message === 'username_cooldown') toast('يمكنك تغيير اسم المستخدم بعد ' + e.days_left + ' يوم', 'err');
-      else if(e.message === 'username_taken') toast('اسم المستخدم مستخدم', 'err');
-      else if(e.message === 'username_too_short') toast('اسم المستخدم قصير جداً', 'err');
-      else if(e.message === 'name_taken') toast('الاسم مستخدم', 'err');
-      else if(!handleApiError(e)) toast(e.message || 'خطأ', 'err');
+      toast(e.message || 'خطأ', 'err');
       btn.disabled = false; btn.textContent = 'حفظ';
     }
   });
@@ -1323,103 +1353,45 @@ function openEditProfile(u){
 function openSettings(){
   showModal('<div class="modal-header"><button class="back-btn" id="stBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">الإعدادات</div><div class="spacer"></div></div>' +
   '<div class="modal-list">' +
-  '<button class="modal-item" id="setPassword"><span style="font-size:1.3rem">🔑</span> تغيير كلمة السر</button>' +
   '<button class="modal-item" id="setTheme"><span style="font-size:1.3rem">🌙</span> الوضع الليلي</button>' +
   '<button class="modal-item" id="setSound"><span style="font-size:1.3rem">🔊</span> الأصوات</button>' +
   '<button class="modal-item" id="setPush"><span style="font-size:1.3rem">🔔</span> الإشعارات</button>' +
-  '<button class="modal-item" id="setBlocks"><span style="font-size:1.3rem">🚫</span> قائمة الحظر</button>' +
   '<button class="modal-item" id="setPrivacy"><span style="font-size:1.3rem">🛡️</span> الخصوصية</button>' +
-  '<button class="modal-item danger" id="setDeleteAccount"><span style="font-size:1.3rem">🗑️</span> حذف الحساب</button>' +
+  '<button class="modal-item danger" id="setLogout"><span style="font-size:1.3rem">🚪</span> تسجيل الخروج (يحذف الحساب)</button>' +
   '</div>');
   $('stBack').addEventListener('click', closeModal);
-  $('setPassword').addEventListener('click', function(){ closeModal(); setTimeout(showChangePassword, 150); });
   $('setTheme').addEventListener('click', async function(){ var light = !document.body.classList.contains('light'); applyTheme(light ? 'light' : 'dark'); try { await api('/me', { method: 'PUT', body: JSON.stringify({ theme: light ? 'light' : 'dark' }) }); } catch(_){} closeModal(); });
   $('setSound').addEventListener('click', async function(){ soundOn = !soundOn; try { await api('/me', { method: 'PUT', body: JSON.stringify({ sound: soundOn }) }); } catch(_){} toast(soundOn ? 'الأصوات مفعّلة' : 'الأصوات معطّلة', 'ok'); closeModal(); });
-  $('setPush').addEventListener('click', async function(){ if(Notification.permission !== 'granted') await Notification.requestPermission(); await setupPush(); toast('تم تفعيل الإشعارات', 'ok'); closeModal(); });
-  $('setBlocks').addEventListener('click', function(){ closeModal(); setTimeout(showBlocksList, 150); });
+  $('setPush').addEventListener('click', async function(){ if(Notification.permission !== 'granted') await Notification.requestPermission(); await setupPush(); toast('تم', 'ok'); closeModal(); });
   $('setPrivacy').addEventListener('click', function(){ closeModal(); setTimeout(showPrivacy, 150); });
-  $('setDeleteAccount').addEventListener('click', function(){ closeModal(); setTimeout(showDeleteAccount, 150); });
-}
-function showChangePassword(){
-  showModal('<div class="modal-header"><button class="back-btn" id="cpBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">تغيير كلمة السر</div><div class="spacer"></div></div>' +
-  '<div class="field"><label>كلمة السر الحالية</label><input id="cpOld" type="password" /></div>' +
-  '<div class="field"><label>كلمة السر الجديدة</label><input id="cpNew" type="password" /><small>8 أحرف على الأقل، حروف وأرقام</small></div>' +
-  '<div class="field"><label>تأكيد الجديدة</label><input id="cpConfirm" type="password" /></div>' +
-  '<button class="btn-main" id="cpSubmit">حفظ</button>');
-  $('cpBack').addEventListener('click', function(){ closeModal(); setTimeout(openSettings, 150); });
-  $('cpSubmit').addEventListener('click', async function(){
-    var oldP = $('cpOld').value, newP = $('cpNew').value, confP = $('cpConfirm').value;
-    if(!oldP) return toast('أدخل كلمة السر الحالية', 'err');
-    if(newP.length < 8) return toast('كلمة السر قصيرة (8 على الأقل)', 'err');
-    if(!/[a-zA-Z\u0600-\u06FF]/.test(newP)) return toast('يجب أن تحتوي على حرف', 'err');
-    if(!/\d/.test(newP)) return toast('يجب أن تحتوي على رقم', 'err');
-    if(newP !== confP) return toast('غير متطابقتين', 'err');
-    try {
-      var r = await api('/change-password', { method: 'POST', body: JSON.stringify({ old_password: oldP, new_password: newP }) });
-      if(r.token){ TOKEN = r.token; localStorage.setItem('token', TOKEN); }
-      closeModal(); toast('تم التغيير', 'ok');
-    } catch(e) {
-      if(!handleApiError(e)){
-        toast(e.message === 'wrong_old_password' ? 'كلمة السر الحالية خاطئة' : e.message, 'err');
-      }
-    }
-  });
-}
-function showDeleteAccount(){
-  showModal('<div class="modal-header"><button class="back-btn" id="delBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title" style="color:var(--danger)">حذف الحساب</div><div class="spacer"></div></div>' +
-  '<p style="color:var(--muted);font-size:.9rem;line-height:1.7;margin-bottom:16px;text-align:center">لا يمكن استرجاع الحساب.</p>' +
-  '<div class="field"><label>اكتب "حذف" للتأكيد</label><input id="delConfirm" /></div>' +
-  '<button class="btn-main" id="delSubmit" style="background:linear-gradient(135deg,#ff5c78,#ef4444);color:#fff">حذف نهائياً</button>');
-  $('delBack').addEventListener('click', function(){ closeModal(); setTimeout(openSettings, 150); });
-  $('delSubmit').addEventListener('click', async function(){
-    if($('delConfirm').value.trim() !== 'حذف') return toast('اكتب "حذف"', 'err');
-    try { await api('/me', { method: 'DELETE' }); localStorage.removeItem('token'); location.reload(); } catch(e) { toast(e.message, 'err'); }
-  });
-}
-async function showBlocksList(){
-  showModal('<div class="modal-header"><button class="back-btn" id="blBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">قائمة الحظر</div><div class="spacer"></div></div><div id="blocksList"><div style="text-align:center;padding:20px"><div class="spinner"></div></div></div>');
-  $('blBack').addEventListener('click', function(){ closeModal(); setTimeout(openSettings, 150); });
-  try {
-    var r = await api('/blocks');
-    var el = $('blocksList');
-    if(!r.blocks.length){
-      el.innerHTML = '<div class="empty" style="padding:40px 20px"><svg viewBox="0 0 24 24" style="width:50px;height:50px;opacity:.3;margin:0 auto 14px;stroke:currentColor;fill:none;stroke-width:1.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg><p style="font-size:.9rem">لا يوجد محظورون</p></div>';
-      return;
-    }
-    el.innerHTML = r.blocks.map(function(u){
-      return '<div class="block-item">' + avatarHTML(u, 44) + '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:.94rem">' + esc(u.display_name) + '</div><div style="font-size:.75rem;color:var(--muted);margin-top:2px">@' + esc(u.username) + '</div></div><button style="padding:8px 14px;border-radius:11px;background:var(--surface-2);color:var(--text);font-weight:800;font-size:.78rem" data-unblock="' + u.id + '">إلغاء</button></div>';
-    }).join('');
-    el.querySelectorAll('[data-unblock]').forEach(function(b){
-      b.addEventListener('click', async function(){
-        try { await api('/unblock/' + b.dataset.unblock, { method: 'POST' }); showBlocksList(); toast('تم إلغاء الحظر', 'ok'); } catch(e){ toast(e.message, 'err'); }
-      });
-    });
-  } catch(e) {
-    $('blocksList').innerHTML = '<div class="empty"><p>فشل التحميل</p></div>';
-  }
+  $('setLogout').addEventListener('click', function(){ closeModal(); setTimeout(confirmLogout, 150); });
 }
 function showPrivacy(){
-  var lockSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-  var shieldSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
-  var dbSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>';
-  var userSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
   showModal('<div class="modal-header"><button class="back-btn" id="pvBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">سياسة الخصوصية</div><div class="spacer"></div></div>' +
-  '<div class="privacy-content">' +
-    '<div class="privacy-item"><div class="p-icon">' + lockSvg + '</div><div class="p-info"><div class="p-title">تشفير الرسائل</div><div class="p-desc">جميع الرسائل الخاصة مشفرة بـ AES-256-GCM قبل حفظها في قاعدة البيانات.</div></div></div>' +
-    '<div class="privacy-item"><div class="p-icon">' + shieldSvg + '</div><div class="p-info"><div class="p-title">حماية الحساب</div><div class="p-desc">كلمات المرور محفوظة بتشفير scrypt مع salt فريد لكل مستخدم. الحساب يُقفل بعد 5 محاولات فاشلة.</div></div></div>' +
-    '<div class="privacy-item"><div class="p-icon">' + dbSvg + '</div><div class="p-info"><div class="p-title">الحذف التلقائي</div><div class="p-desc">يتم حذف الرسائل تلقائياً بعد 48 ساعة من إرسالها. الجلسة تنتهي بعد 7 أيام.</div></div></div>' +
-    '<div class="privacy-item"><div class="p-icon">' + userSvg + '</div><div class="p-info"><div class="p-title">حقوقك</div><div class="p-desc">يمكنك حذف حسابك وبياناتك في أي وقت من الإعدادات.</div></div></div>' +
+  '<div style="font-size:.88rem;line-height:1.95;color:var(--text-2)">' +
+  '<p>• <b>الرسائل:</b> مشفرة AES-256-GCM.</p>' +
+  '<p style="margin-top:10px">• <b>الحساب:</b> مؤقت — يُحذف عند تسجيل الخروج.</p>' +
+  '<p style="margin-top:10px">• <b>الحذف التلقائي:</b> بعد 7 أيام عدم استخدام.</p>' +
+  '<p style="margin-top:10px">• <b>الرسائل:</b> تُحذف بعد 48 ساعة.</p>' +
   '</div>');
-  $('pvBack').addEventListener('click', function(){ closeModal(); setTimeout(openSettings, 150); });
+  $('pvBack').addEventListener('click', closeModal);
 }
 
-function logout(silent){
-  if(silent){ localStorage.removeItem('token'); TOKEN = null; ME = null; location.reload(); return; }
+function confirmLogout(){
   showConfirm({
-    icon: 'logout', title: 'تسجيل الخروج',
-    text: 'هل أنت متأكد من تسجيل الخروج؟',
-    confirmText: 'خروج', danger: true,
-    onConfirm: function(){ localStorage.removeItem('token'); TOKEN = null; ME = null; location.reload(); }
+    icon: 'trash', title: 'تسجيل الخروج',
+    text: '⚠️ سيتم حذف حسابك وكل رسائلك وأصدقائك ومنشوراتك نهائياً. لا يمكن استرجاعها.\n\nهل أنت متأكد؟',
+    confirmText: 'حذف الحساب',
+    danger: true,
+    onConfirm: async function(){
+      try {
+        await api('/logout', { method: 'POST' });
+      } catch(_){}
+      localStorage.removeItem('token');
+      TOKEN = null; ME = null;
+      toast('تم حذف حسابك', 'ok');
+      setTimeout(function(){ location.reload(); }, 1200);
+    }
   });
 }
 
@@ -1443,10 +1415,6 @@ async function openDM(user){
     r.messages.forEach(function(m){ renderDMMsg(m); });
     scrollChat(true);
     socket.emit('dm-read', { fromId: user.id });
-    if(!dmAlertShown && !localStorage.getItem('dmAlertShown')){
-      dmAlertShown = true;
-      setTimeout(function(){ $('dmAlertTitle').textContent = 'تنبيه'; $('dmAlertText').textContent = 'الرسائل تُحذف بعد 48 ساعة.'; $('dmAlert').classList.add('open'); localStorage.setItem('dmAlertShown', '1'); }, 800);
-    }
   } catch(_){}
 }
 
@@ -1455,33 +1423,32 @@ function showModal(html){ $('modalBody').innerHTML = html; $('modalBody').classL
 $('modal').addEventListener('click', function(e){ if(e.target === $('modal')) closeModal(); });
 
 /* MENU */
+$('btnMenu').onclick = null;
 $('btnMenu').addEventListener('click', function(){
   var u = ME || {};
   var av = u.avatar ? '<div class="avatar"><img src="' + esc(u.avatar) + '" /></div>' : '<div class="avatar" style="background:linear-gradient(135deg,' + (u.color || '#e8b567') + ',#d4a574)">' + esc(initial(u.display_name)) + '</div>';
   var html = '<div class="menu-sheet" onclick="event.stopPropagation()"><div class="menu-handle"></div>' +
     '<div class="menu-header">' + av + '<div class="menu-header-info"><div class="menu-header-name">' + esc(u.display_name || 'مستخدم') + '</div><div class="menu-header-handle">@' + esc(u.username || 'user') + '</div></div></div>' +
     '<div class="menu-section-title">الحساب</div>' +
-    '<button class="menu-row" id="mProfile"><div class="menu-icon gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="mr-info"><div class="mr-title">الملف الشخصي</div><div class="mr-sub">عرض ملفك</div></div></button>' +
-    '<button class="menu-row" id="mEditProfile"><div class="menu-icon violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div><div class="mr-info"><div class="mr-title">تعديل الملف</div><div class="mr-sub">الاسم والصورة</div></div></button>' +
-    '<button class="menu-row" id="mMyPosts"><div class="menu-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="mr-info"><div class="mr-title">منشوراتي</div><div class="mr-sub">عرض منشوراتك</div></div></button>' +
+    '<button class="menu-row" id="mProfile"><div class="menu-icon gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="mr-info"><div class="mr-title">ملفي الشخصي</div></div></button>' +
+    '<button class="menu-row" id="mMyQr"><div class="menu-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/></svg></div><div class="mr-info"><div class="mr-title">QR الخاص بي</div><div class="mr-sub">شارك كودك مع أصدقائك</div></div></button>' +
+    '<button class="menu-row" id="mAddFriend"><div class="menu-icon violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div><div class="mr-info"><div class="mr-title">إضافة صديق</div><div class="mr-sub">مسح أو إدخال QR</div></div></button>' +
     '<div class="menu-divider"></div>' +
     '<div class="menu-section-title">الإعدادات</div>' +
-    '<button class="menu-row" id="mSettings"><div class="menu-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><div class="mr-info"><div class="mr-title">الإعدادات</div><div class="mr-sub">الثيم والأصوات</div></div></button>' +
-    '<button class="menu-row" id="mBlocks"><div class="menu-icon rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div><div class="mr-info"><div class="mr-title">قائمة الحظر</div><div class="mr-sub">إدارة المحظورين</div></div></button>' +
-    '<button class="menu-row" id="mPrivacy"><div class="menu-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="mr-info"><div class="mr-title">الخصوصية</div><div class="mr-sub">سياسة الخصوصية</div></div></button>' +
+    '<button class="menu-row" id="mSettings"><div class="menu-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><div class="mr-info"><div class="mr-title">الإعدادات</div></div></button>' +
+    '<button class="menu-row" id="mPrivacy"><div class="menu-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="mr-info"><div class="mr-title">الخصوصية</div></div></button>' +
     '<div class="menu-divider"></div>' +
-    '<button class="menu-row danger" id="mLogout"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div><div class="mr-info"><div class="mr-title">تسجيل الخروج</div><div class="mr-sub">إنهاء الجلسة</div></div></button>' +
+    '<button class="menu-row danger" id="mLogout"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div><div class="mr-info"><div class="mr-title">تسجيل الخروج</div><div class="mr-sub">⚠️ يحذف الحساب نهائياً</div></div></button>' +
     '<div class="menu-close-hint">اضغط خارجاً للإغلاق</div></div>';
   $('modalBody').innerHTML = html;
   $('modalBody').classList.add('menu-sheet-wrap');
   $('modal').classList.add('open');
   $('mProfile').addEventListener('click', function(){ closeModal(); switchTab('profile'); });
-  $('mEditProfile').addEventListener('click', function(){ closeModal(); setTimeout(function(){ openEditProfile(ME); }, 150); });
-  $('mMyPosts').addEventListener('click', function(){ currentProfileTab = 'posts'; closeModal(); switchTab('profile'); });
+  $('mMyQr').addEventListener('click', function(){ closeModal(); setTimeout(showMyQr, 150); });
+  $('mAddFriend').addEventListener('click', function(){ closeModal(); setTimeout(showAddFriendMenu, 150); });
   $('mSettings').addEventListener('click', function(){ closeModal(); setTimeout(openSettings, 150); });
-  $('mBlocks').addEventListener('click', function(){ closeModal(); setTimeout(showBlocksList, 150); });
   $('mPrivacy').addEventListener('click', function(){ closeModal(); setTimeout(showPrivacy, 150); });
-  $('mLogout').addEventListener('click', function(){ closeModal(); setTimeout(function(){ logout(); }, 150); });
+  $('mLogout').addEventListener('click', function(){ closeModal(); setTimeout(confirmLogout, 150); });
 });
 
 /* IMAGES */
@@ -1532,9 +1499,9 @@ avatarInput.onchange = async function(e){
     var d = await uploadImage(cropped, 'avatar.jpg');
     if(d.url){
       var resp = await api('/me', { method: 'PUT', body: JSON.stringify({ avatar: d.url }) });
-      ME = resp.user; loadProfile(); toast('تم تحديث الصورة', 'ok');
+      ME = resp.user; loadProfile(); toast('تم', 'ok');
     }
-  } catch(_){ toast('فشل الرفع', 'err'); }
+  } catch(_){ toast('فشل', 'err'); }
 };
 coverInput.onchange = async function(e){
   var f = e.target.files[0]; if(!f) return;
@@ -1545,9 +1512,9 @@ coverInput.onchange = async function(e){
     var d = await uploadImage(f);
     if(d.url){
       var resp = await api('/me', { method: 'PUT', body: JSON.stringify({ cover: d.url }) });
-      ME = resp.user; loadProfile(); toast('تم تحديث الغلاف', 'ok');
+      ME = resp.user; loadProfile(); toast('تم', 'ok');
     }
-  } catch(_){ toast('فشل الرفع', 'err'); }
+  } catch(_){ toast('فشل', 'err'); }
 };
 
 /* BEEP */
