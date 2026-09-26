@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
 <meta name="theme-color" content="#f5f6fa" />
 <title>Dust | دُست</title>
-<meta name="apple-mobile-web-app-title" content="Dust">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="/socket.io/socket.io.js"></script>
@@ -31,17 +30,8 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 input,textarea{user-select:text;-webkit-user-select:text}
 html,body{height:100%;overscroll-behavior:none}
-body{
-  font-family:'Cairo','Inter',system-ui,-apple-system,sans-serif;
-  color:var(--text);background:var(--bg);overflow:hidden;
-  -webkit-font-smoothing:antialiased;font-size:15px;position:relative;
-}
-body::before{
-  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:
-    radial-gradient(1200px 800px at 100% 0%,rgba(232,181,103,.06),transparent 55%),
-    radial-gradient(1000px 700px at 0% 100%,rgba(91,140,255,.05),transparent 55%);
-}
+body{font-family:'Cairo','Inter',system-ui,-apple-system,sans-serif;color:var(--text);background:var(--bg);overflow:hidden;-webkit-font-smoothing:antialiased;font-size:15px;position:relative}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(1200px 800px at 100% 0%,rgba(232,181,103,.06),transparent 55%),radial-gradient(1000px 700px at 0% 100%,rgba(91,140,255,.05),transparent 55%)}
 button,input,textarea{font-family:inherit;color:inherit;font-size:inherit}
 button{cursor:pointer;border:none;background:none;transition:.2s var(--ease)}
 input,textarea{outline:none;border:none;background:none}
@@ -50,32 +40,15 @@ img{max-width:100%;display:block}
 a{color:var(--gold);text-decoration:none;cursor:pointer}
 .hide{display:none!important}
 .en{direction:ltr;font-family:'Inter',ui-monospace,monospace}
-
 .ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
 .ic-sm{width:18px;height:18px}
 .screen{display:none;height:100dvh;width:100%;position:relative;z-index:1}
 .screen.active{display:flex;flex-direction:column}
 
-/* ===== Splash ===== */
-#splash{
-  position:fixed;inset:0;z-index:10000;
-  background:
-    radial-gradient(900px 700px at 100% 0%,rgba(232,181,103,.18),transparent 60%),
-    radial-gradient(800px 700px at 0% 100%,rgba(91,140,255,.1),transparent 60%),
-    var(--bg);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
-  transition:opacity .5s,visibility .5s;
-}
+#splash{position:fixed;inset:0;z-index:10000;background:radial-gradient(900px 700px at 100% 0%,rgba(232,181,103,.18),transparent 60%),radial-gradient(800px 700px at 0% 100%,rgba(91,140,255,.1),transparent 60%),var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;transition:opacity .5s,visibility .5s}
 #splash.hide{opacity:0;visibility:hidden;pointer-events:none}
-#splash .logo{
-  width:104px;height:104px;border-radius:32px;display:grid;place-items:center;
-  background:var(--grad-gold);color:#1a1207;
-  box-shadow:var(--shadow-gold);animation:logoFloat 2.4s ease-in-out infinite;position:relative;
-}
-#splash .logo::after{
-  content:'';position:absolute;inset:-8px;border-radius:36px;
-  background:var(--grad-gold);filter:blur(28px);opacity:.4;z-index:-1;
-}
+#splash .logo{width:104px;height:104px;border-radius:32px;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;box-shadow:var(--shadow-gold);animation:logoFloat 2.4s ease-in-out infinite;position:relative}
+#splash .logo::after{content:'';position:absolute;inset:-8px;border-radius:36px;background:var(--grad-gold);filter:blur(28px);opacity:.4;z-index:-1}
 #splash .logo svg{width:54px;height:54px}
 #splash .title{font-size:1.9rem;font-weight:900;letter-spacing:-.5px}
 #splash .title span{color:var(--gold)}
@@ -86,7 +59,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 @keyframes splashBar{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
 @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 
-/* ===== Auth ===== */
 #auth{overflow-y:auto}
 .auth-wrap{margin:auto;width:100%;max-width:440px;padding:36px 24px;position:relative;z-index:1}
 .auth-logo{width:92px;height:92px;margin:0 auto 22px;border-radius:28px;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;box-shadow:var(--shadow-gold)}
@@ -110,7 +82,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .warn-card .w-text{flex:1;font-size:.82rem;line-height:1.75;color:var(--text-2)}
 .warn-card .w-text b{color:var(--gold);font-weight:800}
 
-/* ===== App ===== */
 #app{position:relative;overflow:hidden}
 .tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
 .tab{display:none}
@@ -118,7 +89,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .app-header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;padding:18px 20px 14px;padding-top:calc(18px + env(safe-area-inset-top));background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
 .app-header h1{font-size:1.35rem;font-weight:900;flex:1;letter-spacing:-.3px}
-.app-header h1 .brand-dot{color:var(--gold)}
 .hbtn{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--border-2);color:var(--text);transition:transform .15s;flex:0 0 auto}
 .hbtn:active{transform:scale(.92)}
 .qr-mini{background:var(--gold-soft);border-color:rgba(201,143,61,.3);color:var(--gold)}
@@ -130,6 +100,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .list-pad{padding:16px 18px;display:flex;flex-direction:column;gap:11px}
 .user-row{display:flex;align-items:center;gap:13px;padding:13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:transform .15s,background .2s}
 .user-row:active{transform:scale(.98);background:var(--surface-2)}
+.user-row.pressed{background:var(--surface-2);transform:scale(.98)}
 .avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:1.05rem;flex:0 0 auto;position:relative;overflow:hidden;box-shadow:0 0 0 2px var(--surface)}
 .avatar .online-dot{position:absolute;bottom:0;inset-inline-end:0;width:13px;height:13px;border-radius:50%;background:var(--success);border:2.5px solid var(--surface);box-shadow:0 0 8px rgba(16,185,129,.8);z-index:2}
 .user-row .ur-info{flex:1;min-width:0}
@@ -138,7 +109,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .user-row .ur-sub.online{color:var(--success);font-weight:600}
 .user-row .ur-unread{background:var(--danger);color:#fff;font-size:.7rem;font-weight:800;padding:3px 9px;border-radius:99px;min-width:22px;text-align:center}
 
-/* ===== Account Tab ===== */
 .account-wrap{padding:32px 20px 24px;display:flex;flex-direction:column;align-items:center;gap:14px}
 .account-avatar{width:110px;height:110px;border-radius:50%;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;font-weight:900;font-size:2.6rem;box-shadow:var(--shadow-gold);border:5px solid var(--surface)}
 .account-name{font-size:1.6rem;font-weight:900;text-align:center;letter-spacing:-.3px;margin-top:4px}
@@ -155,7 +125,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .btn-danger-outline{width:100%;padding:14px;border-radius:var(--radius);background:var(--surface);border:1.5px solid rgba(232,67,95,.3);color:var(--danger);font-weight:800;font-size:.92rem;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,background .2s}
 .btn-danger-outline:active{transform:scale(.97);background:var(--danger-soft)}
 
-/* ===== Chat View ===== */
 #chatView{position:fixed;inset:0;z-index:200;background:var(--bg);display:none;flex-direction:column}
 #chatView.open{display:flex}
 .chat-head{display:flex;align-items:center;gap:10px;padding:14px 16px;padding-top:calc(14px + env(safe-area-inset-top));border-bottom:1px solid var(--border);background:var(--bg)}
@@ -168,7 +137,8 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .chat-head .ch-sub.online{color:var(--success);font-weight:600}
 .chat-head .ch-sub svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.2}
 .chat-msgs{flex:1;overflow-y:auto;padding:20px 14px 12px;display:flex;flex-direction:column;gap:12px}
-.cmsg{display:flex;flex-direction:row;gap:9px;max-width:82%;align-items:flex-end;animation:fadeUp .25s var(--ease)}
+.cmsg{display:flex;flex-direction:row;gap:9px;max-width:82%;align-items:flex-end;animation:fadeUp .25s var(--ease);transition:transform .15s}
+.cmsg.pressed .cbubble{transform:scale(.95)}
 .cmsg.other{align-self:flex-start}
 .cmsg.me{align-self:flex-end;flex-direction:row-reverse}
 .cmsg-body{display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -178,6 +148,9 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .cmsg.me .cbubble{background:var(--grad-gold);color:#1a1207;border-start-end-radius:5px;box-shadow:var(--shadow-gold);font-weight:500}
 .cmsg[data-local="1"] .cbubble{opacity:.75}
 .cbubble .lock-ic{display:inline-block;width:11px;height:11px;vertical-align:middle;margin-inline-end:4px;opacity:.7;stroke:currentColor;fill:none;stroke-width:2.5}
+.cbubble .edited-mark{font-size:.68rem;opacity:.7;font-style:italic;margin-inline-start:4px}
+.cbubble.deleted{opacity:.6;font-style:italic;background:var(--surface-2)!important;color:var(--muted)!important;border:1px dashed var(--border-2)!important}
+.cbubble.deleted .lock-ic{display:none}
 .cmsg .read-marks{font-size:.72rem;padding:0 10px;font-weight:700;line-height:1}
 .cmsg .read-marks.sent{color:var(--muted)}
 .cmsg .read-marks.delivered{color:var(--success)}
@@ -190,7 +163,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .send:active{transform:scale(.9)}
 .send:disabled{opacity:.4;cursor:not-allowed}
 
-/* ===== Modal ===== */
 .modal{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:none;align-items:flex-end;justify-content:center}
 .modal.open{display:flex}
 .modal-card{background:var(--surface);border-radius:var(--radius-xl) var(--radius-xl) 0 0;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;padding:22px;padding-bottom:calc(22px + env(safe-area-inset-bottom));animation:slideUp .3s var(--ease)}
@@ -205,12 +177,13 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .modal-item:active{background:var(--surface-3);transform:scale(.98)}
 .modal-item .mi-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto;background:var(--grad-gold);color:#1a1207}
 .modal-item .mi-icon svg{width:20px;height:20px;stroke-width:2.2}
+.modal-item .mi-icon.danger{background:var(--danger-soft);color:var(--danger)}
+.modal-item .mi-icon.blue{background:var(--accent-soft);color:var(--accent)}
 .modal-item .mi-info{flex:1;min-width:0}
 .modal-item .mi-title{font-weight:800;font-size:.94rem}
 .modal-item .mi-sub{font-size:.72rem;color:var(--muted);margin-top:3px;font-weight:500}
 #qrReader{width:100%;max-width:400px;margin:0 auto;border-radius:var(--radius-lg);overflow:hidden}
 
-/* ===== Toasts ===== */
 #toasts{position:fixed;top:calc(16px + env(safe-area-inset-top));inset-inline:16px;z-index:999;display:flex;flex-direction:column;gap:9px;align-items:center;pointer-events:none}
 .toast{padding:13px 20px;border-radius:var(--radius);background:color-mix(in srgb,var(--surface) 96%,transparent);backdrop-filter:blur(20px);border:1px solid var(--border-2);box-shadow:var(--shadow-lg);font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:10px;max-width:100%;pointer-events:auto;animation:slideDown .3s var(--ease)}
 .toast.ok{border-color:rgba(16,185,129,.35);color:var(--success)}
@@ -265,18 +238,15 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
     </div>
     <h1 class="auth-title">Dust<span>.</span></h1>
     <p class="auth-sub">تطبيق مشفر — اختر اسمك وابدأ</p>
-
     <div class="field">
       <label>اسم المستخدم (إنجليزي فقط)</label>
       <input id="rgName" placeholder="ahmed_ali" maxlength="20" autocomplete="off" class="en" dir="ltr" style="text-align:left" />
       <div class="hint">أحرف إنجليزية، أرقام، و _ (مثال: ahmed_92)</div>
     </div>
-
     <button id="btnRegister" class="btn-main">
       <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       ابدأ الدردشة
     </button>
-
     <div class="warn-card">
       <div class="w-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -290,7 +260,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
         رسائلك مشفرة بتقنية ECDH P-256. عند <b>تسجيل الخروج</b> سيتم حذف حسابك ومفاتيحك نهائياً.
       </div>
     </div>
-
     <div class="err" id="authErr"></div>
   </div>
 </div>
@@ -392,50 +361,22 @@ var globalPollInterval = null;
 var lastConvData = null;
 var qrScanner = null;
 var qrFileInput = null;
+var lastLongPressAt = 0;
 
 /* ============================================================
-   E2EE — Real ECDH P-256 + HKDF-SHA256
+   E2EE Engine
    ============================================================ */
 var E2EE = {
-  keyPair: null,
-  ready: false,
-  cache: {},
-
-  generateKeyPair: async function() {
-    return crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']);
-  },
-  exportPublicKey: async function(key) {
-    var raw = await crypto.subtle.exportKey('spki', key);
-    var bytes = new Uint8Array(raw); var bin = '';
-    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-    return btoa(bin);
-  },
-  importPublicKey: async function(b64) {
-    var bin = atob(b64); var bytes = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    return crypto.subtle.importKey('spki', bytes, { name: 'ECDH', namedCurve: 'P-256' }, true, []);
-  },
-  exportPrivateKey: async function(key) {
-    var raw = await crypto.subtle.exportKey('pkcs8', key);
-    var bytes = new Uint8Array(raw); var bin = '';
-    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-    return btoa(bin);
-  },
-  importPrivateKey: async function(b64) {
-    var bin = atob(b64); var bytes = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    return crypto.subtle.importKey('pkcs8', bytes, { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']);
-  },
+  keyPair: null, ready: false, cache: {},
+  generateKeyPair: async function() { return crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']); },
+  exportPublicKey: async function(key) { var raw = await crypto.subtle.exportKey('spki', key); var bytes = new Uint8Array(raw); var bin = ''; for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]); return btoa(bin); },
+  importPublicKey: async function(b64) { var bin = atob(b64); var bytes = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); return crypto.subtle.importKey('spki', bytes, { name: 'ECDH', namedCurve: 'P-256' }, true, []); },
+  exportPrivateKey: async function(key) { var raw = await crypto.subtle.exportKey('pkcs8', key); var bytes = new Uint8Array(raw); var bin = ''; for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]); return btoa(bin); },
+  importPrivateKey: async function(b64) { var bin = atob(b64); var bytes = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); return crypto.subtle.importKey('pkcs8', bytes, { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']); },
   deriveSharedKey: async function(peerPublicKey) {
     var bits = await crypto.subtle.deriveBits({ name: 'ECDH', public: peerPublicKey }, this.keyPair.privateKey, 256);
     var hkdfKey = await crypto.subtle.importKey('raw', bits, 'HKDF', false, ['deriveKey']);
-    return crypto.subtle.deriveKey(
-      { name: 'HKDF', hash: 'SHA-256', salt: new TextEncoder().encode('Dust-E2EE-Salt-v1'), info: new TextEncoder().encode('Dust-Shared-Key-v1') },
-      hkdfKey,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['encrypt', 'decrypt']
-    );
+    return crypto.subtle.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: new TextEncoder().encode('Dust-E2EE-Salt-v1'), info: new TextEncoder().encode('Dust-Shared-Key-v1') }, hkdfKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
   },
   computeFingerprint: async function(pub1, pub2) {
     var sorted = [pub1, pub2].sort().join('|');
@@ -446,25 +387,11 @@ var E2EE = {
   },
   init: async function() {
     try {
-      var pub = localStorage.getItem('dust_e2ee_pub');
-      var priv = localStorage.getItem('dust_e2ee_priv');
-      if (pub && priv) {
-        try {
-          var publicKey = await this.importPublicKey(pub);
-          var privateKey = await this.importPrivateKey(priv);
-          this.keyPair = { publicKey, privateKey };
-        } catch(e) { pub = priv = null; }
-      }
-      if (!pub || !priv) {
-        this.keyPair = await this.generateKeyPair();
-        pub = await this.exportPublicKey(this.keyPair.publicKey);
-        priv = await this.exportPrivateKey(this.keyPair.privateKey);
-        localStorage.setItem('dust_e2ee_pub', pub);
-        localStorage.setItem('dust_e2ee_priv', priv);
-      }
+      var pub = localStorage.getItem('dust_e2ee_pub'); var priv = localStorage.getItem('dust_e2ee_priv');
+      if (pub && priv) { try { var publicKey = await this.importPublicKey(pub); var privateKey = await this.importPrivateKey(priv); this.keyPair = { publicKey, privateKey }; } catch(e) { pub = priv = null; } }
+      if (!pub || !priv) { this.keyPair = await this.generateKeyPair(); pub = await this.exportPublicKey(this.keyPair.publicKey); priv = await this.exportPrivateKey(this.keyPair.privateKey); localStorage.setItem('dust_e2ee_pub', pub); localStorage.setItem('dust_e2ee_priv', priv); }
       try { await api('/me/public-key', { method: 'PUT', body: JSON.stringify({ public_key: pub }) }); } catch(e) {}
-      this.ready = true;
-      return true;
+      this.ready = true; return true;
     } catch(e) { this.ready = false; return false; }
   },
   getSharedKey: async function(userId, peerPublicKeyB64) {
@@ -475,23 +402,19 @@ var E2EE = {
     var ownPub = localStorage.getItem('dust_e2ee_pub');
     var fp = await this.computeFingerprint(ownPub, peerPublicKeyB64);
     var entry = { key: sharedKey, fingerprint: fp, peerPublicKey: peerPublicKeyB64 };
-    this.cache[userId] = entry;
-    return entry;
+    this.cache[userId] = entry; return entry;
   },
   encrypt: async function(sharedKey, plainText) {
     var iv = crypto.getRandomValues(new Uint8Array(12));
     var cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, sharedKey, new TextEncoder().encode(plainText));
-    var combined = new Uint8Array(iv.length + cipher.byteLength);
-    combined.set(iv, 0); combined.set(new Uint8Array(cipher), iv.length);
-    var bin = '';
-    for (var i = 0; i < combined.length; i++) bin += String.fromCharCode(combined[i]);
+    var combined = new Uint8Array(iv.length + cipher.byteLength); combined.set(iv, 0); combined.set(new Uint8Array(cipher), iv.length);
+    var bin = ''; for (var i = 0; i < combined.length; i++) bin += String.fromCharCode(combined[i]);
     return '🔒' + btoa(bin);
   },
   decrypt: async function(sharedKey, payload) {
     if (!payload || payload.indexOf('🔒') !== 0) return payload;
     try {
-      var bin = atob(payload.substring(2));
-      var raw = new Uint8Array(bin.length);
+      var bin = atob(payload.substring(2)); var raw = new Uint8Array(bin.length);
       for (var i = 0; i < bin.length; i++) raw[i] = bin.charCodeAt(i);
       var iv = raw.slice(0, 12); var cipher = raw.slice(12);
       var plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, sharedKey, cipher);
@@ -499,6 +422,42 @@ var E2EE = {
     } catch(e) { return '[🔒 تعذر فك التشفير]'; }
   }
 };
+
+/* ============================================================
+   Long press helper
+   ============================================================ */
+function attachLongPress(el, callback, duration){
+  duration = duration || 500;
+  var timer = null, startX = 0, startY = 0, fired = false;
+
+  function down(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    fired = false;
+    var t = e.touches ? e.touches[0] : e;
+    startX = t.clientX; startY = t.clientY;
+    timer = setTimeout(function() {
+      fired = true; lastLongPressAt = Date.now();
+      if (navigator.vibrate) navigator.vibrate(30);
+      callback(e);
+    }, duration);
+  }
+  function move(e) {
+    var t = e.touches ? e.touches[0] : e;
+    if (Math.abs(t.clientX - startX) > 10 || Math.abs(t.clientY - startY) > 10) { clearTimeout(timer); fired = false; }
+  }
+  function up() { clearTimeout(timer); }
+
+  el.addEventListener('touchstart', down, { passive: true });
+  el.addEventListener('touchmove', move, { passive: true });
+  el.addEventListener('touchend', up);
+  el.addEventListener('touchcancel', up);
+  el.addEventListener('mousedown', down);
+  el.addEventListener('mousemove', move);
+  el.addEventListener('mouseup', up);
+  el.addEventListener('mouseleave', up);
+  el.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+}
+function wasLongPress(){ return Date.now() - lastLongPressAt < 600; }
 
 /* ============================================================
    Helpers
@@ -545,8 +504,7 @@ function toast(text, type){
 }
 function showErr(text){
   var e = $('authErr');
-  e.textContent = text;
-  e.classList.add('show');
+  e.textContent = text; e.classList.add('show');
   setTimeout(function(){ e.classList.remove('show'); }, 5000);
 }
 function updateChatBadge(n){
@@ -570,10 +528,8 @@ async function api(path, opts){
 function handleApiError(e){
   if(e.message === 'session_expired' || e.message === 'invalid_token'){
     toast('انتهت الجلسة', 'err');
-    localStorage.removeItem('token');
-    TOKEN = null;
-    setTimeout(function(){ location.reload(); }, 1500);
-    return true;
+    localStorage.removeItem('token'); TOKEN = null;
+    setTimeout(function(){ location.reload(); }, 1500); return true;
   }
   return false;
 }
@@ -586,9 +542,7 @@ window.addEventListener('offline', function(){ $('netBanner').classList.add('sho
    ============================================================ */
 $('btnRegister').addEventListener('click', async function(){
   var name = $('rgName').value.trim().toLowerCase();
-  if(!/^[a-z][a-z0-9_]{1,19}$/.test(name)){
-    return showErr('الاسم يجب أن يبدأ بحرف إنجليزي (2-20 حرف)');
-  }
+  if(!/^[a-z][a-z0-9_]{1,19}$/.test(name)) return showErr('الاسم يجب أن يبدأ بحرف إنجليزي (2-20 حرف)');
   this.disabled = true;
   var colors = ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399"];
   var randomColor = colors[Math.floor(Math.random() * colors.length)];
@@ -596,21 +550,14 @@ $('btnRegister').addEventListener('click', async function(){
     var r = await api('/register', { method: 'POST', body: JSON.stringify({ name: name, color: randomColor }) });
     TOKEN = r.token; localStorage.setItem('token', TOKEN);
     await enterApp(r.user);
-  } catch(e) {
-    showErr(e.message === 'invalid_input' ? 'الاسم غير صالح' : e.message);
-  }
+  } catch(e) { showErr(e.message === 'invalid_input' ? 'الاسم غير صالح' : e.message); }
   this.disabled = false;
 });
 
 async function enterApp(user){
-  ME = user;
-  soundOn = true;
-  // Always light mode
-  document.body.classList.remove('dark');
-
+  ME = user; soundOn = true; document.body.classList.remove('dark');
   var e2eeOk = await E2EE.init();
   if (!e2eeOk) toast('تعذر تفعيل التشفير', 'err');
-
   $('auth').classList.remove('active');
   $('app').classList.add('active');
   socket.emit('auth', { token: TOKEN });
@@ -625,34 +572,18 @@ socket.on('auth-error', function(data){
   var err = data && data.error;
   if(err === 'session_expired' || err === 'invalid_token' || err === 'user_not_found'){
     toast('انتهت الجلسة', 'err');
-    localStorage.removeItem('token');
-    TOKEN = null;
+    localStorage.removeItem('token'); TOKEN = null;
     setTimeout(function(){ location.reload(); }, 1500);
   }
 });
-
-socket.on('auth-ok', function(data){
-  ME = data.user;
-  loadEverything();
-});
-
-socket.on('connect', function(){
-  if (TOKEN) socket.emit('auth', { token: TOKEN });
-});
-
-socket.on('connect_error', function(err){ console.warn('Socket connect error:', err.message); });
+socket.on('auth-ok', function(data){ ME = data.user; loadEverything(); });
+socket.on('connect', function(){ if (TOKEN) socket.emit('auth', { token: TOKEN }); });
 
 socket.on('notification', function(n){
   if (!n) return;
-  if (n.type === 'friend_added') {
-    toast(n.text || 'صديق جديد', 'ok');
-    loadChats();
-  } else if (n.type === 'dm') {
-    if (soundOn) playBeep();
-    loadChats();
-  } else {
-    toast(n.text || 'إشعار جديد', 'info');
-  }
+  if (n.type === 'friend_added') { toast(n.text || 'صديق جديد', 'ok'); loadChats(); }
+  else if (n.type === 'dm') { if (soundOn) playBeep(); loadChats(); }
+  else toast(n.text || 'إشعار جديد', 'info');
 });
 
 socket.on('user-online', function(d){ onlineUsers[d.userId] = true; if(currentTab === 'chats') loadChats(); });
@@ -662,8 +593,7 @@ socket.on('user-deleted', function(d){
   delete onlineUsers[d.userId];
   if(CURRENT_DM && CURRENT_DM.user.id === d.userId){
     toast('المستخدم حذف حسابه — الوضع للقراءة فقط', 'info');
-    CURRENT_DM.deleted = true;
-    CURRENT_DM.sharedKey = null;
+    CURRENT_DM.deleted = true; CURRENT_DM.sharedKey = null;
     $('chatName').textContent = 'حساب محذوف';
     $('chatName').style.color = 'var(--muted)';
     $('chatName').style.fontStyle = 'italic';
@@ -671,9 +601,6 @@ socket.on('user-deleted', function(d){
     $('chatSub').className = 'ch-sub offline';
     $('chatInput').disabled = true;
     $('chatInput').placeholder = 'لا يمكن المراسلة — الحساب محذوف';
-    $('chatInput').style.opacity = '0.5';
-    $('chatSend').disabled = true;
-    $('chatSend').style.opacity = '0.4';
     $('chatVerify').style.display = 'none';
   }
   loadChats();
@@ -687,14 +614,9 @@ socket.on('dm-message', async function(m){
       var locals = $('chatMsgs').querySelectorAll('.cmsg[data-local="1"]');
       for(var i = locals.length - 1; i >= 0; i--){ locals[i].remove(); break; }
     }
-    if(!$('chatMsgs').querySelector('.cmsg[data-id="' + m.id + '"]')){
-      await renderDMMsg(m);
-      scrollChat();
-    }
+    if(!$('chatMsgs').querySelector('.cmsg[data-id="' + m.id + '"]')){ await renderDMMsg(m); scrollChat(); }
     if(m.from_id === CURRENT_DM.user.id) socket.emit('dm-read', { fromId: m.from_id });
-  } else if(!isMine){
-    if(soundOn) playBeep();
-  }
+  } else if(!isMine){ if(soundOn) playBeep(); }
   if(currentTab === 'chats') loadChats();
 });
 
@@ -713,6 +635,46 @@ socket.on('dm-typing', function(d){
     if(d.isTyping){ $('chatSub').textContent = 'يكتب الآن...'; $('chatSub').className = 'ch-sub online'; clearTimeout(d._t); d._t = setTimeout(function(){ updateChatStatus(d.fromId); }, 3000); }
     else updateChatStatus(d.fromId);
   }
+});
+
+/* NEW: message deleted by other side */
+socket.on('dm-deleted', function(d){
+  var el = $('chatMsgs').querySelector('.cmsg[data-id="' + d.id + '"]');
+  if (el) {
+    var bubble = el.querySelector('.cbubble');
+    if (bubble) {
+      bubble.classList.add('deleted');
+      bubble.innerHTML = 'تم حذف الرسالة';
+    }
+    var marks = el.querySelector('.read-marks');
+    if (marks) marks.style.display = 'none';
+  }
+  if(currentTab === 'chats') loadChats();
+});
+
+/* NEW: message edited by other side */
+socket.on('dm-edited', async function(d){
+  var el = $('chatMsgs').querySelector('.cmsg[data-id="' + d.id + '"]');
+  if (el && CURRENT_DM && CURRENT_DM.sharedKey) {
+    var decrypted = await E2EE.decrypt(CURRENT_DM.sharedKey, d.text);
+    var bubble = el.querySelector('.cbubble');
+    if (bubble) {
+      var lockIcon = '<svg class="lock-ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+      bubble.innerHTML = lockIcon + linkify(decrypted) + '<span class="edited-mark">(معدّلة)</span>';
+      bubble.dataset.plain = decrypted;
+    }
+  }
+  if(currentTab === 'chats') loadChats();
+});
+
+/* NEW: conversation deleted by other side */
+socket.on('dm-conversation-deleted', function(d){
+  if (CURRENT_DM && CURRENT_DM.user.id === d.byId) {
+    $('chatView').classList.remove('open');
+    CURRENT_DM = null;
+    toast('تم حذف المحادثة من الطرف الآخر', 'info');
+  }
+  loadChats();
 });
 
 async function updateChatStatus(userId){
@@ -754,8 +716,7 @@ async function pollCurrentChat(){
 }
 
 async function globalPoll(){
-  if(!ME) return;
-  if(document.hidden) return;
+  if(!ME || document.hidden) return;
   try {
     var r = await api('/dm-conversations');
     var totalUnread = 0;
@@ -789,7 +750,7 @@ function switchTab(name){
 $$('.bottom-nav button').forEach(function(b){ b.addEventListener('click', function(){ switchTab(b.dataset.tab); }); });
 
 /* ============================================================
-   Chats list
+   Chats list + long press
    ============================================================ */
 async function loadChats(){
   try {
@@ -805,16 +766,15 @@ async function loadChats(){
       var online = c.user.online && !c.user.deleted;
       var preview = 'لا توجد رسائل';
 
-      if (c.last && c.last.text) {
+      if (c.last && c.last.deleted) { preview = '🚫 تم حذف الرسالة'; }
+      else if (c.last && c.last.text) {
         if (c.last.text.indexOf('🔒') === 0 && c.user.public_key) {
           try {
             var shared = await E2EE.getSharedKey(c.user.id, c.user.public_key);
             var decrypted = await E2EE.decrypt(shared.key, c.last.text);
             preview = decrypted.length > 45 ? decrypted.slice(0, 45) + '...' : decrypted;
           } catch(e) { preview = '🔒 رسالة مشفرة'; }
-        } else {
-          preview = c.last.text.slice(0, 45);
-        }
+        } else preview = c.last.text.slice(0, 45);
       }
 
       var displayName = c.user.deleted ? 'حساب محذوف' : esc(c.user.display_name);
@@ -831,8 +791,65 @@ async function loadChats(){
 
     $('chatsList').innerHTML = r.conversations.length ? html : '<div class="empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><p>لا توجد محادثات بعد<br><br>اضغط زر + لإضافة صديق</p></div>';
 
-    $('chatsList').querySelectorAll('[data-dmuid]').forEach(function(r2){ r2.addEventListener('click', function(){ openDMById(parseInt(r2.dataset.dmuid)); }); });
+    $('chatsList').querySelectorAll('[data-dmuid]').forEach(function(r2){
+      r2.addEventListener('click', function(){
+        if (wasLongPress()) return;
+        openDMById(parseInt(r2.dataset.dmuid));
+      });
+    });
   } catch(_){}
+}
+
+/* Long press on chats list (via delegation, attached once) */
+attachLongPress($('chatsList'), function(e){
+  var row = e.target.closest('[data-dmuid]');
+  if (!row) return;
+  var userId = parseInt(row.dataset.dmuid);
+  if (isNaN(userId)) return;
+  var conv = lastConvData && lastConvData.find(function(c){ return c.user.id === userId; });
+  if (!conv) return;
+  if (conv.user.deleted) {
+    toast('لا يمكن حذف محادثة محذوفة', 'info');
+    return;
+  }
+  showConversationMenu(userId, conv.user.display_name);
+});
+
+function showConversationMenu(userId, name){
+  showModal(
+    '<div class="modal-header">' +
+      '<button class="back-btn" id="cvmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
+      '<div class="title">' + esc(name) + '</div>' +
+      '<div class="spacer"></div>' +
+    '</div>' +
+    '<div class="modal-list">' +
+      '<button class="modal-item" id="cvmDelete">' +
+        '<div class="mi-icon danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>' +
+        '<div class="mi-info"><div class="mi-title">حذف الدردشة</div><div class="mi-sub">سيتم حذف جميع الرسائل من الطرفين</div></div>' +
+      '</button>' +
+    '</div>'
+  );
+  $('cvmBack').addEventListener('click', closeModal);
+  $('cvmDelete').addEventListener('click', function(){
+    closeModal();
+    showConfirm({
+      title: 'حذف الدردشة',
+      text: 'سيتم حذف جميع الرسائل من الطرفين نهائياً. لا يمكن التراجع.',
+      confirmText: 'حذف',
+      danger: true,
+      onConfirm: async function(){
+        try {
+          await api('/dm-conversations/' + userId, { method: 'DELETE' });
+          toast('تم حذف الدردشة', 'ok');
+          if (CURRENT_DM && CURRENT_DM.user.id === userId) {
+            $('chatView').classList.remove('open');
+            CURRENT_DM = null;
+          }
+          loadChats();
+        } catch(e) { toast(e.message, 'err'); }
+      }
+    });
+  });
 }
 
 /* ============================================================
@@ -848,14 +865,8 @@ async function loadAccount(){
       '<div class="account-name en">' + esc(ME.display_name) + '</div>' +
       '<div class="account-username en">@' + esc(ME.username) + '</div>' +
       '<div class="account-info-card">' +
-        '<div class="account-info-row">' +
-          '<span class="label">اسم المستخدم</span>' +
-          '<span class="value">' + esc(ME.username) + '</span>' +
-        '</div>' +
-        '<div class="account-info-row">' +
-          '<span class="label">تاريخ الانضمام</span>' +
-          '<span class="value" style="font-family:inherit;direction:rtl">' + new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'long',year:'numeric'}).format(new Date(ME.created_at)) + '</span>' +
-        '</div>' +
+        '<div class="account-info-row"><span class="label">اسم المستخدم</span><span class="value">' + esc(ME.username) + '</span></div>' +
+        '<div class="account-info-row"><span class="label">تاريخ الانضمام</span><span class="value" style="font-family:inherit;direction:rtl">' + new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'long',year:'numeric'}).format(new Date(ME.created_at)) + '</span></div>' +
       '</div>' +
       '<div class="account-actions">' +
         '<button class="btn-outline" id="btnOpenQr">' +
@@ -873,8 +884,7 @@ async function loadAccount(){
       showConfirm({
         title: 'تسجيل الخروج',
         text: '⚠️ سيتم حذف حسابك وكل رسائلك ومفاتيحك نهائياً.',
-        confirmText: 'حذف الحساب',
-        danger: true,
+        confirmText: 'حذف الحساب', danger: true,
         onConfirm: async function(){
           try { await api('/logout', { method: 'POST' }); } catch(_){}
           localStorage.removeItem('token');
@@ -896,8 +906,7 @@ async function showMyQrModal(){
   showModal(
     '<div class="modal-header">' +
       '<button class="back-btn" id="qmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
-      '<div class="title">QR الخاص بي</div>' +
-      '<div class="spacer"></div>' +
+      '<div class="title">QR الخاص بي</div><div class="spacer"></div>' +
     '</div>' +
     '<div id="qrModalContent"><div style="text-align:center;padding:30px"><div class="spinner"></div></div></div>'
   );
@@ -907,28 +916,17 @@ async function showMyQrModal(){
     var q = await api('/qr/image');
     $('qrModalContent').innerHTML =
       '<div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0">' +
-        '<div style="background:#fff;padding:16px;border-radius:20px;box-shadow:0 6px 24px rgba(0,0,0,.08)">' +
-          '<img src="' + q.qr + '" alt="QR" style="width:240px;height:240px;display:block;border-radius:8px" />' +
-        '</div>' +
+        '<div style="background:#fff;padding:16px;border-radius:20px;box-shadow:0 6px 24px rgba(0,0,0,.08)"><img src="' + q.qr + '" alt="QR" style="width:240px;height:240px;display:block;border-radius:8px" /></div>' +
         '<div style="font-size:.82rem;color:var(--muted);text-align:center;line-height:1.7;max-width:280px">دع صديقك يمسح الكود، أو انسخ الكود وأرسله له</div>' +
         '<div class="en" style="width:100%;padding:14px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:14px;font-family:ui-monospace,monospace;font-size:.9rem;text-align:center;font-weight:700;letter-spacing:1px;color:var(--text)">' + esc(q.qr_id) + '</div>' +
-        '<button class="btn-copy" id="btnCopyQrCode" style="width:100%">' +
-          '<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
-          'نسخ كود QR' +
-        '</button>' +
-        '<button class="btn-outline" id="btnDownloadQrCode" style="width:100%">' +
-          '<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
-          'تحميل صورة QR' +
-        '</button>' +
+        '<button class="btn-copy" id="btnCopyQrCode" style="width:100%"><svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>نسخ كود QR</button>' +
+        '<button class="btn-outline" id="btnDownloadQrCode" style="width:100%"><svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>تحميل صورة QR</button>' +
       '</div>';
-
     $('btnCopyQrCode').addEventListener('click', function(){
       navigator.clipboard.writeText(q.qr_id).then(function(){ toast('تم نسخ كود QR', 'ok'); }).catch(function(){ toast('فشل النسخ', 'err'); });
     });
     $('btnDownloadQrCode').addEventListener('click', function(){
-      var a = document.createElement('a');
-      a.href = q.qr;
-      a.download = 'dust-qr-' + ME.username + '.png';
+      var a = document.createElement('a'); a.href = q.qr; a.download = 'dust-qr-' + ME.username + '.png';
       document.body.appendChild(a); a.click(); a.remove();
       toast('تم التحميل', 'ok');
     });
@@ -936,7 +934,6 @@ async function showMyQrModal(){
     $('qrModalContent').innerHTML = '<div class="empty" style="padding:40px 20px"><p>فشل توليد QR</p></div>';
   }
 }
-
 $('btnMyQrMini').addEventListener('click', showMyQrModal);
 
 /* ============================================================
@@ -946,24 +943,11 @@ $('btnAddFriend').addEventListener('click', showAddFriendMenu);
 
 function showAddFriendMenu(){
   showModal(
-    '<div class="modal-header">' +
-      '<button class="back-btn" id="afmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
-      '<div class="title">إضافة صديق</div>' +
-      '<div class="spacer"></div>' +
-    '</div>' +
+    '<div class="modal-header"><button class="back-btn" id="afmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">إضافة صديق</div><div class="spacer"></div></div>' +
     '<div class="modal-list">' +
-      '<button class="modal-item" id="afmUpload">' +
-        '<div class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>' +
-        '<div class="mi-info"><div class="mi-title">تحميل QR من الاستوديو</div><div class="mi-sub">اختر صورة QR محفوظة</div></div>' +
-      '</button>' +
-      '<button class="modal-item" id="afmCamera">' +
-        '<div class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>' +
-        '<div class="mi-info"><div class="mi-title">مسح بالكاميرا</div><div class="mi-sub">افتح الكاميرا لمسح QR</div></div>' +
-      '</button>' +
-      '<button class="modal-item" id="afmCode">' +
-        '<div class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>' +
-        '<div class="mi-info"><div class="mi-title">إدخال الكود يدوياً</div><div class="mi-sub">الصق كود QR</div></div>' +
-      '</button>' +
+      '<button class="modal-item" id="afmUpload"><div class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div><div class="mi-info"><div class="mi-title">تحميل QR من الاستوديو</div><div class="mi-sub">اختر صورة QR محفوظة</div></div></button>' +
+      '<button class="modal-item" id="afmCamera"><div class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div><div class="mi-info"><div class="mi-title">مسح بالكاميرا</div><div class="mi-sub">افتح الكاميرا لمسح QR</div></div></button>' +
+      '<button class="modal-item" id="afmCode"><div class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div><div class="mi-info"><div class="mi-title">إدخال الكود يدوياً</div><div class="mi-sub">الصق كود QR</div></div></button>' +
     '</div>'
   );
   $('afmBack').addEventListener('click', closeModal);
@@ -975,15 +959,12 @@ function showAddFriendMenu(){
 function openQrUpload(){
   if(!qrFileInput){
     qrFileInput = document.createElement('input');
-    qrFileInput.type = 'file';
-    qrFileInput.accept = 'image/*';
-    qrFileInput.style.display = 'none';
+    qrFileInput.type = 'file'; qrFileInput.accept = 'image/*'; qrFileInput.style.display = 'none';
     document.body.appendChild(qrFileInput);
   }
   if(!document.getElementById('qrHiddenReader')){
     var hiddenDiv = document.createElement('div');
-    hiddenDiv.id = 'qrHiddenReader';
-    hiddenDiv.style.display = 'none';
+    hiddenDiv.id = 'qrHiddenReader'; hiddenDiv.style.display = 'none';
     document.body.appendChild(hiddenDiv);
   }
   qrFileInput.value = '';
@@ -997,63 +978,35 @@ function openQrUpload(){
       var qrId = extractQrId(decoded);
       if(!qrId) return toast('لم يتم العثور على QR صالح', 'err');
       await addFriendByQrId(qrId);
-    } catch(err) {
-      toast('تعذر قراءة الصورة', 'err');
-    }
+    } catch(err) { toast('تعذر قراءة الصورة', 'err'); }
   };
   qrFileInput.click();
 }
 
 async function startQrCamera(){
-  showModal(
-    '<div class="modal-header">' +
-      '<button class="back-btn" id="scanBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
-      '<div class="title">مسح QR</div>' +
-      '<div class="spacer"></div>' +
-    '</div>' +
-    '<div id="qrReader"></div>' +
-    '<div style="text-align:center;padding:12px;color:var(--muted);font-size:.82rem">وجّه الكاميرا نحو الكود</div>'
-  );
+  showModal('<div class="modal-header"><button class="back-btn" id="scanBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">مسح QR</div><div class="spacer"></div></div><div id="qrReader"></div><div style="text-align:center;padding:12px;color:var(--muted);font-size:.82rem">وجّه الكاميرا نحو الكود</div>');
   $('scanBack').addEventListener('click', function(){ stopQrCamera(); closeModal(); });
-
   setTimeout(async function(){
     try {
       qrScanner = new Html5Qrcode("qrReader");
-      await qrScanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
+      await qrScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
         async function(decodedText) {
           await stopQrCamera();
           var qrId = extractQrId(decodedText);
           if(!qrId){ toast('QR غير صالح', 'err'); closeModal(); return; }
           await addFriendByQrId(qrId);
-        },
-        function(){}
+        }, function(){}
       );
-    } catch(e){
-      toast('لا يمكن الوصول للكاميرا', 'err');
-      closeModal();
-    }
+    } catch(e){ toast('لا يمكن الوصول للكاميرا', 'err'); closeModal(); }
   }, 300);
 }
 
 async function stopQrCamera(){
-  if(qrScanner){
-    try { await qrScanner.stop(); qrScanner.clear(); } catch(_){}
-    qrScanner = null;
-  }
+  if(qrScanner){ try { await qrScanner.stop(); qrScanner.clear(); } catch(_){} qrScanner = null; }
 }
 
 function showEnterQrId(){
-  showModal(
-    '<div class="modal-header">' +
-      '<button class="back-btn" id="eqrBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
-      '<div class="title">إدخال كود QR</div>' +
-      '<div class="spacer"></div>' +
-    '</div>' +
-    '<div class="field"><label>كود QR</label><input id="eqrInput" placeholder="a3f9b2e8c4d1" maxlength="32" class="en" dir="ltr" style="text-align:left" /></div>' +
-    '<button class="btn-main" id="eqrSubmit">إضافة صديق</button>'
-  );
+  showModal('<div class="modal-header"><button class="back-btn" id="eqrBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">إدخال كود QR</div><div class="spacer"></div></div><div class="field"><label>كود QR</label><input id="eqrInput" placeholder="a3f9b2e8c4d1" maxlength="32" class="en" dir="ltr" style="text-align:left" /></div><button class="btn-main" id="eqrSubmit">إضافة صديق</button>');
   $('eqrBack').addEventListener('click', closeModal);
   $('eqrSubmit').addEventListener('click', async function(){
     var raw = $('eqrInput').value.trim();
@@ -1069,8 +1022,7 @@ async function addFriendByQrId(qrId){
     var r = await api('/friends/add-by-qr', { method: 'POST', body: JSON.stringify({ qr_id: qrId }) });
     if(r.status === 'already_friends') toast('صديقك بالفعل', 'info');
     else if(r.status === 'added') toast('تمت إضافة ' + (r.user ? r.user.display_name : ''), 'ok');
-    closeModal();
-    loadChats();
+    closeModal(); loadChats();
     if(r.user && r.user.id) setTimeout(function(){ openDMById(r.user.id); }, 400);
   } catch(e) {
     if(e.message === 'user_not_found') toast('لم يتم العثور على المستخدم', 'err');
@@ -1103,6 +1055,7 @@ async function renderDMMsg(m){
   var mine = m.from_id === ME.id;
   el.className = 'cmsg ' + (mine ? 'me' : 'other');
   el.dataset.id = m.id;
+  el.dataset.mine = mine ? '1' : '0';
   if(m._local) el.dataset.local = '1';
 
   var body = document.createElement('div');
@@ -1113,20 +1066,26 @@ async function renderDMMsg(m){
   var bubble = document.createElement('div');
   bubble.className = 'cbubble';
 
-  var displayText = m.text || '';
-  var isEncrypted = displayText.indexOf('🔒') === 0;
-  if (isEncrypted) {
-    if (CURRENT_DM && CURRENT_DM.sharedKey) {
-      displayText = await E2EE.decrypt(CURRENT_DM.sharedKey, displayText);
-    } else {
-      displayText = '[🔒 رسالة مشفرة]';
+  if (m.deleted) {
+    bubble.classList.add('deleted');
+    bubble.textContent = 'تم حذف الرسالة';
+    bubble.dataset.plain = '';
+  } else {
+    var displayText = m.text || '';
+    var isEncrypted = displayText.indexOf('🔒') === 0;
+    if (isEncrypted) {
+      if (CURRENT_DM && CURRENT_DM.sharedKey) displayText = await E2EE.decrypt(CURRENT_DM.sharedKey, displayText);
+      else displayText = '[🔒 رسالة مشفرة]';
     }
+    bubble.dataset.plain = displayText;
+
+    var lockIcon = isEncrypted ? '<svg class="lock-ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' : '';
+    var editedMark = m.edited ? '<span class="edited-mark">(معدّلة)</span>' : '';
+    bubble.innerHTML = lockIcon + linkify(displayText) + editedMark;
   }
 
-  var lockIcon = isEncrypted ? '<svg class="lock-ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' : '';
-  if(displayText) bubble.innerHTML = lockIcon + linkify(displayText);
   body.appendChild(meta); body.appendChild(bubble);
-  if(mine){
+  if(mine && !m.deleted){
     var mk = document.createElement('div');
     mk.className = 'read-marks';
     if(m.read){ mk.classList.add('read'); mk.textContent = '✓✓'; }
@@ -1143,6 +1102,114 @@ $('chatBack').addEventListener('click', function(){
   CURRENT_DM = null;
 });
 
+/* Long press on messages (delegation) */
+attachLongPress($('chatMsgs'), function(e){
+  var msgEl = e.target.closest('.cmsg');
+  if (!msgEl) return;
+  if (!CURRENT_DM || CURRENT_DM.deleted) return;
+  var msgId = parseInt(msgEl.dataset.id);
+  if (isNaN(msgId)) return;
+  if (msgEl.dataset.local === '1') return;
+  var isMine = msgEl.dataset.mine === '1';
+  var bubble = msgEl.querySelector('.cbubble');
+  var isDeleted = bubble && bubble.classList.contains('deleted');
+  if (isDeleted) {
+    toast('الرسالة محذوفة بالفعل', 'info');
+    return;
+  }
+  var text = bubble && bubble.dataset.plain ? bubble.dataset.plain : '';
+  showMessageMenu(msgId, isMine, text);
+});
+
+function showMessageMenu(msgId, isMine, text){
+  var html = '<div class="modal-header">' +
+    '<button class="back-btn" id="mmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
+    '<div class="title">خيارات الرسالة</div><div class="spacer"></div></div>' +
+    '<div class="modal-list">';
+
+  if (isMine) {
+    html += '<button class="modal-item" id="mmEdit"><div class="mi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div><div class="mi-info"><div class="mi-title">تعديل الرسالة</div><div class="mi-sub">سيتم التعديل عند الطرفين</div></div></button>';
+  }
+  html += '<button class="modal-item" id="mmDelete"><div class="mi-icon danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div><div class="mi-info"><div class="mi-title">حذف من الطرفين</div><div class="mi-sub">سيتم حذف الرسالة عندك وعند صديقك</div></div></button>';
+  html += '</div>';
+
+  showModal(html);
+  $('mmBack').addEventListener('click', closeModal);
+
+  if (isMine && $('mmEdit')) {
+    $('mmEdit').addEventListener('click', function(){
+      closeModal();
+      showEditMessageModal(msgId, text);
+    });
+  }
+  $('mmDelete').addEventListener('click', function(){
+    closeModal();
+    showConfirm({
+      title: 'حذف الرسالة',
+      text: 'سيتم حذف هذه الرسالة نهائياً من الطرفين.',
+      confirmText: 'حذف', danger: true,
+      onConfirm: async function(){
+        try {
+          await api('/dms/' + msgId, { method: 'DELETE' });
+          var el = $('chatMsgs').querySelector('.cmsg[data-id="' + msgId + '"]');
+          if (el) {
+            var bubble = el.querySelector('.cbubble');
+            if (bubble) { bubble.classList.add('deleted'); bubble.innerHTML = 'تم حذف الرسالة'; bubble.dataset.plain = ''; }
+            var marks = el.querySelector('.read-marks');
+            if (marks) marks.style.display = 'none';
+          }
+          toast('تم حذف الرسالة', 'ok');
+          if (currentTab === 'chats') loadChats();
+        } catch(e) { toast(e.message, 'err'); }
+      }
+    });
+  });
+}
+
+function showEditMessageModal(msgId, currentText){
+  showModal(
+    '<div class="modal-header">' +
+      '<button class="back-btn" id="emmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
+      '<div class="title">تعديل الرسالة</div><div class="spacer"></div>' +
+    '</div>' +
+    '<div class="field"><textarea id="emmText" maxlength="5000" style="min-height:120px">' + esc(currentText) + '</textarea></div>' +
+    '<button class="btn-main" id="emmSave">حفظ التعديل</button>'
+  );
+  $('emmBack').addEventListener('click', closeModal);
+  setTimeout(function(){ var t = $('emmText'); if(t){ t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, 200);
+
+  $('emmSave').addEventListener('click', async function(){
+    var newText = $('emmText').value.trim();
+    if (!newText) return toast('اكتب نصاً', 'err');
+    if (newText === currentText) { closeModal(); return; }
+    if (!CURRENT_DM || !CURRENT_DM.sharedKey) return toast('لا يوجد مفتاح تشفير', 'err');
+
+    var btn = $('emmSave');
+    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div>';
+    btn.disabled = true;
+
+    try {
+      var encrypted = await E2EE.encrypt(CURRENT_DM.sharedKey, newText);
+      await api('/dms/' + msgId, { method: 'PUT', body: JSON.stringify({ text: encrypted }) });
+
+      var el = $('chatMsgs').querySelector('.cmsg[data-id="' + msgId + '"]');
+      if (el) {
+        var bubble = el.querySelector('.cbubble');
+        if (bubble) {
+          var lockIcon = '<svg class="lock-ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+          bubble.innerHTML = lockIcon + linkify(newText) + '<span class="edited-mark">(معدّلة)</span>';
+          bubble.dataset.plain = newText;
+        }
+      }
+      closeModal();
+      toast('تم التعديل', 'ok');
+    } catch(e) {
+      toast(e.message, 'err');
+      btn.disabled = false; btn.textContent = 'حفظ التعديل';
+    }
+  });
+}
+
 function autoGrow(){ var t = $('chatInput'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px'; }
 $('chatInput').addEventListener('input', function(){
   autoGrow();
@@ -1157,10 +1224,7 @@ $('chatSend').addEventListener('click', sendChat);
 async function sendChat(){
   var txt = $('chatInput').value.trim();
   if(!txt || !CURRENT_DM) return;
-  if (CURRENT_DM.deleted) {
-    toast('لا يمكن المراسلة — الحساب محذوف', 'err');
-    return;
-  }
+  if (CURRENT_DM.deleted) { toast('لا يمكن المراسلة — الحساب محذوف', 'err'); return; }
   var toId = CURRENT_DM.user.id;
   var now = Date.now();
 
@@ -1175,10 +1239,7 @@ async function sendChat(){
   if (CURRENT_DM.sharedKey) {
     try { encrypted = await E2EE.encrypt(CURRENT_DM.sharedKey, txt); }
     catch(e) { toast('فشل التشفير', 'err'); return; }
-  } else {
-    toast('لا يوجد مفتاح مشفر', 'err');
-    return;
-  }
+  } else { toast('لا يوجد مفتاح مشفر', 'err'); return; }
 
   socket.emit('dm-send', { toId: toId, text: encrypted });
   socket.emit('dm-typing', { toId: toId, isTyping: false });
@@ -1193,10 +1254,8 @@ async function openDMById(userId){
 
 async function openDM(user){
   if(ME && user.id === ME.id) return toast('لا يمكنك مراسلة نفسك', 'err');
-
   var isDeleted = !!user.deleted;
   var peerPub = user.public_key;
-
   if (!peerPub && !isDeleted) {
     try {
       var fresh = await api('/users/' + user.id);
@@ -1206,60 +1265,33 @@ async function openDM(user){
       isDeleted = !!user.deleted;
     } catch(_){}
   }
-
   var shared = null;
-  if (peerPub) {
-    try { shared = await E2EE.getSharedKey(user.id, peerPub); } catch(_){}
-  }
-
+  if (peerPub) { try { shared = await E2EE.getSharedKey(user.id, peerPub); } catch(_){} }
   if (!isDeleted && !shared) {
-    return showConfirm({
-      title: 'لا يمكن بدء المحادثة',
-      text: 'صديقك لم يفتح التطبيق بعد على النظام الجديد. اطلب منه فتح التطبيق مرة واحدة، ثم حاول مجدداً.',
-      confirmText: 'حسناً'
-    });
+    return showConfirm({ title: 'لا يمكن بدء المحادثة', text: 'صديقك لم يفتح التطبيق بعد على النظام الجديد. اطلب منه فتح التطبيق مرة واحدة، ثم حاول مجدداً.', confirmText: 'حسناً' });
   }
-
-  CURRENT_DM = {
-    user: user,
-    sharedKey: shared ? shared.key : null,
-    fingerprint: shared ? shared.fingerprint : null,
-    deleted: isDeleted
-  };
+  CURRENT_DM = { user: user, sharedKey: shared ? shared.key : null, fingerprint: shared ? shared.fingerprint : null, deleted: isDeleted };
 
   if (isDeleted) {
     $('chatName').textContent = 'حساب محذوف';
-    $('chatName').style.color = 'var(--muted)';
-    $('chatName').style.fontStyle = 'italic';
-    $('chatSub').textContent = 'لا يمكن المراسلة';
-    $('chatSub').className = 'ch-sub offline';
-    $('chatInput').disabled = true;
-    $('chatInput').placeholder = 'لا يمكن المراسلة — الحساب محذوف';
-    $('chatInput').style.opacity = '0.5';
-    $('chatSend').disabled = true;
-    $('chatSend').style.opacity = '0.4';
-    $('chatVerify').style.display = 'none';
+    $('chatName').style.color = 'var(--muted)'; $('chatName').style.fontStyle = 'italic';
+    $('chatSub').textContent = 'لا يمكن المراسلة'; $('chatSub').className = 'ch-sub offline';
+    $('chatInput').disabled = true; $('chatInput').placeholder = 'لا يمكن المراسلة — الحساب محذوف';
+    $('chatSend').disabled = true; $('chatVerify').style.display = 'none';
   } else {
     $('chatName').textContent = user.display_name;
-    $('chatName').style.color = '';
-    $('chatName').style.fontStyle = '';
+    $('chatName').style.color = ''; $('chatName').style.fontStyle = '';
     if(user.online){ $('chatSub').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/></svg>متصل الآن'; $('chatSub').className = 'ch-sub online'; }
     else { $('chatSub').textContent = fmtLastSeen(user.last_seen); $('chatSub').className = 'ch-sub offline'; }
-    $('chatInput').disabled = false;
-    $('chatInput').placeholder = 'اكتب رسالة مشفرة...';
-    $('chatInput').style.opacity = '';
-    $('chatSend').disabled = false;
-    $('chatSend').style.opacity = '';
-    $('chatVerify').style.display = '';
+    $('chatInput').disabled = false; $('chatInput').placeholder = 'اكتب رسالة مشفرة...';
+    $('chatSend').disabled = false; $('chatVerify').style.display = '';
   }
 
   $('chatView').classList.add('open');
   $('chatMsgs').innerHTML = '';
   try {
     var r = await api('/dms/' + user.id);
-    for (var i = 0; i < r.messages.length; i++) {
-      await renderDMMsg(r.messages[i]);
-    }
+    for (var i = 0; i < r.messages.length; i++) await renderDMMsg(r.messages[i]);
     scrollChat(true);
     if (!isDeleted) socket.emit('dm-read', { fromId: user.id });
   } catch(_){}
@@ -1273,42 +1305,23 @@ $('chatVerify').addEventListener('click', function(){
   var peerId = CURRENT_DM.user.id;
   var verified = localStorage.getItem('dust_verified_' + peerId) === '1';
   var fp = CURRENT_DM.fingerprint;
-
   showModal(
-    '<div class="modal-header">' +
-      '<button class="back-btn" id="vfBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
-      '<div class="title">التحقق من البصمة</div>' +
-      '<div class="spacer"></div>' +
-    '</div>' +
+    '<div class="modal-header"><button class="back-btn" id="vfBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">التحقق من البصمة</div><div class="spacer"></div></div>' +
     '<div style="text-align:center;padding:8px 0">' +
-      '<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;background:var(--success-soft);color:var(--success)">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px;height:32px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>' +
-      '</div>' +
+      '<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;background:var(--success-soft);color:var(--success)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px;height:32px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>' +
       '<div style="font-weight:900;font-size:1.1rem;margin-bottom:6px">قارن هذه البصمة شفهياً</div>' +
       '<div style="font-size:.82rem;color:var(--muted);line-height:1.7;margin-bottom:16px">عبر مكالمة أو وجهاً لوجه. إذا تطابقت عند الطرفين، فالمحادثة آمنة.</div>' +
-      '<div style="padding:18px;background:var(--surface-2);border-radius:16px;border:1px solid var(--border-2);margin-bottom:16px">' +
-        '<div style="font-size:.72rem;color:var(--muted);margin-bottom:8px;font-weight:700">بصمة المفتاح المشترك</div>' +
-        '<div class="en" style="font-family:ui-monospace,monospace;font-size:1rem;font-weight:800;color:var(--text);letter-spacing:1px;line-height:1.8">' + fp + '</div>' +
-      '</div>' +
-      (verified
-        ? '<div style="padding:12px;background:var(--success-soft);border-radius:12px;color:var(--success);font-weight:700;font-size:.85rem;margin-bottom:14px">✓ تم التحقق سابقاً</div>'
-        : '<div style="padding:12px;background:var(--danger-soft);border-radius:12px;color:var(--danger);font-weight:700;font-size:.85rem;margin-bottom:14px">⚠️ لم يتم التحقق بعد</div>'
-      ) +
+      '<div style="padding:18px;background:var(--surface-2);border-radius:16px;border:1px solid var(--border-2);margin-bottom:16px"><div style="font-size:.72rem;color:var(--muted);margin-bottom:8px;font-weight:700">بصمة المفتاح المشترك</div><div class="en" style="font-family:ui-monospace,monospace;font-size:1rem;font-weight:800;color:var(--text);letter-spacing:1px;line-height:1.8">' + fp + '</div></div>' +
+      (verified ? '<div style="padding:12px;background:var(--success-soft);border-radius:12px;color:var(--success);font-weight:700;font-size:.85rem;margin-bottom:14px">✓ تم التحقق سابقاً</div>' : '<div style="padding:12px;background:var(--danger-soft);border-radius:12px;color:var(--danger);font-weight:700;font-size:.85rem;margin-bottom:14px">⚠️ لم يتم التحقق بعد</div>') +
       '<button class="btn-main" id="vfMark" style="margin-bottom:10px">' + (verified ? 'إلغاء التحقق' : '✓ تحققنا معاً') + '</button>' +
       '<button class="btn-outline" id="vfClose">إغلاق</button>' +
     '</div>'
   );
-
   $('vfBack').addEventListener('click', closeModal);
   $('vfClose').addEventListener('click', closeModal);
   $('vfMark').addEventListener('click', function(){
-    if (verified) {
-      localStorage.removeItem('dust_verified_' + peerId);
-      toast('تم إلغاء التحقق', 'info');
-    } else {
-      localStorage.setItem('dust_verified_' + peerId, '1');
-      toast('✓ تم حفظ التحقق', 'ok');
-    }
+    if (verified) { localStorage.removeItem('dust_verified_' + peerId); toast('تم إلغاء التحقق', 'info'); }
+    else { localStorage.setItem('dust_verified_' + peerId, '1'); toast('✓ تم حفظ التحقق', 'ok'); }
     closeModal();
   });
 });
