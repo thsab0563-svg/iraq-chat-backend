@@ -1,5 +1,5 @@
 /* ============================================================
-   Dust Server v11.0 — Secure Admin + E2EE + Anti-MITM
+   Dust Server v12.1 — E2EE + Admin + Anti-MITM
    ============================================================ */
 'use strict';
 
@@ -350,7 +350,7 @@ app.get('/api/admin/stats', authRequired, adminRequired, (req, res) => {
     totalUsers, activeUsers, bannedUsers,
     totalMessages, messages24h,
     totalFriendships, onlineNow,
-    uptime: process.uptime(), version: '11.0.0'
+    uptime: process.uptime(), version: '12.1.0'
   });
 });
 
@@ -544,6 +544,7 @@ let pushEnabled = false;
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:admin@dust.app', process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
   pushEnabled = true;
+  console.log('✅ Web Push enabled');
 }
 app.get('/api/vapid-public', (req, res) => res.json({ key: process.env.VAPID_PUBLIC_KEY || null }));
 app.post('/api/push/subscribe', authRequired, (req, res) => {
@@ -661,7 +662,7 @@ app.get('/health', (req, res) => {
     ok: true, uptime: process.uptime(),
     users: db.prepare('SELECT COUNT(*) as c FROM users WHERE deleted = 0').get().c,
     admins: db.prepare('SELECT COUNT(*) as c FROM users WHERE is_admin = 1').get().c,
-    online: ONLINE_USERS.size, e2ee: 'ECDH-P256', version: '11.0.0'
+    online: ONLINE_USERS.size, e2ee: 'ECDH-P256', version: '12.1.0'
   });
 });
 app.use((err, req, res, next) => {
@@ -672,7 +673,7 @@ app.use((err, req, res, next) => {
 
 /* ===== 19. Start ===== */
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Dust Server v11.0 on port ${PORT}`);
+  console.log(`🚀 Dust Server v12.1 on port ${PORT}`);
   console.log(`🔗 ${PUBLIC_URL}`);
   console.log(`🔐 E2EE: ECDH P-256 + HKDF`);
   console.log(`🔑 Admin secret: ${ADMIN_SECRET ? 'configured' : 'NOT SET'}`);
