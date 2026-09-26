@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
 :root{
@@ -138,7 +139,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .chat-head .ch-sub svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.2}
 .chat-msgs{flex:1;overflow-y:auto;padding:20px 14px 12px;display:flex;flex-direction:column;gap:12px}
 .cmsg{display:flex;flex-direction:row;gap:9px;max-width:82%;align-items:flex-end;animation:fadeUp .25s var(--ease);transition:transform .15s}
-.cmsg.pressed .cbubble{transform:scale(.95)}
 .cmsg.other{align-self:flex-start}
 .cmsg.me{align-self:flex-end;flex-direction:row-reverse}
 .cmsg-body{display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -191,6 +191,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .toast.info{border-color:rgba(201,143,61,.35);color:var(--gold)}
 @keyframes slideDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 .spinner{width:22px;height:22px;border:2.5px solid var(--gold-soft);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 #netBanner{position:fixed;top:0;inset-inline:0;z-index:1000;background:var(--danger);color:#fff;padding:11px 16px;text-align:center;font-weight:700;font-size:.85rem;display:none;align-items:center;justify-content:center;gap:12px;padding-top:calc(11px + env(safe-area-inset-top))}
@@ -219,7 +220,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   <div class="title">Dust<span>.</span></div>
   <div class="sub">
     <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    تشفير حقيقي ECDH
+    تشفير + كشف الاختراق
   </div>
   <div class="bar"></div>
 </div>
@@ -257,7 +258,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
       </div>
       <div class="w-text">
         <b>ملاحظة أمنية:</b><br>
-        رسائلك مشفرة بتقنية ECDH P-256. عند <b>تسجيل الخروج</b> سيتم حذف حسابك ومفاتيحك نهائياً.
+        رسائلك مشفرة + كشف تلقائي للاختراق. عند <b>تسجيل الخروج</b> سيتم حذف حسابك ومفاتيحك نهائياً.
       </div>
     </div>
     <div class="err" id="authErr"></div>
@@ -363,17 +364,47 @@ var qrScanner = null;
 var qrFileInput = null;
 var lastLongPressAt = 0;
 
+/* ============================================================
+   E2EE v3 — ECDH + Padding + Key Change Detection
+   ============================================================ */
 var E2EE = {
   keyPair: null, ready: false, cache: {},
-  generateKeyPair: async function() { return crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']); },
-  exportPublicKey: async function(key) { var raw = await crypto.subtle.exportKey('spki', key); var bytes = new Uint8Array(raw); var bin = ''; for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]); return btoa(bin); },
-  importPublicKey: async function(b64) { var bin = atob(b64); var bytes = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); return crypto.subtle.importKey('spki', bytes, { name: 'ECDH', namedCurve: 'P-256' }, true, []); },
-  exportPrivateKey: async function(key) { var raw = await crypto.subtle.exportKey('pkcs8', key); var bytes = new Uint8Array(raw); var bin = ''; for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]); return btoa(bin); },
-  importPrivateKey: async function(b64) { var bin = atob(b64); var bytes = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); return crypto.subtle.importKey('pkcs8', bytes, { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']); },
+
+  generateKeyPair: async function() {
+    return crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']);
+  },
+  exportPublicKey: async function(key) {
+    var raw = await crypto.subtle.exportKey('spki', key);
+    var bytes = new Uint8Array(raw); var bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  },
+  importPublicKey: async function(b64) {
+    var bin = atob(b64); var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return crypto.subtle.importKey('spki', bytes, { name: 'ECDH', namedCurve: 'P-256' }, true, []);
+  },
+  exportPrivateKey: async function(key) {
+    var raw = await crypto.subtle.exportKey('pkcs8', key);
+    var bytes = new Uint8Array(raw); var bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  },
+  importPrivateKey: async function(b64) {
+    var bin = atob(b64); var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return crypto.subtle.importKey('pkcs8', bytes, { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']);
+  },
   deriveSharedKey: async function(peerPublicKey) {
     var bits = await crypto.subtle.deriveBits({ name: 'ECDH', public: peerPublicKey }, this.keyPair.privateKey, 256);
     var hkdfKey = await crypto.subtle.importKey('raw', bits, 'HKDF', false, ['deriveKey']);
-    return crypto.subtle.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: new TextEncoder().encode('Dust-E2EE-Salt-v1'), info: new TextEncoder().encode('Dust-Shared-Key-v1') }, hkdfKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    return crypto.subtle.deriveKey(
+      { name: 'HKDF', hash: 'SHA-256', salt: new TextEncoder().encode('Dust-E2EE-Salt-v3'), info: new TextEncoder().encode('Dust-Shared-Key-v3') },
+      hkdfKey,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
   },
   computeFingerprint: async function(pub1, pub2) {
     var sorted = [pub1, pub2].sort().join('|');
@@ -385,10 +416,23 @@ var E2EE = {
   init: async function() {
     try {
       var pub = localStorage.getItem('dust_e2ee_pub'); var priv = localStorage.getItem('dust_e2ee_priv');
-      if (pub && priv) { try { var publicKey = await this.importPublicKey(pub); var privateKey = await this.importPrivateKey(priv); this.keyPair = { publicKey, privateKey }; } catch(e) { pub = priv = null; } }
-      if (!pub || !priv) { this.keyPair = await this.generateKeyPair(); pub = await this.exportPublicKey(this.keyPair.publicKey); priv = await this.exportPrivateKey(this.keyPair.privateKey); localStorage.setItem('dust_e2ee_pub', pub); localStorage.setItem('dust_e2ee_priv', priv); }
+      if (pub && priv) {
+        try {
+          var publicKey = await this.importPublicKey(pub);
+          var privateKey = await this.importPrivateKey(priv);
+          this.keyPair = { publicKey, privateKey };
+        } catch(e) { pub = priv = null; }
+      }
+      if (!pub || !priv) {
+        this.keyPair = await this.generateKeyPair();
+        pub = await this.exportPublicKey(this.keyPair.publicKey);
+        priv = await this.exportPrivateKey(this.keyPair.privateKey);
+        localStorage.setItem('dust_e2ee_pub', pub);
+        localStorage.setItem('dust_e2ee_priv', priv);
+      }
       try { await api('/me/public-key', { method: 'PUT', body: JSON.stringify({ public_key: pub }) }); } catch(e) {}
-      this.ready = true; return true;
+      this.ready = true;
+      return true;
     } catch(e) { this.ready = false; return false; }
   },
   getSharedKey: async function(userId, peerPublicKeyB64) {
@@ -399,23 +443,60 @@ var E2EE = {
     var ownPub = localStorage.getItem('dust_e2ee_pub');
     var fp = await this.computeFingerprint(ownPub, peerPublicKeyB64);
     var entry = { key: sharedKey, fingerprint: fp, peerPublicKey: peerPublicKeyB64 };
-    this.cache[userId] = entry; return entry;
+    this.cache[userId] = entry;
+    return entry;
   },
+
+  // ✅ Padding: يخفي الطول الحقيقي للرسالة
   encrypt: async function(sharedKey, plainText) {
+    var enc = new TextEncoder();
+    var textBytes = enc.encode(plainText);
+    // احسب حجم الحشو: الرسائل تُحشى لمضاعفات 64 بايت
+    var targetLen = Math.ceil((textBytes.length + 4) / 64) * 64;
+    var padLen = targetLen - textBytes.length - 4;
+    // أول 4 بايتات = طول النص الأصلي (32-bit big-endian)
+    var padded = new Uint8Array(targetLen);
+    padded[0] = (textBytes.length >>> 24) & 0xff;
+    padded[1] = (textBytes.length >>> 16) & 0xff;
+    padded[2] = (textBytes.length >>> 8) & 0xff;
+    padded[3] = textBytes.length & 0xff;
+    padded.set(textBytes, 4);
+    // الحشو عشوائي (لا يمكن كشفه)
+    var randomPad = crypto.getRandomValues(new Uint8Array(padLen));
+    padded.set(randomPad, 4 + textBytes.length);
+
     var iv = crypto.getRandomValues(new Uint8Array(12));
-    var cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, sharedKey, new TextEncoder().encode(plainText));
-    var combined = new Uint8Array(iv.length + cipher.byteLength); combined.set(iv, 0); combined.set(new Uint8Array(cipher), iv.length);
-    var bin = ''; for (var i = 0; i < combined.length; i++) bin += String.fromCharCode(combined[i]);
+    var cipher = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: iv, tagLength: 128 },
+      sharedKey,
+      padded
+    );
+    var combined = new Uint8Array(iv.length + cipher.byteLength);
+    combined.set(iv, 0);
+    combined.set(new Uint8Array(cipher), iv.length);
+    var bin = '';
+    for (var i = 0; i < combined.length; i++) bin += String.fromCharCode(combined[i]);
     return '🔒' + btoa(bin);
   },
   decrypt: async function(sharedKey, payload) {
     if (!payload || payload.indexOf('🔒') !== 0) return payload;
     try {
-      var bin = atob(payload.substring(2)); var raw = new Uint8Array(bin.length);
+      var bin = atob(payload.substring(2));
+      var raw = new Uint8Array(bin.length);
       for (var i = 0; i < bin.length; i++) raw[i] = bin.charCodeAt(i);
-      var iv = raw.slice(0, 12); var cipher = raw.slice(12);
-      var plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, sharedKey, cipher);
-      return new TextDecoder().decode(plain);
+      var iv = raw.slice(0, 12);
+      var cipher = raw.slice(12);
+      var plain = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: iv, tagLength: 128 },
+        sharedKey,
+        cipher
+      );
+      var bytes = new Uint8Array(plain);
+      // استخرج الطول الأصلي من أول 4 بايتات
+      var origLen = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
+      if (origLen < 0 || origLen > bytes.length - 4) return '[🔒 تالف]';
+      var textBytes = bytes.slice(4, 4 + origLen);
+      return new TextDecoder().decode(textBytes);
     } catch(e) { return '[🔒 تعذر فك التشفير]'; }
   }
 };
@@ -502,6 +583,32 @@ function handleApiError(e){
 window.addEventListener('online', function(){ $('netBanner').classList.remove('show'); });
 window.addEventListener('offline', function(){ $('netBanner').classList.add('show'); });
 
+/* ========== Key Change Warning ========== */
+function showKeyChangeWarning(user, onCancel, onAccept){
+  var backdrop = document.createElement('div');
+  backdrop.style.cssText = 'position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:20px;';
+  backdrop.innerHTML =
+    '<div style="background:var(--surface);border:2px solid var(--danger);border-radius:24px;width:100%;max-width:400px;padding:26px 22px 22px;text-align:center;box-shadow:0 20px 60px rgba(232,67,95,.4)">' +
+      '<div style="width:72px;height:72px;border-radius:50%;margin:0 auto 18px;display:grid;place-items:center;background:var(--danger-soft);color:var(--danger);animation:pulse 1.5s ease-in-out infinite">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:38px;height:38px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+      '</div>' +
+      '<div style="font-size:1.2rem;font-weight:900;color:var(--danger);margin-bottom:10px">⚠️ تحذير أمني خطير</div>' +
+      '<div style="font-size:.9rem;color:var(--text-2);line-height:1.75;margin-bottom:18px">' +
+        'تغيّر مفتاح التشفير الخاص بـ <b>' + esc(user.display_name) + '</b> منذ آخر مرة تحدثتما.' +
+        '<br><br><b>قد يعني هذا:</b><br>• صديقك أعاد تثبيت التطبيق (طبيعي)<br>• <b style="color:var(--danger)">أو هناك هجوم MITM (اختراق)</b>' +
+      '</div>' +
+      '<div style="padding:14px;background:var(--surface-2);border-radius:12px;margin-bottom:16px;font-size:.82rem;line-height:1.7;color:var(--muted)"><b>للتأكد:</b> قارن بصمة المفتاح مع صديقك عبر مكالمة صوتية أو وجهاً لوجه.</div>' +
+      '<div style="display:flex;gap:10px">' +
+        '<button id="kcCancel" style="flex:1;padding:14px;border-radius:14px;font-weight:800;background:var(--surface-2);color:var(--text);border:none;cursor:pointer">إلغاء</button>' +
+        '<button id="kcAccept" style="flex:1;padding:14px;border-radius:14px;font-weight:800;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;cursor:pointer">متابعة على مسؤوليتي</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(backdrop);
+  backdrop.querySelector('#kcCancel').addEventListener('click', function(){ backdrop.remove(); onCancel(); });
+  backdrop.querySelector('#kcAccept').addEventListener('click', function(){ backdrop.remove(); onAccept(); });
+}
+
+/* ========== Auth ========== */
 $('btnRegister').addEventListener('click', async function(){
   var name = $('rgName').value.trim().toLowerCase();
   if(!/^[a-z][a-z0-9_]{1,19}$/.test(name)) return showErr('الاسم يجب أن يبدأ بحرف إنجليزي (2-20 حرف)');
@@ -527,6 +634,7 @@ async function enterApp(user){
   loadEverything();
 }
 
+/* ========== Socket ========== */
 socket.on('auth-error', function(data){
   var err = data && data.error;
   if(err === 'session_expired' || err === 'invalid_token' || err === 'user_not_found'){
@@ -634,6 +742,7 @@ async function updateChatStatus(userId){
   }
 }
 
+/* ========== Poll ========== */
 async function pollCurrentChat(){
   if(!CURRENT_DM) return;
   var userId = CURRENT_DM.user.id;
@@ -696,6 +805,7 @@ function switchTab(name){
 }
 $$('.bottom-nav button').forEach(function(b){ b.addEventListener('click', function(){ switchTab(b.dataset.tab); }); });
 
+/* ========== Chats list ========== */
 async function loadChats(){
   try {
     var r = await api('/dm-conversations');
@@ -753,10 +863,7 @@ function showConversationMenu(userId, name){
   showModal(
     '<div class="modal-header"><button class="back-btn" id="cvmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">' + esc(name) + '</div><div class="spacer"></div></div>' +
     '<div class="modal-list">' +
-      '<button class="modal-item" id="cvmDelete">' +
-        '<div class="mi-icon danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>' +
-        '<div class="mi-info"><div class="mi-title">حذف الدردشة</div><div class="mi-sub">سيتم حذف جميع الرسائل من الطرفين</div></div>' +
-      '</button>' +
+      '<button class="modal-item" id="cvmDelete"><div class="mi-icon danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div><div class="mi-info"><div class="mi-title">حذف الدردشة</div><div class="mi-sub">سيتم حذف جميع الرسائل من الطرفين</div></div></button>' +
     '</div>'
   );
   $('cvmBack').addEventListener('click', closeModal);
@@ -781,11 +888,13 @@ function showConversationMenu(userId, name){
   });
 }
 
+/* ========== Account ========== */
 async function loadAccount(){
   try {
     var r = await api('/me');
     ME = r.user;
     var box = $('accountContent');
+    var myFp = localStorage.getItem('dust_e2ee_pub') ? await E2EE.computeFingerprint(localStorage.getItem('dust_e2ee_pub'), localStorage.getItem('dust_e2ee_pub')) : '—';
     box.innerHTML =
       '<div class="account-avatar">' + esc(initial(ME.display_name)) + '</div>' +
       '<div class="account-name en">' + esc(ME.display_name) + '</div>' +
@@ -796,7 +905,7 @@ async function loadAccount(){
       '</div>' +
       '<div class="account-actions">' +
         '<button class="btn-outline" id="btnPrivacy"><svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>سياسة الخصوصية</button>' +
-        '<button class="btn-danger-outline" id="btnLogout"><svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>تسجيل الخروج (حذف الحساب)</button>' +
+        '<button class="btn-danger-outline" id="btnLogout"><svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>تسجيل الخروج</button>' +
       '</div>';
 
     $('btnPrivacy').addEventListener('click', showPrivacyPolicy);
@@ -821,67 +930,26 @@ async function loadAccount(){
 
 function showPrivacyPolicy(){
   showModal(
-    '<div class="modal-header">' +
-      '<button class="back-btn" id="ppBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
-      '<div class="title">سياسة الخصوصية</div>' +
-      '<div class="spacer"></div>' +
-    '</div>' +
+    '<div class="modal-header"><button class="back-btn" id="ppBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">سياسة الخصوصية</div><div class="spacer"></div></div>' +
     '<div style="font-size:.88rem;line-height:1.9;color:var(--text-2);padding:0 4px">' +
       '<div style="display:flex;gap:12px;padding:14px;background:var(--success-soft);border-radius:14px;margin-bottom:16px;border:1px solid rgba(16,185,129,.25)">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" style="width:24px;height:24px;flex:0 0 auto;margin-top:2px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>' +
-        '<div style="font-size:.82rem;line-height:1.7;color:var(--success);font-weight:600">' +
-          'رسائلك الخاصة <b>مشفرة من الطرف إلى الطرف (E2EE)</b> ولا يمكن لأحد — حتى نحن — قراءتها.' +
-        '</div>' +
+        '<div style="font-size:.82rem;line-height:1.7;color:var(--success);font-weight:600">رسائلك <b>مشفرة من الطرف إلى الطرف (E2EE)</b> + <b>كشف تلقائي</b> للاختراق.</div>' +
       '</div>' +
       '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">1. المعلومات التي نجمعها</h3>' +
       '<p><b>لا نجمع:</b></p>' +
-      '<ul style="padding-inline-start:20px;margin:8px 0">' +
-        '<li>لا نجمع محتوى رسائلك (مشفرة من الطرف إلى الطرف).</li>' +
-        '<li>لا نجمع جهات الاتصال أو الموقع الجغرافي.</li>' +
-        '<li>لا نستخدم أدوات تتبع أو إعلانات.</li>' +
-      '</ul>' +
+      '<ul style="padding-inline-start:20px;margin:8px 0"><li>لا نجمع محتوى رسائلك (مشفرة).</li><li>لا نجمع جهات الاتصال أو الموقع.</li><li>لا نستخدم تتبع أو إعلانات.</li></ul>' +
       '<p style="margin-top:10px"><b>نجمع الحد الأدنى فقط:</b></p>' +
+      '<ul style="padding-inline-start:20px;margin:8px 0"><li>اسم المستخدم (لإنشاء حسابك).</li><li>المفتاح العام للتشفير.</li><li>البيانات الوصفية: من راسل من، ومتى — لكن ليس <b>ماذا</b>.</li></ul>' +
+      '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">2. الأمان</h3>' +
       '<ul style="padding-inline-start:20px;margin:8px 0">' +
-        '<li>اسم المستخدم الذي اخترته (لإنشاء حسابك).</li>' +
-        '<li>المفتاح العام للتشفير (لتمكين الاتصال المشفر).</li>' +
-        '<li>الوقت وآخر ظهور (لإظهار حالة الاتصال).</li>' +
-        '<li>البيانات الوصفية للرسائل: <i>من</i> راسل <i>من</i>، ومتى — لكن ليس <b>ماذا</b> قال.</li>' +
+        '<li><b>E2EE:</b> AES-256-GCM + ECDH P-256.</li>' +
+        '<li><b>Padding:</b> طول الرسالة مخفي (مضاعفات 64 بايت).</li>' +
+        '<li><b>كشف تغيّر المفتاح:</b> تحذير أحمر عند أي تغيير.</li>' +
+        '<li><b>التحقق من البصمة:</b> عبر QR أو نص.</li>' +
       '</ul>' +
-      '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">2. كيف نستخدم بياناتك</h3>' +
-      '<ul style="padding-inline-start:20px;margin:8px 0">' +
-        '<li>لتشغيل التطبيق وتوصيل رسائلك إلى صديقك.</li>' +
-        '<li>لمنع إساءة الاستخدام (تحديد معدل الطلبات).</li>' +
-        '<li>لا نبيع بياناتك لأي طرف ثالث.</li>' +
-        '<li>لا نشاركها إلا بموجب أمر قضائي ملزم قانونياً.</li>' +
-      '</ul>' +
-      '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">3. مدة الاحتفاظ بالبيانات</h3>' +
-      '<ul style="padding-inline-start:20px;margin:8px 0">' +
-        '<li>الرسائل تُحذف تلقائياً من الخادم بعد <b>48 ساعة</b> من قراءتها.</li>' +
-        '<li>حسابك يُحذف تلقائياً بعد <b>7 أيام</b> من عدم الاستخدام.</li>' +
-        '<li>تسجيل الخروج يحذف حسابك ومفاتيحك وبياناتك فوراً.</li>' +
-      '</ul>' +
-      '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">4. الأمان</h3>' +
-      '<ul style="padding-inline-start:20px;margin:8px 0">' +
-        '<li><b>E2EE:</b> تشفير AES-256-GCM بمفاتيح مشتقة من ECDH P-256.</li>' +
-        '<li><b>HTTPS:</b> كل الاتصالات مشفرة عبر TLS.</li>' +
-        '<li><b>التحقق من البصمة:</b> يمكنك مقارنة بصمة مفتاحك مع صديقك للتأكد من عدم وجود اختراق.</li>' +
-        '<li>حماية ضد SQL Injection، XSS، وهجمات القوة الغاشمة.</li>' +
-      '</ul>' +
-      '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">5. حقوقك</h3>' +
-      '<ul style="padding-inline-start:20px;margin:8px 0">' +
-        '<li>الحق في حذف حسابك وبياناتك في أي وقت (زر تسجيل الخروج).</li>' +
-        '<li>الحق في معرفة البيانات المُخزّنة عنك.</li>' +
-        '<li>لا يوجد التزام بفترة إشعار — الحذف فوري.</li>' +
-      '</ul>' +
-      '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">6. حدود المسؤولية</h3>' +
-      '<div style="padding:14px;background:var(--danger-soft);border-radius:12px;border:1px solid rgba(232,67,95,.25);font-size:.82rem;line-height:1.8;color:var(--danger)">' +
-        '<b>⚠️ تنبيه مهم:</b> هذا التطبيق غير مخصص لتبادل معلومات حساسة. للاستخدامات الحساسة (نشطاء، صحفيون، معارضون) ننصح باستخدام <b>Signal</b> أو <b>Briar</b> فقط.' +
-      '</div>' +
-      '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">7. التغييرات على السياسة</h3>' +
-      '<p>قد نحدّث هذه السياسة عند الحاجة. الاستمرار في استخدام التطبيق يعني قبولك للنسخة المحدّثة.</p>' +
-      '<div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:.75rem;color:var(--muted)">' +
-        'آخر تحديث: 2026' +
-      '</div>' +
+      '<h3 style="font-size:.98rem;font-weight:900;color:var(--text);margin:18px 0 10px">3. حدود المسؤولية</h3>' +
+      '<div style="padding:14px;background:var(--danger-soft);border-radius:12px;border:1px solid rgba(232,67,95,.25);font-size:.82rem;line-height:1.8;color:var(--danger)"><b>⚠️ تنبيه:</b> هذا التطبيق غير مخصص لتبادل معلومات حساسة. للاستخدامات الحساسة استخدم <b>Signal</b> أو <b>Briar</b>.</div>' +
     '</div>'
   );
   $('ppBack').addEventListener('click', closeModal);
@@ -908,9 +976,7 @@ async function showMyQrModal(){
       document.body.appendChild(a); a.click(); a.remove();
       toast('تم التحميل', 'ok');
     });
-  } catch(e) {
-    $('qrModalContent').innerHTML = '<div class="empty" style="padding:40px 20px"><p>فشل توليد QR</p></div>';
-  }
+  } catch(e) { $('qrModalContent').innerHTML = '<div class="empty" style="padding:40px 20px"><p>فشل توليد QR</p></div>'; }
 }
 $('btnMyQrMini').addEventListener('click', showMyQrModal);
 
@@ -1076,13 +1142,8 @@ attachLongPress($('chatMsgs'), function(e){
 });
 
 function showMessageMenu(msgId, isMine, text){
-  if (!isMine) {
-    toast('يمكنك فقط حذف أو تعديل رسائلك', 'info');
-    return;
-  }
-  var html = '<div class="modal-header">' +
-    '<button class="back-btn" id="mmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
-    '<div class="title">خيارات الرسالة</div><div class="spacer"></div></div>' +
+  if (!isMine) { toast('يمكنك فقط حذف أو تعديل رسائلك', 'info'); return; }
+  var html = '<div class="modal-header"><button class="back-btn" id="mmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">خيارات الرسالة</div><div class="spacer"></div></div>' +
     '<div class="modal-list">' +
       '<button class="modal-item" id="mmEdit"><div class="mi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div><div class="mi-info"><div class="mi-title">تعديل الرسالة</div><div class="mi-sub">سيتم التعديل عند الطرفين</div></div></button>' +
       '<button class="modal-item" id="mmDelete"><div class="mi-icon danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div><div class="mi-info"><div class="mi-title">حذف الرسالة</div><div class="mi-sub">سيتم الحذف من الطرفين</div></div></button>' +
@@ -1093,9 +1154,7 @@ function showMessageMenu(msgId, isMine, text){
   $('mmDelete').addEventListener('click', function(){
     closeModal();
     showConfirm({
-      title: 'حذف الرسالة',
-      text: 'سيتم حذف هذه الرسالة نهائياً من الطرفين.',
-      confirmText: 'حذف', danger: true,
+      title: 'حذف الرسالة', text: 'سيتم حذف هذه الرسالة نهائياً من الطرفين.', confirmText: 'حذف', danger: true,
       onConfirm: async function(){
         try {
           await api('/dms/' + msgId, { method: 'DELETE' });
@@ -1115,11 +1174,7 @@ function showMessageMenu(msgId, isMine, text){
 }
 
 function showEditMessageModal(msgId, currentText){
-  showModal(
-    '<div class="modal-header"><button class="back-btn" id="emmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">تعديل الرسالة</div><div class="spacer"></div></div>' +
-    '<div class="field"><textarea id="emmText" maxlength="5000" style="min-height:120px">' + esc(currentText) + '</textarea></div>' +
-    '<button class="btn-main" id="emmSave">حفظ التعديل</button>'
-  );
+  showModal('<div class="modal-header"><button class="back-btn" id="emmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">تعديل الرسالة</div><div class="spacer"></div></div><div class="field"><textarea id="emmText" maxlength="5000" style="min-height:120px">' + esc(currentText) + '</textarea></div><button class="btn-main" id="emmSave">حفظ التعديل</button>');
   $('emmBack').addEventListener('click', closeModal);
   setTimeout(function(){ var t = $('emmText'); if(t){ t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, 200);
   $('emmSave').addEventListener('click', async function(){
@@ -1144,10 +1199,7 @@ function showEditMessageModal(msgId, currentText){
       }
       closeModal();
       toast('تم التعديل', 'ok');
-    } catch(e) {
-      toast(e.message, 'err');
-      btn.disabled = false; btn.textContent = 'حفظ التعديل';
-    }
+    } catch(e) { toast(e.message, 'err'); btn.disabled = false; btn.textContent = 'حفظ التعديل'; }
   });
 }
 
@@ -1199,10 +1251,28 @@ async function openDM(user){
       isDeleted = !!user.deleted;
     } catch(_){}
   }
+
+  // 🛡️ كشف تغيّر المفتاح
+  if (peerPub && !isDeleted) {
+    var cacheKey = 'dust_peer_key_' + user.id;
+    var cachedKey = localStorage.getItem(cacheKey);
+    if (cachedKey && cachedKey !== peerPub) {
+      var proceed = await new Promise(function(resolve){
+        showKeyChangeWarning(user,
+          function(){ resolve(false); },
+          function(){ resolve(true); });
+      });
+      if (!proceed) return;
+    }
+    localStorage.setItem(cacheKey, peerPub);
+  }
+
   var shared = null;
   if (peerPub) { try { shared = await E2EE.getSharedKey(user.id, peerPub); } catch(_){} }
-  if (!isDeleted && !shared) return showConfirm({ title: 'لا يمكن بدء المحادثة', text: 'صديقك لم يفتح التطبيق بعد على النظام الجديد. اطلب منه فتح التطبيق مرة واحدة، ثم حاول مجدداً.', confirmText: 'حسناً' });
+  if (!isDeleted && !shared) return showConfirm({ title: 'لا يمكن بدء المحادثة', text: 'صديقك لم يفتح التطبيق بعد. اطلب منه فتح التطبيق مرة واحدة، ثم حاول مجدداً.', confirmText: 'حسناً' });
+
   CURRENT_DM = { user: user, sharedKey: shared ? shared.key : null, fingerprint: shared ? shared.fingerprint : null, deleted: isDeleted };
+
   if (isDeleted) {
     $('chatName').textContent = 'حساب محذوف';
     $('chatName').style.color = 'var(--muted)'; $('chatName').style.fontStyle = 'italic';
@@ -1217,6 +1287,7 @@ async function openDM(user){
     $('chatInput').disabled = false; $('chatInput').placeholder = 'اكتب رسالة مشفرة...';
     $('chatSend').disabled = false; $('chatVerify').style.display = '';
   }
+
   $('chatView').classList.add('open');
   $('chatMsgs').innerHTML = '';
   try {
@@ -1227,23 +1298,42 @@ async function openDM(user){
   } catch(_){}
 }
 
+/* ========== Verify Fingerprint (with QR) ========== */
 $('chatVerify').addEventListener('click', function(){
   if (!CURRENT_DM || !CURRENT_DM.fingerprint) return;
   var peerId = CURRENT_DM.user.id;
   var verified = localStorage.getItem('dust_verified_' + peerId) === '1';
   var fp = CURRENT_DM.fingerprint;
+
   showModal(
     '<div class="modal-header"><button class="back-btn" id="vfBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">التحقق من البصمة</div><div class="spacer"></div></div>' +
     '<div style="text-align:center;padding:8px 0">' +
-      '<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;background:var(--success-soft);color:var(--success)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px;height:32px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>' +
-      '<div style="font-weight:900;font-size:1.1rem;margin-bottom:6px">قارن هذه البصمة شفهياً</div>' +
-      '<div style="font-size:.82rem;color:var(--muted);line-height:1.7;margin-bottom:16px">عبر مكالمة أو وجهاً لوجه. إذا تطابقت عند الطرفين، فالمحادثة آمنة.</div>' +
-      '<div style="padding:18px;background:var(--surface-2);border-radius:16px;border:1px solid var(--border-2);margin-bottom:16px"><div style="font-size:.72rem;color:var(--muted);margin-bottom:8px;font-weight:700">بصمة المفتاح المشترك</div><div class="en" style="font-family:ui-monospace,monospace;font-size:1rem;font-weight:800;color:var(--text);letter-spacing:1px;line-height:1.8">' + fp + '</div></div>' +
+      '<div style="font-weight:900;font-size:1.05rem;margin-bottom:6px">قارن هذه البصمة مع صديقك</div>' +
+      '<div style="font-size:.82rem;color:var(--muted);line-height:1.7;margin-bottom:16px">عبر مكالمة صوتية أو وجهاً لوجه. إذا تطابقت، فالمحادثة آمنة.</div>' +
+      '<div style="padding:16px;background:var(--surface-2);border-radius:16px;border:1px solid var(--border-2);margin-bottom:16px">' +
+        '<div style="font-size:.72rem;color:var(--muted);margin-bottom:8px;font-weight:700">بصمة المفتاح المشترك</div>' +
+        '<div class="en" style="font-family:ui-monospace,monospace;font-size:1rem;font-weight:800;color:var(--text);letter-spacing:1px;line-height:1.8">' + fp + '</div>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:center;margin-bottom:16px">' +
+        '<div style="background:#fff;padding:12px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.08)"><div id="fpQr" style="width:180px;height:180px"></div></div>' +
+      '</div>' +
       (verified ? '<div style="padding:12px;background:var(--success-soft);border-radius:12px;color:var(--success);font-weight:700;font-size:.85rem;margin-bottom:14px">✓ تم التحقق سابقاً</div>' : '<div style="padding:12px;background:var(--danger-soft);border-radius:12px;color:var(--danger);font-weight:700;font-size:.85rem;margin-bottom:14px">⚠️ لم يتم التحقق بعد</div>') +
       '<button class="btn-main" id="vfMark" style="margin-bottom:10px">' + (verified ? 'إلغاء التحقق' : '✓ تحققنا معاً') + '</button>' +
       '<button class="btn-outline" id="vfClose">إغلاق</button>' +
     '</div>'
   );
+
+  try {
+    if (typeof QRCode !== 'undefined') {
+      new QRCode(document.getElementById('fpQr'), {
+        text: 'dust-fp:' + fp.replace(/\s/g, ''),
+        width: 180, height: 180,
+        colorDark: '#0e1018', colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+  } catch(e) {}
+
   $('vfBack').addEventListener('click', closeModal);
   $('vfClose').addEventListener('click', closeModal);
   $('vfMark').addEventListener('click', function(){
@@ -1253,6 +1343,7 @@ $('chatVerify').addEventListener('click', function(){
   });
 });
 
+/* ========== Modal ========== */
 function closeModal(){ $('modal').classList.remove('open'); }
 function showModal(html){ $('modalBody').innerHTML = html; $('modal').classList.add('open'); }
 $('modal').addEventListener('click', function(e){ if(e.target === $('modal')) closeModal(); });
@@ -1271,8 +1362,8 @@ function showConfirm(opts){
       '<div style="font-size:1.15rem;font-weight:900;margin-bottom:8px">' + esc(opts.title) + '</div>' +
       '<div style="font-size:.88rem;color:var(--muted);line-height:1.7;margin-bottom:22px;white-space:pre-line">' + esc(opts.text || '') + '</div>' +
       '<div style="display:flex;gap:10px">' +
-        '<button id="cfCancel" style="flex:1;padding:14px;border-radius:16px;font-weight:800;background:var(--surface-2);color:var(--text)">إلغاء</button>' +
-        '<button id="cfOk" style="flex:1;padding:14px;border-radius:16px;font-weight:800;background:' + (danger ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 'var(--grad-gold)') + ';color:' + (danger ? '#fff' : '#1a1207') + '">' + esc(opts.confirmText || 'تأكيد') + '</button>' +
+        '<button id="cfCancel" style="flex:1;padding:14px;border-radius:16px;font-weight:800;background:var(--surface-2);color:var(--text);border:none;cursor:pointer">إلغاء</button>' +
+        '<button id="cfOk" style="flex:1;padding:14px;border-radius:16px;font-weight:800;background:' + (danger ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 'var(--grad-gold)') + ';color:' + (danger ? '#fff' : '#1a1207') + ';border:none;cursor:pointer">' + esc(opts.confirmText || 'تأكيد') + '</button>' +
       '</div>' +
     '</div>';
   document.body.appendChild(backdrop);
