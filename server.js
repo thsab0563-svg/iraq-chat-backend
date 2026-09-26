@@ -1,5 +1,5 @@
 /* ============================================================
-   Dust Server v9.0 — E2EE + Anti-MITM + PIN Support
+   Dust Server v11.0 — Secure Admin + E2EE + Anti-MITM
    ============================================================ */
 'use strict';
 
@@ -24,15 +24,9 @@ const { nanoid } = require('nanoid');
 
 /* ===== 1. Environment ===== */
 const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET || JWT_SECRET.length < 32) {
-  console.error('❌ JWT_SECRET missing or too short');
-  process.exit(1);
-}
+if (!JWT_SECRET || JWT_SECRET.length < 32) { console.error('❌ JWT_SECRET missing or too short'); process.exit(1); }
 const DB_KEY_HEX = process.env.DB_ENCRYPTION_KEY;
-if (!DB_KEY_HEX || DB_KEY_HEX.length !== 32) {
-  console.error('❌ DB_ENCRYPTION_KEY must be exactly 32 chars');
-  process.exit(1);
-}
+if (!DB_KEY_HEX || DB_KEY_HEX.length !== 32) { console.error('❌ DB_ENCRYPTION_KEY must be exactly 32 chars'); process.exit(1); }
 const DB_KEY = Buffer.from(DB_KEY_HEX, 'utf8');
 const PUBLIC_URL = process.env.PUBLIC_URL || 'http://localhost:8080';
 const PORT = parseInt(process.env.PORT || '8080', 10);
@@ -60,6 +54,8 @@ CREATE TABLE IF NOT EXISTS users (
   created_at INTEGER NOT NULL,
   last_seen INTEGER NOT NULL,
   public_key TEXT,
+  is_admin INTEGER DEFAULT 0,
+  banned INTEGER DEFAULT 0,
   deleted INTEGER DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_users_qr ON users(qr_id);
@@ -102,8 +98,33 @@ console.log('✅ Database initialized');
 try { db.exec('ALTER TABLE users ADD COLUMN public_key TEXT'); } catch(e) {}
 try { db.exec('ALTER TABLE dms ADD COLUMN edited INTEGER DEFAULT 0'); } catch(e) {}
 try { db.exec('ALTER TABLE dms ADD COLUMN deleted INTEGER DEFAULT 0'); } catch(e) {}
+try { db.exec('ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0'); } catch(e) {}
+try { db.exec('ALTER TABLE users ADD COLUMN banned INTEGER DEFAULT 0'); } catch(e) {}
 
-/* ===== 3. Field encryption ===== */
+/* ===== 3. Admin Secret System ===== */
+const ADMIN_SECRET = process.env.ADMIN_SECRET || '';
+const ADMIN_USER_ID = process.env.ADMIN_USER_ID || '';
+
+if (ADMIN_SECRET && ADMIN_SECRET.length < 20) {
+  console.error('❌ ADMIN_SECRET must be at least 20 characters!');
+  process.exit(1);
+}
+if (ADMIN_SECRET) console.log('🔑 Admin secret configured (first claim wins)');
+if (ADMIN_USER_ID) console.log('🔑 Admin ID fallback configured:', ADMIN_USER_ID);
+
+function ensureAdminById() {
+  if (!ADMIN_USER_ID) return;
+  try {
+    const existingAdmins = db.prepare('SELECT COUNT(*) as c FROM users WHERE is_admin = 1').get().c;
+    if (existingAdmins > 0) return;
+    const r = db.prepare('UPDATE users SET is_admin = 1 WHERE id = ?').run(parseInt(ADMIN_USER_ID, 10));
+    if (r.changes > 0) console.log('✅ Admin configured by ID:', ADMIN_USER_ID);
+  } catch(e) {}
+}
+ensureAdminById();
+setInterval(ensureAdminById, 60 * 1000);
+
+/* ===== 4. Field encryption ===== */
 function encryptField(plain) {
   if (!plain) return null;
   const iv = crypto.randomBytes(12);
@@ -125,7 +146,7 @@ function decryptField(payload) {
   } catch (e) { return null; }
 }
 
-/* ===== 4. Helpers ===== */
+/* ===== 5. Helpers ===== */
 function now() { return Date.now(); }
 function hashToken(token) { return crypto.createHash('sha256').update(token).digest('hex'); }
 const ONLINE_USERS = new Map();
@@ -140,7 +161,9 @@ function publicUser(row, includePrivate = false) {
     public_key: row.public_key || null,
     bio: decryptField(row.bio_enc),
     location: decryptField(row.location_enc),
-    deleted: row.deleted === 1
+    deleted: row.deleted === 1,
+    is_admin: row.is_admin === 1,
+    banned: row.banned === 1
   };
   if (includePrivate) { u.theme = row.theme; u.sound = !!row.sound; }
   return u;
@@ -155,14 +178,10 @@ function mapMessage(m) {
   };
 }
 
-/* ===== 5. Express ===== */
+/* ===== 6. Express ===== */
 const app = express();
 app.set('trust proxy', 1);
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: 'cross-origin' }
-}));
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({ origin: (o, cb) => cb(null, true), credentials: true }));
 app.use(express.json({ limit: '256kb' }));
 app.use(express.urlencoded({ extended: true, limit: '256kb' }));
@@ -178,14 +197,17 @@ const UPLOAD_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d' }));
 
-/* ===== 6. Rate limiting ===== */
+/* ===== 7. Rate limiting ===== */
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, message: { error: 'too_many_requests' } });
 const apiLimiter = rateLimit({ windowMs: 60 * 1000, max: 240, message: { error: 'rate_limit_exceeded' } });
 const dmLimiter = rateLimit({ windowMs: 60 * 1000, max: 80, keyGenerator: (req) => req.userId ? String(req.userId) : req.ip, message: { error: 'slow_down' } });
+const claimLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 5, message: { error: 'too_many_claims' } });
+
 app.use('/api/', apiLimiter);
 app.use('/api/register', authLimiter);
+app.use('/api/claim-admin', claimLimiter);
 
-/* ===== 7. Auth middleware ===== */
+/* ===== 8. Auth middleware ===== */
 function authRequired(req, res, next) {
   const h = req.headers.authorization || '';
   const token = h.startsWith('Bearer ') ? h.slice(7) : null;
@@ -195,6 +217,7 @@ function authRequired(req, res, next) {
     const row = db.prepare('SELECT * FROM users WHERE id = ? AND deleted = 0').get(decoded.id);
     if (!row) return res.status(401).json({ error: 'user_not_found' });
     if (row.token_hash !== hashToken(token)) return res.status(401).json({ error: 'session_expired' });
+    if (row.banned === 1) return res.status(403).json({ error: 'banned' });
     req.userId = row.id; req.user = row; req.token = token;
     next();
   } catch (e) { return res.status(401).json({ error: 'invalid_token' }); }
@@ -204,8 +227,12 @@ function validate(req, res, next) {
   if (!errors.isEmpty()) return res.status(400).json({ error: 'invalid_input', details: errors.array() });
   next();
 }
+function adminRequired(req, res, next) {
+  if (!req.user || req.user.is_admin !== 1) return res.status(403).json({ error: 'admin_only' });
+  next();
+}
 
-/* ===== 8. Auth routes ===== */
+/* ===== 9. Auth routes ===== */
 app.post('/api/register',
   body('name').trim().isLength({ min: 2, max: 20 }).matches(/^[a-z][a-z0-9_]*$/i),
   body('color').optional().matches(/^#[0-9a-f]{6}$/i),
@@ -237,7 +264,37 @@ app.post('/api/logout', authRequired, (req, res) => {
   res.json({ ok: true });
 });
 
-/* ===== 9. User routes ===== */
+/* ===== 9.5. Claim Admin ===== */
+app.post('/api/claim-admin', authRequired, (req, res) => {
+  if (!ADMIN_SECRET) return res.status(400).json({ error: 'no_secret_configured' });
+
+  const provided = String((req.body && req.body.secret) || '');
+  if (provided.length < 20) return res.status(400).json({ error: 'secret_too_short' });
+
+  const a = Buffer.from(provided, 'utf8');
+  const b = Buffer.from(ADMIN_SECRET, 'utf8');
+  if (a.length !== b.length) return res.status(403).json({ error: 'invalid_secret' });
+  try {
+    if (!crypto.timingSafeEqual(a, b)) return res.status(403).json({ error: 'invalid_secret' });
+  } catch(e) { return res.status(403).json({ error: 'invalid_secret' }); }
+
+  const existingAdmins = db.prepare('SELECT COUNT(*) as c FROM users WHERE is_admin = 1').get().c;
+  const me = db.prepare('SELECT is_admin FROM users WHERE id = ?').get(req.userId);
+  const iAmAdmin = me && me.is_admin === 1;
+
+  if (existingAdmins > 0 && !iAmAdmin) {
+    console.log(`⚠️  Admin claim rejected: admins exist (user ${req.userId})`);
+    return res.status(403).json({ error: 'admin_already_exists' });
+  }
+
+  db.prepare('UPDATE users SET is_admin = 1 WHERE id = ?').run(req.userId);
+  console.log(`🎉 User ${req.userId} (${req.user.username}) became admin`);
+
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
+  res.json({ ok: true, user: publicUser(user, true) });
+});
+
+/* ===== 10. User routes ===== */
 app.get('/api/me', authRequired, (req, res) => res.json({ user: publicUser(req.user, true) }));
 
 app.put('/api/me', authRequired,
@@ -280,7 +337,96 @@ app.get('/api/users/:id', authRequired, (req, res) => {
   res.json({ user: publicUser(row), isFriend, blocked });
 });
 
-/* ===== 10. QR ===== */
+/* ===== 10.5. Admin routes ===== */
+app.get('/api/admin/stats', authRequired, adminRequired, (req, res) => {
+  const totalUsers = db.prepare('SELECT COUNT(*) as c FROM users WHERE deleted = 0').get().c;
+  const activeUsers = db.prepare('SELECT COUNT(*) as c FROM users WHERE deleted = 0 AND last_seen > ?').get(Date.now() - 24*60*60*1000).c;
+  const bannedUsers = db.prepare('SELECT COUNT(*) as c FROM users WHERE banned = 1').get().c;
+  const totalMessages = db.prepare('SELECT COUNT(*) as c FROM dms').get().c;
+  const messages24h = db.prepare('SELECT COUNT(*) as c FROM dms WHERE time > ?').get(Date.now() - 24*60*60*1000).c;
+  const totalFriendships = db.prepare('SELECT COUNT(*) as c FROM friendships').get().c / 2;
+  const onlineNow = ONLINE_USERS.size;
+  res.json({
+    totalUsers, activeUsers, bannedUsers,
+    totalMessages, messages24h,
+    totalFriendships, onlineNow,
+    uptime: process.uptime(), version: '11.0.0'
+  });
+});
+
+app.get('/api/admin/users', authRequired, adminRequired, (req, res) => {
+  const q = String(req.query.q || '').trim().slice(0, 50);
+  let rows;
+  if (q) {
+    rows = db.prepare(`SELECT * FROM users WHERE username LIKE ? OR display_name LIKE ? ORDER BY last_seen DESC LIMIT 100`).all(`%${q}%`, `%${q}%`);
+  } else {
+    rows = db.prepare('SELECT * FROM users ORDER BY last_seen DESC LIMIT 100').all();
+  }
+  const users = rows.map(r => {
+    const msgCount = db.prepare('SELECT COUNT(*) as c FROM dms WHERE from_id = ? OR to_id = ?').get(r.id, r.id).c;
+    const friends = db.prepare('SELECT COUNT(*) as c FROM friendships WHERE user_id = ?').get(r.id).c;
+    const u = publicUser(r, true);
+    u.msg_count = msgCount;
+    u.friends_count = friends;
+    return u;
+  });
+  res.json({ users });
+});
+
+app.post('/api/admin/user/:id/ban', authRequired, adminRequired, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!id) return res.status(400).json({ error: 'invalid' });
+  if (id === req.userId) return res.status(400).json({ error: 'self' });
+  const action = req.body && req.body.action;
+  const banned = action === 'unban' ? 0 : 1;
+  db.prepare('UPDATE users SET banned = ? WHERE id = ?').run(banned, id);
+  if (banned === 1) io.to(`u_${id}`).emit('auth-error', { error: 'banned' });
+  res.json({ ok: true, banned: banned === 1 });
+});
+
+app.delete('/api/admin/user/:id', authRequired, adminRequired, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!id) return res.status(400).json({ error: 'invalid' });
+  if (id === req.userId) return res.status(400).json({ error: 'self' });
+  db.prepare('UPDATE users SET deleted = 1, banned = 1 WHERE id = ?').run(id);
+  io.to(`u_${id}`).emit('user-deleted', { userId: id });
+  res.json({ ok: true });
+});
+
+app.post('/api/admin/user/:id/admin', authRequired, adminRequired, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!id) return res.status(400).json({ error: 'invalid' });
+  if (id === req.userId) return res.status(400).json({ error: 'self' });
+  const current = db.prepare('SELECT is_admin FROM users WHERE id = ?').get(id);
+  if (!current) return res.status(404).json({ error: 'not_found' });
+  const newVal = current.is_admin === 1 ? 0 : 1;
+  db.prepare('UPDATE users SET is_admin = ? WHERE id = ?').run(newVal, id);
+  res.json({ ok: true, is_admin: newVal === 1 });
+});
+
+app.post('/api/admin/broadcast', authRequired, adminRequired,
+  body('text').trim().isLength({ min: 1, max: 500 }),
+  validate,
+  (req, res) => {
+    const text = req.body.text;
+    const users = db.prepare('SELECT id FROM users WHERE deleted = 0').all();
+    let sent = 0;
+    const t = Date.now();
+    const senderId = req.userId;
+    for (const u of users) {
+      if (u.id === senderId) continue;
+      try {
+        const info = db.prepare('INSERT INTO dms (from_id, to_id, text, time, delivered) VALUES (?, ?, ?, ?, 0)').run(senderId, u.id, '📢 ' + text, t);
+        const msg = { id: info.lastInsertRowid, from_id: senderId, to_id: u.id, text: '📢 ' + text, time: t, delivered: ONLINE_USERS.has(u.id), read: false, edited: false, deleted: false };
+        io.to(`u_${u.id}`).emit('dm-message', msg);
+        sent++;
+      } catch(e) {}
+    }
+    res.json({ ok: true, sent });
+  }
+);
+
+/* ===== 11. QR ===== */
 app.get('/api/qr/image', authRequired, async (req, res) => {
   try {
     const link = `${PUBLIC_URL}/?qr=${req.user.qr_id}`;
@@ -289,7 +435,7 @@ app.get('/api/qr/image', authRequired, async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'qr_failed' }); }
 });
 
-/* ===== 11. Friends ===== */
+/* ===== 12. Friends ===== */
 app.post('/api/friends/add-by-qr', authRequired,
   body('qr_id').trim().isLength({ min: 8, max: 32 }).matches(/^[a-z0-9]+$/i),
   validate,
@@ -313,13 +459,9 @@ app.post('/api/friends/add-by-qr', authRequired,
   }
 );
 
-/* ===== 12. DM conversations ===== */
+/* ===== 13. DM ===== */
 app.get('/api/dm-conversations', authRequired, (req, res) => {
-  const rows = db.prepare(`
-    SELECT CASE WHEN from_id = ? THEN to_id ELSE from_id END AS other_id, MAX(time) AS last_time
-    FROM dms WHERE from_id = ? OR to_id = ?
-    GROUP BY other_id ORDER BY last_time DESC LIMIT 100
-  `).all(req.userId, req.userId, req.userId);
+  const rows = db.prepare(`SELECT CASE WHEN from_id = ? THEN to_id ELSE from_id END AS other_id, MAX(time) AS last_time FROM dms WHERE from_id = ? OR to_id = ? GROUP BY other_id ORDER BY last_time DESC LIMIT 100`).all(req.userId, req.userId, req.userId);
   const conversations = rows.map(r => {
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(r.other_id);
     if (!user) return null;
@@ -339,7 +481,6 @@ app.get('/api/dms/:userId', authRequired, (req, res) => {
   res.json({ messages: rows.map(mapMessage) });
 });
 
-/* ===== 13. Delete entire conversation ===== */
 app.delete('/api/dm-conversations/:userId', authRequired, (req, res) => {
   const otherId = parseInt(req.params.userId, 10);
   if (!otherId) return res.status(400).json({ error: 'invalid' });
@@ -348,7 +489,6 @@ app.delete('/api/dm-conversations/:userId', authRequired, (req, res) => {
   res.json({ ok: true });
 });
 
-/* ===== 14. Message edit / delete ===== */
 app.put('/api/dms/:messageId', authRequired,
   body('text').trim().isLength({ min: 1, max: 10000 }),
   validate,
@@ -377,7 +517,7 @@ app.delete('/api/dms/:messageId', authRequired, (req, res) => {
   res.json({ ok: true });
 });
 
-/* ===== 15. Upload ===== */
+/* ===== 14. Upload ===== */
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
   filename: (req, file, cb) => {
@@ -399,7 +539,7 @@ app.post('/upload', authRequired, upload.single('image'), (req, res) => {
   res.json({ url: `${PUBLIC_URL}/uploads/${req.file.filename}` });
 });
 
-/* ===== 16. Push ===== */
+/* ===== 15. Push ===== */
 let pushEnabled = false;
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:admin@dust.app', process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
@@ -423,7 +563,7 @@ async function sendPush(userId, payload) {
   for (const id of dead) db.prepare('DELETE FROM push_subs WHERE id = ?').run(id);
 }
 
-/* ===== 17. Socket.io ===== */
+/* ===== 16. Socket.io ===== */
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*', methods: ['GET', 'POST'] }, pingTimeout: 30000, pingInterval: 25000, maxHttpBufferSize: 1e6 });
 
@@ -433,6 +573,7 @@ function verifyToken(token) {
     const row = db.prepare('SELECT * FROM users WHERE id = ? AND deleted = 0').get(decoded.id);
     if (!row) return { error: 'user_not_found' };
     if (row.token_hash !== hashToken(token)) return { error: 'session_expired' };
+    if (row.banned === 1) return { error: 'banned' };
     return { user: row };
   } catch (e) { return { error: 'invalid_token' }; }
 }
@@ -507,19 +648,20 @@ io.on('connection', (socket) => {
   });
 });
 
-/* ===== 18. Cleanup ===== */
+/* ===== 17. Cleanup ===== */
 setInterval(() => {
   const cutoff = now() - (48 * 60 * 60 * 1000);
   const r = db.prepare('DELETE FROM dms WHERE time < ? AND read = 1').run(cutoff);
   if (r.changes > 0) console.log(`🧹 Cleaned ${r.changes} messages`);
 }, 60 * 60 * 1000);
 
-/* ===== 19. Health ===== */
+/* ===== 18. Health ===== */
 app.get('/health', (req, res) => {
   res.json({
     ok: true, uptime: process.uptime(),
     users: db.prepare('SELECT COUNT(*) as c FROM users WHERE deleted = 0').get().c,
-    online: ONLINE_USERS.size, e2ee: 'ECDH-P256', version: '9.0.0'
+    admins: db.prepare('SELECT COUNT(*) as c FROM users WHERE is_admin = 1').get().c,
+    online: ONLINE_USERS.size, e2ee: 'ECDH-P256', version: '11.0.0'
   });
 });
 app.use((err, req, res, next) => {
@@ -528,11 +670,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'server_error' });
 });
 
-/* ===== 20. Start ===== */
+/* ===== 19. Start ===== */
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Dust Server v9.0 on port ${PORT}`);
+  console.log(`🚀 Dust Server v11.0 on port ${PORT}`);
   console.log(`🔗 ${PUBLIC_URL}`);
   console.log(`🔐 E2EE: ECDH P-256 + HKDF`);
-  console.log(`🛡️  Security: helmet + rate-limit + JWT + AES-256-GCM`);
+  console.log(`🔑 Admin secret: ${ADMIN_SECRET ? 'configured' : 'NOT SET'}`);
 });
 process.on('SIGTERM', () => { server.close(() => { db.close(); process.exit(0); }); });
