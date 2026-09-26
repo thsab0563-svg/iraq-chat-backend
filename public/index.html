@@ -708,7 +708,34 @@ socket.on('dm-typing', function(d){
     else updateChatStatus(d.fromId);
   }
 });
+socket.on('notification', function(n){
+  if (!n) return;
+  if (n.type === 'friend_added') {
+    toast(n.text || 'صديق جديد', 'ok');
+    loadChats();
+  } else if (n.type === 'dm') {
+    if (soundOn) playBeep();
+    loadChats();
+  } else {
+    toast(n.text || 'إشعار جديد', 'info');
+  }
+});
 
+socket.on('connect', function(){
+  console.log('✅ Socket connected');
+  // Re-authenticate on every reconnect
+  if (TOKEN) socket.emit('auth', { token: TOKEN });
+});
+
+socket.on('connect_error', function(err){
+  console.warn('⚠️ Socket connect error:', err.message);
+});
+
+socket.on('auth-ok', function(data){
+  console.log('✅ Socket authenticated as', data.user.id);
+  ME = data.user;
+  loadEverything();
+});
 async function updateChatStatus(userId){
   if(onlineUsers[userId]){ $('chatSub').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/></svg>متصل الآن'; $('chatSub').className = 'ch-sub online'; }
   else {
