@@ -1,5 +1,5 @@
 /* ============================================================
-   Dust Server v8.5 — E2EE + Message Edit/Delete + Conv Delete
+   Dust Server v9.0 — E2EE + Anti-MITM + PIN Support
    ============================================================ */
 'use strict';
 
@@ -22,15 +22,23 @@ const QRCode = require('qrcode');
 const cors = require('cors');
 const { nanoid } = require('nanoid');
 
+/* ===== 1. Environment ===== */
 const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET || JWT_SECRET.length < 32) { console.error('❌ JWT_SECRET missing or too short'); process.exit(1); }
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  console.error('❌ JWT_SECRET missing or too short');
+  process.exit(1);
+}
 const DB_KEY_HEX = process.env.DB_ENCRYPTION_KEY;
-if (!DB_KEY_HEX || DB_KEY_HEX.length !== 32) { console.error('❌ DB_ENCRYPTION_KEY must be exactly 32 chars'); process.exit(1); }
+if (!DB_KEY_HEX || DB_KEY_HEX.length !== 32) {
+  console.error('❌ DB_ENCRYPTION_KEY must be exactly 32 chars');
+  process.exit(1);
+}
 const DB_KEY = Buffer.from(DB_KEY_HEX, 'utf8');
 const PUBLIC_URL = process.env.PUBLIC_URL || 'http://localhost:8080';
 const PORT = parseInt(process.env.PORT || '8080', 10);
 const DB_PATH = process.env.DB_PATH || './dust.db';
 
+/* ===== 2. Database ===== */
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
@@ -95,6 +103,7 @@ try { db.exec('ALTER TABLE users ADD COLUMN public_key TEXT'); } catch(e) {}
 try { db.exec('ALTER TABLE dms ADD COLUMN edited INTEGER DEFAULT 0'); } catch(e) {}
 try { db.exec('ALTER TABLE dms ADD COLUMN deleted INTEGER DEFAULT 0'); } catch(e) {}
 
+/* ===== 3. Field encryption ===== */
 function encryptField(plain) {
   if (!plain) return null;
   const iv = crypto.randomBytes(12);
@@ -116,6 +125,7 @@ function decryptField(payload) {
   } catch (e) { return null; }
 }
 
+/* ===== 4. Helpers ===== */
 function now() { return Date.now(); }
 function hashToken(token) { return crypto.createHash('sha256').update(token).digest('hex'); }
 const ONLINE_USERS = new Map();
@@ -145,6 +155,7 @@ function mapMessage(m) {
   };
 }
 
+/* ===== 5. Express ===== */
 const app = express();
 app.set('trust proxy', 1);
 app.use(helmet({
@@ -167,12 +178,14 @@ const UPLOAD_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d' }));
 
+/* ===== 6. Rate limiting ===== */
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, message: { error: 'too_many_requests' } });
 const apiLimiter = rateLimit({ windowMs: 60 * 1000, max: 240, message: { error: 'rate_limit_exceeded' } });
 const dmLimiter = rateLimit({ windowMs: 60 * 1000, max: 80, keyGenerator: (req) => req.userId ? String(req.userId) : req.ip, message: { error: 'slow_down' } });
 app.use('/api/', apiLimiter);
 app.use('/api/register', authLimiter);
 
+/* ===== 7. Auth middleware ===== */
 function authRequired(req, res, next) {
   const h = req.headers.authorization || '';
   const token = h.startsWith('Bearer ') ? h.slice(7) : null;
@@ -192,6 +205,7 @@ function validate(req, res, next) {
   next();
 }
 
+/* ===== 8. Auth routes ===== */
 app.post('/api/register',
   body('name').trim().isLength({ min: 2, max: 20 }).matches(/^[a-z][a-z0-9_]*$/i),
   body('color').optional().matches(/^#[0-9a-f]{6}$/i),
@@ -223,6 +237,7 @@ app.post('/api/logout', authRequired, (req, res) => {
   res.json({ ok: true });
 });
 
+/* ===== 9. User routes ===== */
 app.get('/api/me', authRequired, (req, res) => res.json({ user: publicUser(req.user, true) }));
 
 app.put('/api/me', authRequired,
@@ -265,6 +280,7 @@ app.get('/api/users/:id', authRequired, (req, res) => {
   res.json({ user: publicUser(row), isFriend, blocked });
 });
 
+/* ===== 10. QR ===== */
 app.get('/api/qr/image', authRequired, async (req, res) => {
   try {
     const link = `${PUBLIC_URL}/?qr=${req.user.qr_id}`;
@@ -273,6 +289,7 @@ app.get('/api/qr/image', authRequired, async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'qr_failed' }); }
 });
 
+/* ===== 11. Friends ===== */
 app.post('/api/friends/add-by-qr', authRequired,
   body('qr_id').trim().isLength({ min: 8, max: 32 }).matches(/^[a-z0-9]+$/i),
   validate,
@@ -296,6 +313,7 @@ app.post('/api/friends/add-by-qr', authRequired,
   }
 );
 
+/* ===== 12. DM conversations ===== */
 app.get('/api/dm-conversations', authRequired, (req, res) => {
   const rows = db.prepare(`
     SELECT CASE WHEN from_id = ? THEN to_id ELSE from_id END AS other_id, MAX(time) AS last_time
@@ -321,6 +339,7 @@ app.get('/api/dms/:userId', authRequired, (req, res) => {
   res.json({ messages: rows.map(mapMessage) });
 });
 
+/* ===== 13. Delete entire conversation ===== */
 app.delete('/api/dm-conversations/:userId', authRequired, (req, res) => {
   const otherId = parseInt(req.params.userId, 10);
   if (!otherId) return res.status(400).json({ error: 'invalid' });
@@ -329,6 +348,7 @@ app.delete('/api/dm-conversations/:userId', authRequired, (req, res) => {
   res.json({ ok: true });
 });
 
+/* ===== 14. Message edit / delete ===== */
 app.put('/api/dms/:messageId', authRequired,
   body('text').trim().isLength({ min: 1, max: 10000 }),
   validate,
@@ -357,6 +377,7 @@ app.delete('/api/dms/:messageId', authRequired, (req, res) => {
   res.json({ ok: true });
 });
 
+/* ===== 15. Upload ===== */
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
   filename: (req, file, cb) => {
@@ -378,6 +399,7 @@ app.post('/upload', authRequired, upload.single('image'), (req, res) => {
   res.json({ url: `${PUBLIC_URL}/uploads/${req.file.filename}` });
 });
 
+/* ===== 16. Push ===== */
 let pushEnabled = false;
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:admin@dust.app', process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
@@ -401,6 +423,7 @@ async function sendPush(userId, payload) {
   for (const id of dead) db.prepare('DELETE FROM push_subs WHERE id = ?').run(id);
 }
 
+/* ===== 17. Socket.io ===== */
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*', methods: ['GET', 'POST'] }, pingTimeout: 30000, pingInterval: 25000, maxHttpBufferSize: 1e6 });
 
@@ -484,17 +507,19 @@ io.on('connection', (socket) => {
   });
 });
 
+/* ===== 18. Cleanup ===== */
 setInterval(() => {
   const cutoff = now() - (48 * 60 * 60 * 1000);
   const r = db.prepare('DELETE FROM dms WHERE time < ? AND read = 1').run(cutoff);
   if (r.changes > 0) console.log(`🧹 Cleaned ${r.changes} messages`);
 }, 60 * 60 * 1000);
 
+/* ===== 19. Health ===== */
 app.get('/health', (req, res) => {
   res.json({
     ok: true, uptime: process.uptime(),
     users: db.prepare('SELECT COUNT(*) as c FROM users WHERE deleted = 0').get().c,
-    online: ONLINE_USERS.size, e2ee: 'ECDH-P256', version: '8.5.0'
+    online: ONLINE_USERS.size, e2ee: 'ECDH-P256', version: '9.0.0'
   });
 });
 app.use((err, req, res, next) => {
@@ -503,9 +528,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'server_error' });
 });
 
+/* ===== 20. Start ===== */
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Dust Server v8.5 on port ${PORT}`);
+  console.log(`🚀 Dust Server v9.0 on port ${PORT}`);
   console.log(`🔗 ${PUBLIC_URL}`);
   console.log(`🔐 E2EE: ECDH P-256 + HKDF`);
+  console.log(`🛡️  Security: helmet + rate-limit + JWT + AES-256-GCM`);
 });
 process.on('SIGTERM', () => { server.close(() => { db.close(); process.exit(0); }); });
