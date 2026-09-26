@@ -28,23 +28,13 @@
   --ease:cubic-bezier(.2,.8,.3,1);
   --radius-sm:12px;--radius:16px;--radius-lg:22px;--radius-xl:28px;
 }
-body.dark{
-  --bg:#0b0d14;--surface:#161a25;--surface-2:#1c2130;--surface-3:#242b3d;
-  --text:#f0f2f8;--text-2:#c8cddc;--muted:#8a90a4;--muted-2:#5c627a;
-  --border:rgba(255,255,255,.06);--border-2:rgba(255,255,255,.1);
-  --gold:#e8b567;--gold-2:#f4c885;--gold-soft:rgba(232,181,103,.12);
-  --shadow-sm:0 2px 8px rgba(0,0,0,.2);
-  --shadow-md:0 8px 24px rgba(0,0,0,.3);
-  --shadow-lg:0 20px 50px rgba(0,0,0,.4);
-}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 input,textarea{user-select:text;-webkit-user-select:text}
 html,body{height:100%;overscroll-behavior:none}
 body{
   font-family:'Cairo','Inter',system-ui,-apple-system,sans-serif;
   color:var(--text);background:var(--bg);overflow:hidden;
-  -webkit-font-smoothing:antialiased;font-size:15px;
-  transition:background .3s,color .3s;position:relative;
+  -webkit-font-smoothing:antialiased;font-size:15px;position:relative;
 }
 body::before{
   content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
@@ -66,6 +56,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .screen{display:none;height:100dvh;width:100%;position:relative;z-index:1}
 .screen.active{display:flex;flex-direction:column}
 
+/* ===== Splash ===== */
 #splash{
   position:fixed;inset:0;z-index:10000;
   background:
@@ -95,6 +86,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 @keyframes splashBar{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
 @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 
+/* ===== Auth ===== */
 #auth{overflow-y:auto}
 .auth-wrap{margin:auto;width:100%;max-width:440px;padding:36px 24px;position:relative;z-index:1}
 .auth-logo{width:92px;height:92px;margin:0 auto 22px;border-radius:28px;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;box-shadow:var(--shadow-gold)}
@@ -118,6 +110,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .warn-card .w-text{flex:1;font-size:.82rem;line-height:1.75;color:var(--text-2)}
 .warn-card .w-text b{color:var(--gold);font-weight:800}
 
+/* ===== App ===== */
 #app{position:relative;overflow:hidden}
 .tab-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
 .tab{display:none}
@@ -126,8 +119,9 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .app-header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;padding:18px 20px 14px;padding-top:calc(18px + env(safe-area-inset-top));background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
 .app-header h1{font-size:1.35rem;font-weight:900;flex:1;letter-spacing:-.3px}
 .app-header h1 .brand-dot{color:var(--gold)}
-.hbtn{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--border-2);color:var(--text);transition:transform .15s}
+.hbtn{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--border-2);color:var(--text);transition:transform .15s;flex:0 0 auto}
 .hbtn:active{transform:scale(.92)}
+.qr-mini{background:var(--gold-soft);border-color:rgba(201,143,61,.3);color:var(--gold)}
 .bottom-nav{position:absolute;bottom:calc(12px + env(safe-area-inset-bottom));inset-inline:16px;z-index:60;display:flex;height:66px;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(28px);border:1px solid var(--border-2);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:6px;gap:3px}
 .bottom-nav button{flex:1;padding:7px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:.58rem;font-weight:700;position:relative;border-radius:15px;transition:.2s var(--ease)}
 .bottom-nav button.on{color:var(--gold);background:var(--gold-soft)}
@@ -144,27 +138,28 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .user-row .ur-sub.online{color:var(--success);font-weight:600}
 .user-row .ur-unread{background:var(--danger);color:#fff;font-size:.7rem;font-weight:800;padding:3px 9px;border-radius:99px;min-width:22px;text-align:center}
 
-.account-wrap{padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:20px}
-.account-avatar{width:100px;height:100px;border-radius:50%;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;font-weight:900;font-size:2.4rem;box-shadow:var(--shadow-gold);border:4px solid var(--surface)}
-.account-name{font-size:1.6rem;font-weight:900;text-align:center;letter-spacing:-.3px}
-.account-username{font-size:.9rem;color:var(--muted);margin-top:-14px}
-.qr-card{width:100%;max-width:340px;padding:24px;border-radius:var(--radius-xl);background:var(--surface);border:1px solid var(--border-2);box-shadow:var(--shadow-md);display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:8px}
-.qr-card h3{font-size:1rem;font-weight:900;color:var(--text)}
-.qr-wrapper{background:#fff;padding:14px;border-radius:18px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
-.qr-wrapper canvas,.qr-wrapper img{display:block;border-radius:6px}
-.qr-hint{font-size:.78rem;color:var(--muted);text-align:center;line-height:1.7;max-width:250px}
+/* ===== Account Tab ===== */
+.account-wrap{padding:32px 20px 24px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.account-avatar{width:110px;height:110px;border-radius:50%;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;font-weight:900;font-size:2.6rem;box-shadow:var(--shadow-gold);border:5px solid var(--surface)}
+.account-name{font-size:1.6rem;font-weight:900;text-align:center;letter-spacing:-.3px;margin-top:4px}
+.account-username{font-size:.9rem;color:var(--muted)}
+.account-info-card{width:100%;max-width:360px;margin-top:14px;padding:18px;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius-lg);display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow-sm)}
+.account-info-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.88rem}
+.account-info-row .label{color:var(--muted);font-weight:600}
+.account-info-row .value{font-weight:800;color:var(--text);font-family:ui-monospace,monospace;direction:ltr}
+.account-actions{width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px;margin-top:14px}
 .btn-copy{width:100%;padding:13px;border-radius:var(--radius);background:var(--grad-gold);color:#1a1207;font-weight:800;font-size:.92rem;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--shadow-gold);transition:transform .15s}
 .btn-copy:active{transform:scale(.97)}
-.btn-outline{width:100%;padding:13px;border-radius:var(--radius);background:var(--surface);border:1.5px solid var(--border-2);color:var(--text);font-weight:800;font-size:.92rem;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,background .2s}
+.btn-outline{width:100%;padding:14px;border-radius:var(--radius);background:var(--surface);border:1.5px solid var(--border-2);color:var(--text);font-weight:800;font-size:.92rem;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,background .2s}
 .btn-outline:active{transform:scale(.97);background:var(--surface-2)}
-.btn-danger-outline{width:100%;padding:13px;border-radius:var(--radius);background:var(--surface);border:1.5px solid rgba(232,67,95,.3);color:var(--danger);font-weight:800;font-size:.92rem;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,background .2s}
+.btn-danger-outline{width:100%;padding:14px;border-radius:var(--radius);background:var(--surface);border:1.5px solid rgba(232,67,95,.3);color:var(--danger);font-weight:800;font-size:.92rem;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,background .2s}
 .btn-danger-outline:active{transform:scale(.97);background:var(--danger-soft)}
-.account-actions{width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px;margin-top:6px}
 
+/* ===== Chat View ===== */
 #chatView{position:fixed;inset:0;z-index:200;background:var(--bg);display:none;flex-direction:column}
 #chatView.open{display:flex}
 .chat-head{display:flex;align-items:center;gap:10px;padding:14px 16px;padding-top:calc(14px + env(safe-area-inset-top));border-bottom:1px solid var(--border);background:var(--bg)}
-.chat-head .back{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--border-2);color:var(--text)}
+.chat-head .back{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--border-2);color:var(--text);flex:0 0 auto}
 .chat-head .back:active{transform:scale(.92)}
 .chat-head .verify{background:var(--success-soft);border-color:rgba(16,185,129,.3);color:var(--success)}
 .chat-head .ch-text{flex:1;min-width:0}
@@ -190,10 +185,13 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .chat-input-row{padding:12px 14px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--bg);display:flex;align-items:flex-end;gap:9px}
 #chatInput{flex:1;padding:12px 16px;border-radius:var(--radius);background:var(--surface);border:1.5px solid var(--border-2);color:var(--text);font-size:.93rem;line-height:1.55;max-height:120px;min-height:44px;resize:none;transition:border-color .2s,box-shadow .2s}
 #chatInput:focus{border-color:var(--gold);box-shadow:0 0 0 4px var(--gold-soft)}
+#chatInput:disabled{opacity:.5;cursor:not-allowed}
 .send{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;flex:0 0 auto;box-shadow:var(--shadow-gold);transition:transform .15s}
 .send:active{transform:scale(.9)}
+.send:disabled{opacity:.4;cursor:not-allowed}
 
-.modal{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:none;align-items:flex-end;justify-content:center}
+/* ===== Modal ===== */
+.modal{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:none;align-items:flex-end;justify-content:center}
 .modal.open{display:flex}
 .modal-card{background:var(--surface);border-radius:var(--radius-xl) var(--radius-xl) 0 0;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;padding:22px;padding-bottom:calc(22px + env(safe-area-inset-bottom));animation:slideUp .3s var(--ease)}
 .modal-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
@@ -212,6 +210,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .modal-item .mi-sub{font-size:.72rem;color:var(--muted);margin-top:3px;font-weight:500}
 #qrReader{width:100%;max-width:400px;margin:0 auto;border-radius:var(--radius-lg);overflow:hidden}
 
+/* ===== Toasts ===== */
 #toasts{position:fixed;top:calc(16px + env(safe-area-inset-top));inset-inline:16px;z-index:999;display:flex;flex-direction:column;gap:9px;align-items:center;pointer-events:none}
 .toast{padding:13px 20px;border-radius:var(--radius);background:color-mix(in srgb,var(--surface) 96%,transparent);backdrop-filter:blur(20px);border:1px solid var(--border-2);box-shadow:var(--shadow-lg);font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:10px;max-width:100%;pointer-events:auto;animation:slideDown .3s var(--ease)}
 .toast.ok{border-color:rgba(16,185,129,.35);color:var(--success)}
@@ -309,7 +308,19 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
     </div>
 
     <div id="tab-account" class="tab">
-      <header class="app-header"><h1>حسابي</h1></header>
+      <header class="app-header">
+        <button class="hbtn qr-mini" id="btnMyQrMini" title="QR الخاص بي">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+            <line x1="14" y1="14" x2="14" y2="21"/>
+            <line x1="21" y1="14" x2="21" y2="21"/>
+          </svg>
+        </button>
+        <h1 style="text-align:center">حسابي</h1>
+        <div style="width:42px;flex:0 0 auto"></div>
+      </header>
       <div class="account-wrap" id="accountContent"></div>
     </div>
   </div>
@@ -383,7 +394,7 @@ var qrScanner = null;
 var qrFileInput = null;
 
 /* ============================================================
-   E2EE Engine - Real ECDH P-256 + HKDF-SHA256
+   E2EE — Real ECDH P-256 + HKDF-SHA256
    ============================================================ */
 var E2EE = {
   keyPair: null,
@@ -391,78 +402,52 @@ var E2EE = {
   cache: {},
 
   generateKeyPair: async function() {
-    return crypto.subtle.generateKey(
-      { name: 'ECDH', namedCurve: 'P-256' },
-      true,
-      ['deriveKey', 'deriveBits']
-    );
+    return crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']);
   },
-
   exportPublicKey: async function(key) {
     var raw = await crypto.subtle.exportKey('spki', key);
-    var bytes = new Uint8Array(raw);
-    var bin = '';
+    var bytes = new Uint8Array(raw); var bin = '';
     for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
     return btoa(bin);
   },
-
   importPublicKey: async function(b64) {
-    var bin = atob(b64);
-    var bytes = new Uint8Array(bin.length);
+    var bin = atob(b64); var bytes = new Uint8Array(bin.length);
     for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     return crypto.subtle.importKey('spki', bytes, { name: 'ECDH', namedCurve: 'P-256' }, true, []);
   },
-
   exportPrivateKey: async function(key) {
     var raw = await crypto.subtle.exportKey('pkcs8', key);
-    var bytes = new Uint8Array(raw);
-    var bin = '';
+    var bytes = new Uint8Array(raw); var bin = '';
     for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
     return btoa(bin);
   },
-
   importPrivateKey: async function(b64) {
-    var bin = atob(b64);
-    var bytes = new Uint8Array(bin.length);
+    var bin = atob(b64); var bytes = new Uint8Array(bin.length);
     for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     return crypto.subtle.importKey('pkcs8', bytes, { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']);
   },
-
   deriveSharedKey: async function(peerPublicKey) {
-    var bits = await crypto.subtle.deriveBits(
-      { name: 'ECDH', public: peerPublicKey },
-      this.keyPair.privateKey,
-      256
-    );
+    var bits = await crypto.subtle.deriveBits({ name: 'ECDH', public: peerPublicKey }, this.keyPair.privateKey, 256);
     var hkdfKey = await crypto.subtle.importKey('raw', bits, 'HKDF', false, ['deriveKey']);
     return crypto.subtle.deriveKey(
-      {
-        name: 'HKDF',
-        hash: 'SHA-256',
-        salt: new TextEncoder().encode('Dust-E2EE-Salt-v1'),
-        info: new TextEncoder().encode('Dust-Shared-Key-v1')
-      },
+      { name: 'HKDF', hash: 'SHA-256', salt: new TextEncoder().encode('Dust-E2EE-Salt-v1'), info: new TextEncoder().encode('Dust-Shared-Key-v1') },
       hkdfKey,
       { name: 'AES-GCM', length: 256 },
       false,
       ['encrypt', 'decrypt']
     );
   },
-
   computeFingerprint: async function(pub1, pub2) {
     var sorted = [pub1, pub2].sort().join('|');
     var hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(sorted));
-    var bytes = new Uint8Array(hash).slice(0, 8);
-    var hex = '';
+    var bytes = new Uint8Array(hash).slice(0, 8); var hex = '';
     for (var i = 0; i < bytes.length; i++) hex += bytes[i].toString(16).padStart(2, '0');
     return hex.match(/.{1,4}/g).join(' ');
   },
-
   init: async function() {
     try {
       var pub = localStorage.getItem('dust_e2ee_pub');
       var priv = localStorage.getItem('dust_e2ee_priv');
-
       if (pub && priv) {
         try {
           var publicKey = await this.importPublicKey(pub);
@@ -470,7 +455,6 @@ var E2EE = {
           this.keyPair = { publicKey, privateKey };
         } catch(e) { pub = priv = null; }
       }
-
       if (!pub || !priv) {
         this.keyPair = await this.generateKeyPair();
         pub = await this.exportPublicKey(this.keyPair.publicKey);
@@ -478,25 +462,14 @@ var E2EE = {
         localStorage.setItem('dust_e2ee_pub', pub);
         localStorage.setItem('dust_e2ee_priv', priv);
       }
-
-      try {
-        await api('/me/public-key', { method: 'PUT', body: JSON.stringify({ public_key: pub }) });
-      } catch(e) { console.warn('Public key upload failed:', e); }
-
+      try { await api('/me/public-key', { method: 'PUT', body: JSON.stringify({ public_key: pub }) }); } catch(e) {}
       this.ready = true;
       return true;
-    } catch(e) {
-      console.error('E2EE init error:', e);
-      this.ready = false;
-      return false;
-    }
+    } catch(e) { this.ready = false; return false; }
   },
-
   getSharedKey: async function(userId, peerPublicKeyB64) {
     if (!peerPublicKeyB64) throw new Error('no_peer_key');
-    if (this.cache[userId] && this.cache[userId].peerPublicKey === peerPublicKeyB64) {
-      return this.cache[userId];
-    }
+    if (this.cache[userId] && this.cache[userId].peerPublicKey === peerPublicKeyB64) return this.cache[userId];
     var peerPub = await this.importPublicKey(peerPublicKeyB64);
     var sharedKey = await this.deriveSharedKey(peerPub);
     var ownPub = localStorage.getItem('dust_e2ee_pub');
@@ -505,30 +478,22 @@ var E2EE = {
     this.cache[userId] = entry;
     return entry;
   },
-
   encrypt: async function(sharedKey, plainText) {
     var iv = crypto.getRandomValues(new Uint8Array(12));
-    var cipher = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv: iv, tagLength: 128 },
-      sharedKey,
-      new TextEncoder().encode(plainText)
-    );
+    var cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, sharedKey, new TextEncoder().encode(plainText));
     var combined = new Uint8Array(iv.length + cipher.byteLength);
-    combined.set(iv, 0);
-    combined.set(new Uint8Array(cipher), iv.length);
+    combined.set(iv, 0); combined.set(new Uint8Array(cipher), iv.length);
     var bin = '';
     for (var i = 0; i < combined.length; i++) bin += String.fromCharCode(combined[i]);
     return '🔒' + btoa(bin);
   },
-
   decrypt: async function(sharedKey, payload) {
     if (!payload || payload.indexOf('🔒') !== 0) return payload;
     try {
       var bin = atob(payload.substring(2));
       var raw = new Uint8Array(bin.length);
       for (var i = 0; i < bin.length; i++) raw[i] = bin.charCodeAt(i);
-      var iv = raw.slice(0, 12);
-      var cipher = raw.slice(12);
+      var iv = raw.slice(0, 12); var cipher = raw.slice(12);
       var plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, sharedKey, cipher);
       return new TextDecoder().decode(plain);
     } catch(e) { return '[🔒 تعذر فك التشفير]'; }
@@ -557,8 +522,14 @@ function linkify(text){
   return s;
 }
 function avatarHTML(user, size){
-  var color = (user && user.color) || '#e8b567';
   var sz = size ? 'width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size*0.42) + 'px' : '';
+  if (user && user.deleted) {
+    var iconSz = Math.round((size||46)*0.5);
+    return '<div class="avatar" style="background:#4a4f5c;color:#c8cddc;' + sz + '">' +
+      '<svg viewBox="0 0 24 24" style="width:' + iconSz + 'px;height:' + iconSz + 'px;stroke:currentColor;fill:none;stroke-width:2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="4" y1="4" x2="20" y2="20" stroke-width="2.5"/></svg>' +
+    '</div>';
+  }
+  var color = (user && user.color) || '#e8b567';
   var dot = (user && user.online) ? '<span class="online-dot"></span>' : '';
   var nm = (user && user.display_name) ? user.display_name : '';
   return '<div class="avatar" style="background:linear-gradient(135deg,' + color + ',#d4a574);' + sz + '">' + esc(initial(nm)) + dot + '</div>';
@@ -597,7 +568,7 @@ async function api(path, opts){
   return data;
 }
 function handleApiError(e){
-  if(e.message === 'session_expired' || e.message === 'invalid_token' || e.message === 'user_not_found'){
+  if(e.message === 'session_expired' || e.message === 'invalid_token'){
     toast('انتهت الجلسة', 'err');
     localStorage.removeItem('token');
     TOKEN = null;
@@ -633,8 +604,9 @@ $('btnRegister').addEventListener('click', async function(){
 
 async function enterApp(user){
   ME = user;
-  soundOn = user.sound !== false;
-  applyTheme(user.theme || 'light');
+  soundOn = true;
+  // Always light mode
+  document.body.classList.remove('dark');
 
   var e2eeOk = await E2EE.init();
   if (!e2eeOk) toast('تعذر تفعيل التشفير', 'err');
@@ -645,7 +617,6 @@ async function enterApp(user){
   lastConvData = null;
   loadEverything();
 }
-function applyTheme(theme){ document.body.classList.toggle('dark', theme === 'dark'); }
 
 /* ============================================================
    Socket
@@ -659,14 +630,51 @@ socket.on('auth-error', function(data){
     setTimeout(function(){ location.reload(); }, 1500);
   }
 });
+
+socket.on('auth-ok', function(data){
+  ME = data.user;
+  loadEverything();
+});
+
+socket.on('connect', function(){
+  if (TOKEN) socket.emit('auth', { token: TOKEN });
+});
+
+socket.on('connect_error', function(err){ console.warn('Socket connect error:', err.message); });
+
+socket.on('notification', function(n){
+  if (!n) return;
+  if (n.type === 'friend_added') {
+    toast(n.text || 'صديق جديد', 'ok');
+    loadChats();
+  } else if (n.type === 'dm') {
+    if (soundOn) playBeep();
+    loadChats();
+  } else {
+    toast(n.text || 'إشعار جديد', 'info');
+  }
+});
+
 socket.on('user-online', function(d){ onlineUsers[d.userId] = true; if(currentTab === 'chats') loadChats(); });
 socket.on('user-offline', function(d){ delete onlineUsers[d.userId]; if(currentTab === 'chats') loadChats(); });
+
 socket.on('user-deleted', function(d){
   delete onlineUsers[d.userId];
   if(CURRENT_DM && CURRENT_DM.user.id === d.userId){
-    toast('المستخدم حذف حسابه', 'err');
-    $('chatView').classList.remove('open');
-    CURRENT_DM = null;
+    toast('المستخدم حذف حسابه — الوضع للقراءة فقط', 'info');
+    CURRENT_DM.deleted = true;
+    CURRENT_DM.sharedKey = null;
+    $('chatName').textContent = 'حساب محذوف';
+    $('chatName').style.color = 'var(--muted)';
+    $('chatName').style.fontStyle = 'italic';
+    $('chatSub').textContent = 'لا يمكن المراسلة';
+    $('chatSub').className = 'ch-sub offline';
+    $('chatInput').disabled = true;
+    $('chatInput').placeholder = 'لا يمكن المراسلة — الحساب محذوف';
+    $('chatInput').style.opacity = '0.5';
+    $('chatSend').disabled = true;
+    $('chatSend').style.opacity = '0.4';
+    $('chatVerify').style.display = 'none';
   }
   loadChats();
 });
@@ -706,34 +714,7 @@ socket.on('dm-typing', function(d){
     else updateChatStatus(d.fromId);
   }
 });
-socket.on('notification', function(n){
-  if (!n) return;
-  if (n.type === 'friend_added') {
-    toast(n.text || 'صديق جديد', 'ok');
-    loadChats();
-  } else if (n.type === 'dm') {
-    if (soundOn) playBeep();
-    loadChats();
-  } else {
-    toast(n.text || 'إشعار جديد', 'info');
-  }
-});
 
-socket.on('connect', function(){
-  console.log('✅ Socket connected');
-  // Re-authenticate on every reconnect
-  if (TOKEN) socket.emit('auth', { token: TOKEN });
-});
-
-socket.on('connect_error', function(err){
-  console.warn('⚠️ Socket connect error:', err.message);
-});
-
-socket.on('auth-ok', function(data){
-  console.log('✅ Socket authenticated as', data.user.id);
-  ME = data.user;
-  loadEverything();
-});
 async function updateChatStatus(userId){
   if(onlineUsers[userId]){ $('chatSub').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/></svg>متصل الآن'; $('chatSub').className = 'ch-sub online'; }
   else {
@@ -821,7 +802,7 @@ async function loadChats(){
     var html = '';
     for (var i = 0; i < r.conversations.length; i++) {
       var c = r.conversations[i];
-      var online = c.user.online;
+      var online = c.user.online && !c.user.deleted;
       var preview = 'لا توجد رسائل';
 
       if (c.last && c.last.text) {
@@ -836,11 +817,15 @@ async function loadChats(){
         }
       }
 
-      html += '<div class="user-row" data-dmuid="' + c.user.id + '">' +
+      var displayName = c.user.deleted ? 'حساب محذوف' : esc(c.user.display_name);
+      var subText = c.user.deleted ? 'الحساب محذوف' : (online ? 'متصل الآن' : esc(preview));
+      var subClass = c.user.deleted ? 'offline' : (online ? 'online' : '');
+
+      html += '<div class="user-row" data-dmuid="' + c.user.id + '"' + (c.user.deleted ? ' style="opacity:.65"' : '') + '>' +
         avatarHTML(c.user) +
-        '<div class="ur-info"><div class="ur-name">' + esc(c.user.display_name) + '</div>' +
-        '<div class="ur-sub' + (online ? ' online' : '') + '">' + (online ? 'متصل الآن' : esc(preview)) + '</div></div>' +
-        (c.unread ? '<span class="ur-unread">' + c.unread + '</span>' : '') +
+        '<div class="ur-info"><div class="ur-name" style="' + (c.user.deleted ? 'color:var(--muted);font-style:italic' : '') + '">' + displayName + '</div>' +
+        '<div class="ur-sub ' + subClass + '">' + subText + '</div></div>' +
+        (c.unread && !c.user.deleted ? '<span class="ur-unread">' + c.unread + '</span>' : '') +
         '</div>';
     }
 
@@ -851,39 +836,31 @@ async function loadChats(){
 }
 
 /* ============================================================
-   Account tab
+   Account Tab
    ============================================================ */
 async function loadAccount(){
   try {
     var r = await api('/me');
     ME = r.user;
     var box = $('accountContent');
-    var isDark = document.body.classList.contains('dark');
     box.innerHTML =
       '<div class="account-avatar">' + esc(initial(ME.display_name)) + '</div>' +
       '<div class="account-name en">' + esc(ME.display_name) + '</div>' +
       '<div class="account-username en">@' + esc(ME.username) + '</div>' +
-
-      '<div class="qr-card">' +
-        '<h3>شارك كودك لإضافة الأصدقاء</h3>' +
-        '<div class="qr-wrapper" id="qrWrapper"><div class="spinner"></div></div>' +
-        '<div class="qr-hint">دع صديقك يمسح الكود أو حمّله من الاستوديو</div>' +
-        '<button class="btn-copy" id="btnCopyQr">' +
-          '<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
-          'نسخ رابط QR' +
-        '</button>' +
+      '<div class="account-info-card">' +
+        '<div class="account-info-row">' +
+          '<span class="label">اسم المستخدم</span>' +
+          '<span class="value">' + esc(ME.username) + '</span>' +
+        '</div>' +
+        '<div class="account-info-row">' +
+          '<span class="label">تاريخ الانضمام</span>' +
+          '<span class="value" style="font-family:inherit;direction:rtl">' + new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'long',year:'numeric'}).format(new Date(ME.created_at)) + '</span>' +
+        '</div>' +
       '</div>' +
-
       '<div class="account-actions">' +
-        '<button class="btn-outline" id="btnDownloadQr">' +
-          '<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
-          'تحميل صورة QR' +
-        '</button>' +
-        '<button class="btn-outline" id="btnThemeToggle">' +
-          (isDark ? '☀️ الوضع النهاري' : '🌙 الوضع الليلي') +
-        '</button>' +
-        '<button class="btn-outline" id="btnSound">' +
-          (soundOn ? '🔊 إيقاف الأصوات' : '🔇 تفعيل الأصوات') +
+        '<button class="btn-outline" id="btnOpenQr">' +
+          '<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/></svg>' +
+          'عرض QR الخاص بي' +
         '</button>' +
         '<button class="btn-danger-outline" id="btnLogout">' +
           '<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
@@ -891,35 +868,7 @@ async function loadAccount(){
         '</button>' +
       '</div>';
 
-    try {
-      var q = await api('/qr/image');
-      $('qrWrapper').innerHTML = '<img src="' + q.qr + '" alt="QR" style="width:200px;height:200px" />';
-      $('btnCopyQr').addEventListener('click', function(){
-        navigator.clipboard.writeText(q.link).then(function(){ toast('تم نسخ الرابط', 'ok'); }).catch(function(){ toast('فشل النسخ', 'err'); });
-      });
-      $('btnDownloadQr').addEventListener('click', function(){
-        var a = document.createElement('a');
-        a.href = q.qr;
-        a.download = 'dust-qr-' + ME.username + '.png';
-        document.body.appendChild(a); a.click(); a.remove();
-        toast('تم التحميل', 'ok');
-      });
-    } catch(e) {
-      $('qrWrapper').innerHTML = '<div style="color:var(--muted);font-size:.8rem;padding:20px;text-align:center">فشل توليد QR</div>';
-    }
-
-    $('btnThemeToggle').addEventListener('click', async function(){
-      var isDark2 = document.body.classList.contains('dark');
-      applyTheme(isDark2 ? 'light' : 'dark');
-      try { await api('/me', { method: 'PUT', body: JSON.stringify({ theme: isDark2 ? 'light' : 'dark' }) }); } catch(_){}
-      loadAccount();
-    });
-    $('btnSound').addEventListener('click', async function(){
-      soundOn = !soundOn;
-      try { await api('/me', { method: 'PUT', body: JSON.stringify({ sound: soundOn }) }); } catch(_){}
-      toast(soundOn ? 'الأصوات مفعّلة' : 'الأصوات معطّلة', 'ok');
-      loadAccount();
-    });
+    $('btnOpenQr').addEventListener('click', showMyQrModal);
     $('btnLogout').addEventListener('click', function(){
       showConfirm({
         title: 'تسجيل الخروج',
@@ -939,6 +888,56 @@ async function loadAccount(){
     });
   } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
 }
+
+/* ============================================================
+   My QR Modal
+   ============================================================ */
+async function showMyQrModal(){
+  showModal(
+    '<div class="modal-header">' +
+      '<button class="back-btn" id="qmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
+      '<div class="title">QR الخاص بي</div>' +
+      '<div class="spacer"></div>' +
+    '</div>' +
+    '<div id="qrModalContent"><div style="text-align:center;padding:30px"><div class="spinner"></div></div></div>'
+  );
+  $('qmBack').addEventListener('click', closeModal);
+
+  try {
+    var q = await api('/qr/image');
+    $('qrModalContent').innerHTML =
+      '<div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0">' +
+        '<div style="background:#fff;padding:16px;border-radius:20px;box-shadow:0 6px 24px rgba(0,0,0,.08)">' +
+          '<img src="' + q.qr + '" alt="QR" style="width:240px;height:240px;display:block;border-radius:8px" />' +
+        '</div>' +
+        '<div style="font-size:.82rem;color:var(--muted);text-align:center;line-height:1.7;max-width:280px">دع صديقك يمسح الكود، أو انسخ الكود وأرسله له</div>' +
+        '<div class="en" style="width:100%;padding:14px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:14px;font-family:ui-monospace,monospace;font-size:.9rem;text-align:center;font-weight:700;letter-spacing:1px;color:var(--text)">' + esc(q.qr_id) + '</div>' +
+        '<button class="btn-copy" id="btnCopyQrCode" style="width:100%">' +
+          '<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
+          'نسخ كود QR' +
+        '</button>' +
+        '<button class="btn-outline" id="btnDownloadQrCode" style="width:100%">' +
+          '<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+          'تحميل صورة QR' +
+        '</button>' +
+      '</div>';
+
+    $('btnCopyQrCode').addEventListener('click', function(){
+      navigator.clipboard.writeText(q.qr_id).then(function(){ toast('تم نسخ كود QR', 'ok'); }).catch(function(){ toast('فشل النسخ', 'err'); });
+    });
+    $('btnDownloadQrCode').addEventListener('click', function(){
+      var a = document.createElement('a');
+      a.href = q.qr;
+      a.download = 'dust-qr-' + ME.username + '.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      toast('تم التحميل', 'ok');
+    });
+  } catch(e) {
+    $('qrModalContent').innerHTML = '<div class="empty" style="padding:40px 20px"><p>فشل توليد QR</p></div>';
+  }
+}
+
+$('btnMyQrMini').addEventListener('click', showMyQrModal);
 
 /* ============================================================
    Add friend
@@ -963,7 +962,7 @@ function showAddFriendMenu(){
       '</button>' +
       '<button class="modal-item" id="afmCode">' +
         '<div class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>' +
-        '<div class="mi-info"><div class="mi-title">إدخال الكود يدوياً</div><div class="mi-sub">الصق كود QR أو الرابط</div></div>' +
+        '<div class="mi-info"><div class="mi-title">إدخال الكود يدوياً</div><div class="mi-sub">الصق كود QR</div></div>' +
       '</button>' +
     '</div>'
   );
@@ -1052,7 +1051,7 @@ function showEnterQrId(){
       '<div class="title">إدخال كود QR</div>' +
       '<div class="spacer"></div>' +
     '</div>' +
-    '<div class="field"><label>كود QR أو الرابط</label><input id="eqrInput" placeholder="a3f9b2e8c4d1" maxlength="200" class="en" dir="ltr" style="text-align:left" /></div>' +
+    '<div class="field"><label>كود QR</label><input id="eqrInput" placeholder="a3f9b2e8c4d1" maxlength="32" class="en" dir="ltr" style="text-align:left" /></div>' +
     '<button class="btn-main" id="eqrSubmit">إضافة صديق</button>'
   );
   $('eqrBack').addEventListener('click', closeModal);
@@ -1147,10 +1146,10 @@ $('chatBack').addEventListener('click', function(){
 function autoGrow(){ var t = $('chatInput'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px'; }
 $('chatInput').addEventListener('input', function(){
   autoGrow();
-  if(!CURRENT_DM) return;
+  if(!CURRENT_DM || CURRENT_DM.deleted) return;
   socket.emit('dm-typing', { toId: CURRENT_DM.user.id, isTyping: true });
   clearTimeout(dmTypingTimer);
-  dmTypingTimer = setTimeout(function(){ if(CURRENT_DM) socket.emit('dm-typing', { toId: CURRENT_DM.user.id, isTyping: false }); }, 1500);
+  dmTypingTimer = setTimeout(function(){ if(CURRENT_DM && !CURRENT_DM.deleted) socket.emit('dm-typing', { toId: CURRENT_DM.user.id, isTyping: false }); }, 1500);
 });
 $('chatInput').addEventListener('keydown', function(e){ if(e.key === 'Enter' && !e.shiftKey && window.innerWidth > 720){ e.preventDefault(); sendChat(); } });
 $('chatSend').addEventListener('click', sendChat);
@@ -1158,6 +1157,10 @@ $('chatSend').addEventListener('click', sendChat);
 async function sendChat(){
   var txt = $('chatInput').value.trim();
   if(!txt || !CURRENT_DM) return;
+  if (CURRENT_DM.deleted) {
+    toast('لا يمكن المراسلة — الحساب محذوف', 'err');
+    return;
+  }
   var toId = CURRENT_DM.user.id;
   var now = Date.now();
 
@@ -1173,7 +1176,7 @@ async function sendChat(){
     try { encrypted = await E2EE.encrypt(CURRENT_DM.sharedKey, txt); }
     catch(e) { toast('فشل التشفير', 'err'); return; }
   } else {
-    toast('لا يوجد مفتاح مشفر مع هذا المستخدم', 'err');
+    toast('لا يوجد مفتاح مشفر', 'err');
     return;
   }
 
@@ -1191,34 +1194,65 @@ async function openDMById(userId){
 async function openDM(user){
   if(ME && user.id === ME.id) return toast('لا يمكنك مراسلة نفسك', 'err');
 
+  var isDeleted = !!user.deleted;
   var peerPub = user.public_key;
-  if (!peerPub) {
+
+  if (!peerPub && !isDeleted) {
     try {
       var fresh = await api('/users/' + user.id);
       peerPub = fresh.user.public_key;
       user.public_key = peerPub;
+      user.deleted = fresh.user.deleted;
+      isDeleted = !!user.deleted;
     } catch(_){}
   }
 
-  if (!peerPub) {
+  var shared = null;
+  if (peerPub) {
+    try { shared = await E2EE.getSharedKey(user.id, peerPub); } catch(_){}
+  }
+
+  if (!isDeleted && !shared) {
     return showConfirm({
       title: 'لا يمكن بدء المحادثة',
-      text: 'صديقك لم يفتح التطبيق بعد على النظام الجديد. اطلب منه فتح التطبيق مرة واحدة لتوليد مفتاحه، ثم حاول مجدداً.',
+      text: 'صديقك لم يفتح التطبيق بعد على النظام الجديد. اطلب منه فتح التطبيق مرة واحدة، ثم حاول مجدداً.',
       confirmText: 'حسناً'
     });
   }
 
-  var shared;
-  try {
-    shared = await E2EE.getSharedKey(user.id, peerPub);
-  } catch(e) {
-    return toast('تعذر إنشاء المفتاح المشترك', 'err');
+  CURRENT_DM = {
+    user: user,
+    sharedKey: shared ? shared.key : null,
+    fingerprint: shared ? shared.fingerprint : null,
+    deleted: isDeleted
+  };
+
+  if (isDeleted) {
+    $('chatName').textContent = 'حساب محذوف';
+    $('chatName').style.color = 'var(--muted)';
+    $('chatName').style.fontStyle = 'italic';
+    $('chatSub').textContent = 'لا يمكن المراسلة';
+    $('chatSub').className = 'ch-sub offline';
+    $('chatInput').disabled = true;
+    $('chatInput').placeholder = 'لا يمكن المراسلة — الحساب محذوف';
+    $('chatInput').style.opacity = '0.5';
+    $('chatSend').disabled = true;
+    $('chatSend').style.opacity = '0.4';
+    $('chatVerify').style.display = 'none';
+  } else {
+    $('chatName').textContent = user.display_name;
+    $('chatName').style.color = '';
+    $('chatName').style.fontStyle = '';
+    if(user.online){ $('chatSub').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/></svg>متصل الآن'; $('chatSub').className = 'ch-sub online'; }
+    else { $('chatSub').textContent = fmtLastSeen(user.last_seen); $('chatSub').className = 'ch-sub offline'; }
+    $('chatInput').disabled = false;
+    $('chatInput').placeholder = 'اكتب رسالة مشفرة...';
+    $('chatInput').style.opacity = '';
+    $('chatSend').disabled = false;
+    $('chatSend').style.opacity = '';
+    $('chatVerify').style.display = '';
   }
 
-  CURRENT_DM = { user: user, sharedKey: shared.key, fingerprint: shared.fingerprint };
-  $('chatName').textContent = user.display_name;
-  if(user.online){ $('chatSub').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/></svg>متصل الآن'; $('chatSub').className = 'ch-sub online'; }
-  else { $('chatSub').textContent = fmtLastSeen(user.last_seen); $('chatSub').className = 'ch-sub offline'; }
   $('chatView').classList.add('open');
   $('chatMsgs').innerHTML = '';
   try {
@@ -1227,7 +1261,7 @@ async function openDM(user){
       await renderDMMsg(r.messages[i]);
     }
     scrollChat(true);
-    socket.emit('dm-read', { fromId: user.id });
+    if (!isDeleted) socket.emit('dm-read', { fromId: user.id });
   } catch(_){}
 }
 
@@ -1288,7 +1322,7 @@ $('modal').addEventListener('click', function(e){ if(e.target === $('modal')) cl
 
 function showConfirm(opts){
   var backdrop = document.createElement('div');
-  backdrop.style.cssText = 'position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:20px;';
+  backdrop.style.cssText = 'position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.5);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:20px;';
   var danger = opts.danger;
   backdrop.innerHTML =
     '<div style="background:var(--surface);border:1px solid var(--border-2);border-radius:22px;width:100%;max-width:380px;padding:26px 22px 22px;text-align:center;box-shadow:var(--shadow-lg)">' +
