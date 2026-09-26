@@ -363,9 +363,7 @@ var qrScanner = null;
 var qrFileInput = null;
 var lastLongPressAt = 0;
 
-/* ============================================================
-   E2EE Engine
-   ============================================================ */
+/* ========== E2EE ========== */
 var E2EE = {
   keyPair: null, ready: false, cache: {},
   generateKeyPair: async function() { return crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']); },
@@ -423,30 +421,18 @@ var E2EE = {
   }
 };
 
-/* ============================================================
-   Long press helper
-   ============================================================ */
+/* ========== Long press ========== */
 function attachLongPress(el, callback, duration){
   duration = duration || 500;
-  var timer = null, startX = 0, startY = 0, fired = false;
-
+  var timer = null, startX = 0, startY = 0;
   function down(e) {
     if (e.button !== undefined && e.button !== 0) return;
-    fired = false;
     var t = e.touches ? e.touches[0] : e;
     startX = t.clientX; startY = t.clientY;
-    timer = setTimeout(function() {
-      fired = true; lastLongPressAt = Date.now();
-      if (navigator.vibrate) navigator.vibrate(30);
-      callback(e);
-    }, duration);
+    timer = setTimeout(function() { lastLongPressAt = Date.now(); if (navigator.vibrate) navigator.vibrate(30); callback(e); }, duration);
   }
-  function move(e) {
-    var t = e.touches ? e.touches[0] : e;
-    if (Math.abs(t.clientX - startX) > 10 || Math.abs(t.clientY - startY) > 10) { clearTimeout(timer); fired = false; }
-  }
+  function move(e) { var t = e.touches ? e.touches[0] : e; if (Math.abs(t.clientX - startX) > 10 || Math.abs(t.clientY - startY) > 10) clearTimeout(timer); }
   function up() { clearTimeout(timer); }
-
   el.addEventListener('touchstart', down, { passive: true });
   el.addEventListener('touchmove', move, { passive: true });
   el.addEventListener('touchend', up);
@@ -459,9 +445,7 @@ function attachLongPress(el, callback, duration){
 }
 function wasLongPress(){ return Date.now() - lastLongPressAt < 600; }
 
-/* ============================================================
-   Helpers
-   ============================================================ */
+/* ========== Helpers ========== */
 var esc = function(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
 var initial = function(n){ return (n||'?').trim().charAt(0).toUpperCase(); };
 var fmtTime = function(ts){ return new Intl.DateTimeFormat('ar-EG',{hour:'2-digit',minute:'2-digit'}).format(new Date(ts)); };
@@ -474,19 +458,12 @@ var fmtLastSeen = function(ts){
   if(diff < 172800) return 'أمس';
   return new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'short'}).format(new Date(ts));
 };
-
-function linkify(text){
-  var s = esc(text);
-  s = s.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
-  return s;
-}
+function linkify(text){ var s = esc(text); s = s.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>'); return s; }
 function avatarHTML(user, size){
   var sz = size ? 'width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size*0.42) + 'px' : '';
   if (user && user.deleted) {
     var iconSz = Math.round((size||46)*0.5);
-    return '<div class="avatar" style="background:#4a4f5c;color:#c8cddc;' + sz + '">' +
-      '<svg viewBox="0 0 24 24" style="width:' + iconSz + 'px;height:' + iconSz + 'px;stroke:currentColor;fill:none;stroke-width:2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="4" y1="4" x2="20" y2="20" stroke-width="2.5"/></svg>' +
-    '</div>';
+    return '<div class="avatar" style="background:#4a4f5c;color:#c8cddc;' + sz + '"><svg viewBox="0 0 24 24" style="width:' + iconSz + 'px;height:' + iconSz + 'px;stroke:currentColor;fill:none;stroke-width:2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="4" y1="4" x2="20" y2="20" stroke-width="2.5"/></svg></div>';
   }
   var color = (user && user.color) || '#e8b567';
   var dot = (user && user.online) ? '<span class="online-dot"></span>' : '';
@@ -502,17 +479,8 @@ function toast(text, type){
   c.appendChild(el);
   setTimeout(function(){ el.style.opacity='0'; el.style.transition='.3s'; setTimeout(function(){ el.remove(); }, 300); }, 2800);
 }
-function showErr(text){
-  var e = $('authErr');
-  e.textContent = text; e.classList.add('show');
-  setTimeout(function(){ e.classList.remove('show'); }, 5000);
-}
-function updateChatBadge(n){
-  var b = $('chatBadge');
-  chatBadgeCount = Math.max(0, n);
-  if(chatBadgeCount > 0){ b.textContent = chatBadgeCount > 99 ? '99+' : chatBadgeCount; b.classList.remove('hide'); }
-  else b.classList.add('hide');
-}
+function showErr(text){ var e = $('authErr'); e.textContent = text; e.classList.add('show'); setTimeout(function(){ e.classList.remove('show'); }, 5000); }
+function updateChatBadge(n){ var b = $('chatBadge'); chatBadgeCount = Math.max(0, n); if(chatBadgeCount > 0){ b.textContent = chatBadgeCount > 99 ? '99+' : chatBadgeCount; b.classList.remove('hide'); } else b.classList.add('hide'); }
 
 async function api(path, opts){
   opts = opts || {};
@@ -537,9 +505,7 @@ function handleApiError(e){
 window.addEventListener('online', function(){ $('netBanner').classList.remove('show'); });
 window.addEventListener('offline', function(){ $('netBanner').classList.add('show'); });
 
-/* ============================================================
-   Auth
-   ============================================================ */
+/* ========== Auth ========== */
 $('btnRegister').addEventListener('click', async function(){
   var name = $('rgName').value.trim().toLowerCase();
   if(!/^[a-z][a-z0-9_]{1,19}$/.test(name)) return showErr('الاسم يجب أن يبدأ بحرف إنجليزي (2-20 حرف)');
@@ -565,9 +531,7 @@ async function enterApp(user){
   loadEverything();
 }
 
-/* ============================================================
-   Socket
-   ============================================================ */
+/* ========== Socket ========== */
 socket.on('auth-error', function(data){
   var err = data && data.error;
   if(err === 'session_expired' || err === 'invalid_token' || err === 'user_not_found'){
@@ -595,13 +559,10 @@ socket.on('user-deleted', function(d){
     toast('المستخدم حذف حسابه — الوضع للقراءة فقط', 'info');
     CURRENT_DM.deleted = true; CURRENT_DM.sharedKey = null;
     $('chatName').textContent = 'حساب محذوف';
-    $('chatName').style.color = 'var(--muted)';
-    $('chatName').style.fontStyle = 'italic';
-    $('chatSub').textContent = 'لا يمكن المراسلة';
-    $('chatSub').className = 'ch-sub offline';
-    $('chatInput').disabled = true;
-    $('chatInput').placeholder = 'لا يمكن المراسلة — الحساب محذوف';
-    $('chatVerify').style.display = 'none';
+    $('chatName').style.color = 'var(--muted)'; $('chatName').style.fontStyle = 'italic';
+    $('chatSub').textContent = 'لا يمكن المراسلة'; $('chatSub').className = 'ch-sub offline';
+    $('chatInput').disabled = true; $('chatInput').placeholder = 'لا يمكن المراسلة — الحساب محذوف';
+    $('chatSend').disabled = true; $('chatVerify').style.display = 'none';
   }
   loadChats();
 });
@@ -637,22 +598,17 @@ socket.on('dm-typing', function(d){
   }
 });
 
-/* NEW: message deleted by other side */
 socket.on('dm-deleted', function(d){
   var el = $('chatMsgs').querySelector('.cmsg[data-id="' + d.id + '"]');
   if (el) {
     var bubble = el.querySelector('.cbubble');
-    if (bubble) {
-      bubble.classList.add('deleted');
-      bubble.innerHTML = 'تم حذف الرسالة';
-    }
+    if (bubble) { bubble.classList.add('deleted'); bubble.innerHTML = 'تم حذف الرسالة'; bubble.dataset.plain = ''; }
     var marks = el.querySelector('.read-marks');
     if (marks) marks.style.display = 'none';
   }
   if(currentTab === 'chats') loadChats();
 });
 
-/* NEW: message edited by other side */
 socket.on('dm-edited', async function(d){
   var el = $('chatMsgs').querySelector('.cmsg[data-id="' + d.id + '"]');
   if (el && CURRENT_DM && CURRENT_DM.sharedKey) {
@@ -667,7 +623,6 @@ socket.on('dm-edited', async function(d){
   if(currentTab === 'chats') loadChats();
 });
 
-/* NEW: conversation deleted by other side */
 socket.on('dm-conversation-deleted', function(d){
   if (CURRENT_DM && CURRENT_DM.user.id === d.byId) {
     $('chatView').classList.remove('open');
@@ -684,9 +639,7 @@ async function updateChatStatus(userId){
   }
 }
 
-/* ============================================================
-   Poll
-   ============================================================ */
+/* ========== Poll ========== */
 async function pollCurrentChat(){
   if(!CURRENT_DM) return;
   var userId = CURRENT_DM.user.id;
@@ -749,9 +702,7 @@ function switchTab(name){
 }
 $$('.bottom-nav button').forEach(function(b){ b.addEventListener('click', function(){ switchTab(b.dataset.tab); }); });
 
-/* ============================================================
-   Chats list + long press
-   ============================================================ */
+/* ========== Chats list ========== */
 async function loadChats(){
   try {
     var r = await api('/dm-conversations');
@@ -800,7 +751,6 @@ async function loadChats(){
   } catch(_){}
 }
 
-/* Long press on chats list (via delegation, attached once) */
 attachLongPress($('chatsList'), function(e){
   var row = e.target.closest('[data-dmuid]');
   if (!row) return;
@@ -808,20 +758,13 @@ attachLongPress($('chatsList'), function(e){
   if (isNaN(userId)) return;
   var conv = lastConvData && lastConvData.find(function(c){ return c.user.id === userId; });
   if (!conv) return;
-  if (conv.user.deleted) {
-    toast('لا يمكن حذف محادثة محذوفة', 'info');
-    return;
-  }
+  if (conv.user.deleted) { toast('لا يمكن حذف محادثة محذوفة', 'info'); return; }
   showConversationMenu(userId, conv.user.display_name);
 });
 
 function showConversationMenu(userId, name){
   showModal(
-    '<div class="modal-header">' +
-      '<button class="back-btn" id="cvmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
-      '<div class="title">' + esc(name) + '</div>' +
-      '<div class="spacer"></div>' +
-    '</div>' +
+    '<div class="modal-header"><button class="back-btn" id="cvmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">' + esc(name) + '</div><div class="spacer"></div></div>' +
     '<div class="modal-list">' +
       '<button class="modal-item" id="cvmDelete">' +
         '<div class="mi-icon danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>' +
@@ -835,8 +778,7 @@ function showConversationMenu(userId, name){
     showConfirm({
       title: 'حذف الدردشة',
       text: 'سيتم حذف جميع الرسائل من الطرفين نهائياً. لا يمكن التراجع.',
-      confirmText: 'حذف',
-      danger: true,
+      confirmText: 'حذف', danger: true,
       onConfirm: async function(){
         try {
           await api('/dm-conversations/' + userId, { method: 'DELETE' });
@@ -852,9 +794,7 @@ function showConversationMenu(userId, name){
   });
 }
 
-/* ============================================================
-   Account Tab
-   ============================================================ */
+/* ========== Account ========== */
 async function loadAccount(){
   try {
     var r = await api('/me');
@@ -869,14 +809,8 @@ async function loadAccount(){
         '<div class="account-info-row"><span class="label">تاريخ الانضمام</span><span class="value" style="font-family:inherit;direction:rtl">' + new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'long',year:'numeric'}).format(new Date(ME.created_at)) + '</span></div>' +
       '</div>' +
       '<div class="account-actions">' +
-        '<button class="btn-outline" id="btnOpenQr">' +
-          '<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/></svg>' +
-          'عرض QR الخاص بي' +
-        '</button>' +
-        '<button class="btn-danger-outline" id="btnLogout">' +
-          '<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
-          'تسجيل الخروج (حذف الحساب)' +
-        '</button>' +
+        '<button class="btn-outline" id="btnOpenQr"><svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/></svg>عرض QR الخاص بي</button>' +
+        '<button class="btn-danger-outline" id="btnLogout"><svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>تسجيل الخروج (حذف الحساب)</button>' +
       '</div>';
 
     $('btnOpenQr').addEventListener('click', showMyQrModal);
@@ -899,19 +833,10 @@ async function loadAccount(){
   } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
 }
 
-/* ============================================================
-   My QR Modal
-   ============================================================ */
+/* ========== My QR Modal ========== */
 async function showMyQrModal(){
-  showModal(
-    '<div class="modal-header">' +
-      '<button class="back-btn" id="qmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
-      '<div class="title">QR الخاص بي</div><div class="spacer"></div>' +
-    '</div>' +
-    '<div id="qrModalContent"><div style="text-align:center;padding:30px"><div class="spinner"></div></div></div>'
-  );
+  showModal('<div class="modal-header"><button class="back-btn" id="qmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">QR الخاص بي</div><div class="spacer"></div></div><div id="qrModalContent"><div style="text-align:center;padding:30px"><div class="spinner"></div></div></div>');
   $('qmBack').addEventListener('click', closeModal);
-
   try {
     var q = await api('/qr/image');
     $('qrModalContent').innerHTML =
@@ -936,20 +861,16 @@ async function showMyQrModal(){
 }
 $('btnMyQrMini').addEventListener('click', showMyQrModal);
 
-/* ============================================================
-   Add friend
-   ============================================================ */
+/* ========== Add friend ========== */
 $('btnAddFriend').addEventListener('click', showAddFriendMenu);
 
 function showAddFriendMenu(){
-  showModal(
-    '<div class="modal-header"><button class="back-btn" id="afmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">إضافة صديق</div><div class="spacer"></div></div>' +
+  showModal('<div class="modal-header"><button class="back-btn" id="afmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">إضافة صديق</div><div class="spacer"></div></div>' +
     '<div class="modal-list">' +
       '<button class="modal-item" id="afmUpload"><div class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div><div class="mi-info"><div class="mi-title">تحميل QR من الاستوديو</div><div class="mi-sub">اختر صورة QR محفوظة</div></div></button>' +
       '<button class="modal-item" id="afmCamera"><div class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div><div class="mi-info"><div class="mi-title">مسح بالكاميرا</div><div class="mi-sub">افتح الكاميرا لمسح QR</div></div></button>' +
       '<button class="modal-item" id="afmCode"><div class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div><div class="mi-info"><div class="mi-title">إدخال الكود يدوياً</div><div class="mi-sub">الصق كود QR</div></div></button>' +
-    '</div>'
-  );
+    '</div>');
   $('afmBack').addEventListener('click', closeModal);
   $('afmUpload').addEventListener('click', function(){ closeModal(); setTimeout(openQrUpload, 150); });
   $('afmCamera').addEventListener('click', function(){ closeModal(); setTimeout(startQrCamera, 150); });
@@ -1001,9 +922,7 @@ async function startQrCamera(){
   }, 300);
 }
 
-async function stopQrCamera(){
-  if(qrScanner){ try { await qrScanner.stop(); qrScanner.clear(); } catch(_){} qrScanner = null; }
-}
+async function stopQrCamera(){ if(qrScanner){ try { await qrScanner.stop(); qrScanner.clear(); } catch(_){} qrScanner = null; } }
 
 function showEnterQrId(){
   showModal('<div class="modal-header"><button class="back-btn" id="eqrBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">إدخال كود QR</div><div class="spacer"></div></div><div class="field"><label>كود QR</label><input id="eqrInput" placeholder="a3f9b2e8c4d1" maxlength="32" class="en" dir="ltr" style="text-align:left" /></div><button class="btn-main" id="eqrSubmit">إضافة صديق</button>');
@@ -1042,13 +961,8 @@ function extractQrId(text){
   return null;
 }
 
-/* ============================================================
-   Chat view
-   ============================================================ */
-function scrollChat(inst){
-  var el = $('chatMsgs');
-  requestAnimationFrame(function(){ el.scrollTo({ top: el.scrollHeight, behavior: inst ? 'auto' : 'smooth' }); });
-}
+/* ========== Chat view ========== */
+function scrollChat(inst){ var el = $('chatMsgs'); requestAnimationFrame(function(){ el.scrollTo({ top: el.scrollHeight, behavior: inst ? 'auto' : 'smooth' }); }); }
 
 async function renderDMMsg(m){
   var el = document.createElement('div');
@@ -1097,12 +1011,8 @@ async function renderDMMsg(m){
   $('chatMsgs').appendChild(el);
 }
 
-$('chatBack').addEventListener('click', function(){
-  $('chatView').classList.remove('open');
-  CURRENT_DM = null;
-});
+$('chatBack').addEventListener('click', function(){ $('chatView').classList.remove('open'); CURRENT_DM = null; });
 
-/* Long press on messages (delegation) */
 attachLongPress($('chatMsgs'), function(e){
   var msgEl = e.target.closest('.cmsg');
   if (!msgEl) return;
@@ -1113,35 +1023,34 @@ attachLongPress($('chatMsgs'), function(e){
   var isMine = msgEl.dataset.mine === '1';
   var bubble = msgEl.querySelector('.cbubble');
   var isDeleted = bubble && bubble.classList.contains('deleted');
-  if (isDeleted) {
-    toast('الرسالة محذوفة بالفعل', 'info');
-    return;
-  }
+  if (isDeleted) { toast('الرسالة محذوفة بالفعل', 'info'); return; }
   var text = bubble && bubble.dataset.plain ? bubble.dataset.plain : '';
   showMessageMenu(msgId, isMine, text);
 });
 
 function showMessageMenu(msgId, isMine, text){
+  // فقط رسائل المرسل يمكن تعديلها أو حذفها
+  if (!isMine) {
+    toast('يمكنك فقط حذف أو تعديل رسائلك', 'info');
+    return;
+  }
+
   var html = '<div class="modal-header">' +
     '<button class="back-btn" id="mmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
     '<div class="title">خيارات الرسالة</div><div class="spacer"></div></div>' +
-    '<div class="modal-list">';
-
-  if (isMine) {
-    html += '<button class="modal-item" id="mmEdit"><div class="mi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div><div class="mi-info"><div class="mi-title">تعديل الرسالة</div><div class="mi-sub">سيتم التعديل عند الطرفين</div></div></button>';
-  }
-  html += '<button class="modal-item" id="mmDelete"><div class="mi-icon danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div><div class="mi-info"><div class="mi-title">حذف من الطرفين</div><div class="mi-sub">سيتم حذف الرسالة عندك وعند صديقك</div></div></button>';
-  html += '</div>';
+    '<div class="modal-list">' +
+      '<button class="modal-item" id="mmEdit"><div class="mi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div><div class="mi-info"><div class="mi-title">تعديل الرسالة</div><div class="mi-sub">سيتم التعديل عند الطرفين</div></div></button>' +
+      '<button class="modal-item" id="mmDelete"><div class="mi-icon danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div><div class="mi-info"><div class="mi-title">حذف الرسالة</div><div class="mi-sub">سيتم الحذف من الطرفين</div></div></button>' +
+    '</div>';
 
   showModal(html);
   $('mmBack').addEventListener('click', closeModal);
 
-  if (isMine && $('mmEdit')) {
-    $('mmEdit').addEventListener('click', function(){
-      closeModal();
-      showEditMessageModal(msgId, text);
-    });
-  }
+  $('mmEdit').addEventListener('click', function(){
+    closeModal();
+    showEditMessageModal(msgId, text);
+  });
+
   $('mmDelete').addEventListener('click', function(){
     closeModal();
     showConfirm({
@@ -1168,10 +1077,7 @@ function showMessageMenu(msgId, isMine, text){
 
 function showEditMessageModal(msgId, currentText){
   showModal(
-    '<div class="modal-header">' +
-      '<button class="back-btn" id="emmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
-      '<div class="title">تعديل الرسالة</div><div class="spacer"></div>' +
-    '</div>' +
+    '<div class="modal-header"><button class="back-btn" id="emmBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button><div class="title">تعديل الرسالة</div><div class="spacer"></div></div>' +
     '<div class="field"><textarea id="emmText" maxlength="5000" style="min-height:120px">' + esc(currentText) + '</textarea></div>' +
     '<button class="btn-main" id="emmSave">حفظ التعديل</button>'
   );
@@ -1267,9 +1173,8 @@ async function openDM(user){
   }
   var shared = null;
   if (peerPub) { try { shared = await E2EE.getSharedKey(user.id, peerPub); } catch(_){} }
-  if (!isDeleted && !shared) {
-    return showConfirm({ title: 'لا يمكن بدء المحادثة', text: 'صديقك لم يفتح التطبيق بعد على النظام الجديد. اطلب منه فتح التطبيق مرة واحدة، ثم حاول مجدداً.', confirmText: 'حسناً' });
-  }
+  if (!isDeleted && !shared) return showConfirm({ title: 'لا يمكن بدء المحادثة', text: 'صديقك لم يفتح التطبيق بعد على النظام الجديد. اطلب منه فتح التطبيق مرة واحدة، ثم حاول مجدداً.', confirmText: 'حسناً' });
+
   CURRENT_DM = { user: user, sharedKey: shared ? shared.key : null, fingerprint: shared ? shared.fingerprint : null, deleted: isDeleted };
 
   if (isDeleted) {
@@ -1297,9 +1202,7 @@ async function openDM(user){
   } catch(_){}
 }
 
-/* ============================================================
-   Verify fingerprint
-   ============================================================ */
+/* ========== Verify fingerprint ========== */
 $('chatVerify').addEventListener('click', function(){
   if (!CURRENT_DM || !CURRENT_DM.fingerprint) return;
   var peerId = CURRENT_DM.user.id;
@@ -1326,9 +1229,7 @@ $('chatVerify').addEventListener('click', function(){
   });
 });
 
-/* ============================================================
-   Modal + Confirm
-   ============================================================ */
+/* ========== Modal ========== */
 function closeModal(){ $('modal').classList.remove('open'); }
 function showModal(html){ $('modalBody').innerHTML = html; $('modal').classList.add('open'); }
 $('modal').addEventListener('click', function(e){ if(e.target === $('modal')) closeModal(); });
@@ -1357,9 +1258,7 @@ function showConfirm(opts){
   backdrop.querySelector('#cfOk').addEventListener('click', function(){ backdrop.remove(); if(opts.onConfirm) opts.onConfirm(); });
 }
 
-/* ============================================================
-   Beep
-   ============================================================ */
+/* ========== Beep ========== */
 var audioCtx = null;
 function getAudioCtx(){ var Ctx = window.AudioContext || window.webkitAudioContext; if(!Ctx) return null; if(!audioCtx) audioCtx = new Ctx(); if(audioCtx.state === 'suspended') audioCtx.resume(); return audioCtx; }
 function playBeep(){
@@ -1378,9 +1277,7 @@ function playBeep(){
   } catch(_){}
 }
 
-/* ============================================================
-   Init
-   ============================================================ */
+/* ========== Init ========== */
 (async function(){
   var minWait = new Promise(function(r){ setTimeout(r, 800); });
   try {
