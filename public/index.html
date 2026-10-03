@@ -412,7 +412,7 @@ document.addEventListener('contextmenu', function(e){
   if (e.target.closest('.cmsg') || e.target.closest('.chat-msgs')) e.preventDefault();
 });
 document.addEventListener('visibilitychange', function(){
-  if (document.hidden && ME && E2EE.ready) document.body.classList.add('security-blur');
+  if (document.hidden && ME && E2EE.ready && E2EE.hasPIN()) document.body.classList.add('security-blur');
   else document.body.classList.remove('security-blur');
 });
 
@@ -420,11 +420,13 @@ function startAutoLockMonitor(){
   if (SecurityPack.lockInterval) clearInterval(SecurityPack.lockInterval);
   SecurityPack.lockInterval = setInterval(function(){
     if (!ME || !E2EE.hasPIN() || !E2EE.ready) return;
+    if (E2EE.hasNoPin()) return; /* ✅ لا يوجد PIN — تخطّى */
     if ($('pinLock').classList.contains('open')) return;
     if (Date.now() - SecurityPack.lastActivity >= SecurityPack.autoLockMinutes * 60 * 1000) lockAppNow('auto');
   }, 5000);
 }
 function lockAppNow(reason){
+  if (E2EE.hasNoPin()) { toast('لا يوجد رمز أمان', 'info'); return; } /* ✅ */
   if ($('pinLock').classList.contains('open')) return;
   E2EE.lock();
   if (CURRENT_DM) { $('chatView').classList.remove('open'); CURRENT_DM = null; }
@@ -476,7 +478,14 @@ function showSecurityLog(){
 
 var E2EE = {
   keyPair: null, ready: false, cache: {},
-  hasPIN: function() { return !!localStorage.getItem('dust_e2ee_priv_enc'); },
+  hasPIN: function() {
+    /* ✅ إذا كان مُعلّماً بـ "بدون PIN" نُعيد false */
+    if (localStorage.getItem('dust_no_pin') === '1') return false;
+    return !!localStorage.getItem('dust_e2ee_priv_enc');
+  },
+  hasNoPin: function() {
+    return localStorage.getItem('dust_no_pin') === '1' && !!localStorage.getItem('dust_e2ee_priv');
+  },
   deriveKeyFromPIN: async function(pin, salt) {
     var enc = new TextEncoder();
     var km = await crypto.subtle.importKey('raw', enc.encode(pin), {name:'PBKDF2'}, false, ['deriveKey']);
@@ -493,6 +502,7 @@ var E2EE = {
     for (var i = 0; i < combined.length; i++) bin += String.fromCharCode(combined[i]);
     localStorage.setItem('dust_e2ee_priv_enc', btoa(bin));
     localStorage.removeItem('dust_e2ee_priv');
+    localStorage.removeItem('dust_no_pin');
   },
   decryptPrivateKey: async function(pin) {
     try {
@@ -506,6 +516,39 @@ var E2EE = {
       var plain = await crypto.subtle.decrypt({name:'AES-GCM', iv: iv}, key, cipher);
       return new TextDecoder().decode(plain);
     } catch(e) { return null; }
+  },
+  /* ✅ إزالة رمز الأمان — يفك تشفير المفتاح ويخزّنه بدون تشفير */
+  removePin: async function(pin) {
+    var privB64 = await this.decryptPrivateKey(pin);
+    if (!privB64) return false;
+    localStorage.setItem('dust_e2ee_priv', privB64);
+    localStorage.removeItem('dust_e2ee_priv_enc');
+    localStorage.setItem('dust_no_pin', '1');
+    /* إبقاء المفتاح جاهزاً في الذاكرة */
+    try {
+      var pubB64 = localStorage.getItem('dust_e2ee_pub');
+      if (pubB64) {
+        var publicKey = await this.importPublicKey(pubB64);
+        var privateKey = await this.importPrivateKey(privB64);
+        this.keyPair = { publicKey: publicKey, privateKey: privateKey };
+        this.ready = true;
+      }
+    } catch(e){}
+    return true;
+  },
+  /* ✅ فتح تلقائي عند عدم وجود PIN */
+  autoUnlockNoPin: async function() {
+    var privB64 = localStorage.getItem('dust_e2ee_priv');
+    var pubB64 = localStorage.getItem('dust_e2ee_pub');
+    if (!privB64 || !pubB64) return false;
+    try {
+      var publicKey = await this.importPublicKey(pubB64);
+      var privateKey = await this.importPrivateKey(privB64);
+      this.keyPair = { publicKey: publicKey, privateKey: privateKey };
+      this.ready = true;
+      try { await api('/me/public-key', { method: 'PUT', body: JSON.stringify({ public_key: pubB64 }) }); } catch(e) {}
+      return true;
+    } catch(e) { return false; }
   },
   unlock: async function(pin) {
     var privB64 = await this.decryptPrivateKey(pin);
@@ -521,7 +564,11 @@ var E2EE = {
       return true;
     } catch(e) { return false; }
   },
-  lock: function() { this.keyPair = null; this.ready = false; this.cache = {}; },
+  lock: function() {
+    /* ✅ لا تقفل إذا كان بدون PIN */
+    if (this.hasNoPin()) return;
+    this.keyPair = null; this.ready = false; this.cache = {};
+  },
   setup: async function(pin) {
     var kp = await this.generateKeyPair();
     var pubB64 = await this.exportPublicKey(kp.publicKey);
@@ -745,7 +792,7 @@ document.addEventListener('click', function(e){
 function exportBackup(){
   try {
     var pub = localStorage.getItem('dust_e2ee_pub'); var privEnc = localStorage.getItem('dust_e2ee_priv_enc');
-    if (!pub || !privEnc) return toast('لا يوجد مفتاح', 'err');
+    if (!pub || !privEnc) return toast('لا يوجد مفتاح مشفّر', 'err');
     var data = { app: 'Dust', version: 1, created_at: Date.now(), username: ME ? ME.username : null, public_key: pub, encrypted_private_key: privEnc };
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dust-backup-' + (ME ? ME.username : 'user') + '-' + new Date().toISOString().slice(0,10) + '.json';
@@ -783,6 +830,7 @@ function showImportPinModal(data){
       localStorage.setItem('dust_e2ee_pub', data.public_key);
       localStorage.setItem('dust_e2ee_priv_enc', data.encrypted_private_key);
       localStorage.removeItem('dust_e2ee_priv');
+      localStorage.removeItem('dust_no_pin');
       logSecurityEvent('backup_import', 'استيراد نسخة');
       closeModal(); toast('✓ تم', 'ok'); setTimeout(function(){ location.reload(); }, 1200);
     } catch(e) { $('ibErr').textContent = 'رمز خاطئ'; btn.disabled = false; btn.textContent = 'استيراد'; }
@@ -899,8 +947,16 @@ async function enterApp(user){
   var pendingSecret = sessionStorage.getItem('dust_pending_admin_claim');
   if (pendingSecret) { sessionStorage.removeItem('dust_pending_admin_claim'); setTimeout(function(){ doClaimAdmin(pendingSecret); }, 1500); }
   else { var urlSecret = checkAdminClaimFromUrl(); if (urlSecret) setTimeout(function(){ doClaimAdmin(urlSecret); }, 1500); }
-  if (E2EE.hasPIN()) showPINUnlock(false);
-  else showPINSetup(!!localStorage.getItem('dust_e2ee_priv'));
+  /* ✅ منطق الفتح */
+  if (E2EE.hasNoPin()) {
+    var ok = await E2EE.autoUnlockNoPin();
+    if (ok) { toast('تم فتح التطبيق (بدون رمز)', 'info'); afterUnlock(); }
+    else { localStorage.removeItem('dust_no_pin'); showPINSetup(!!localStorage.getItem('dust_e2ee_priv')); }
+  } else if (E2EE.hasPIN()) {
+    showPINUnlock(false);
+  } else {
+    showPINSetup(!!localStorage.getItem('dust_e2ee_priv'));
+  }
 }
 
 async function afterUnlock(){
@@ -1214,7 +1270,6 @@ async function loadChats(){
       if (c.last && c.last.deleted) { preview = '🚫 تم حذف الرسالة'; }
       else if (c.last && c.last.text) {
         var lastTxt = c.last.text;
-        // ✅ أولاً: cache للرسائل التي أرسلتها أنت
         var cached = lookupSentMsg(lastTxt) || lookupRecvMsg(lastTxt);
         if (cached) {
           preview = cached.length > 45 ? cached.slice(0, 45) + '...' : cached;
@@ -1265,7 +1320,10 @@ async function loadAccount(){
     ME = r.user;
     var box = $('accountContent');
     var duressOn = !!localStorage.getItem('dust_duress_hash');
-    box.innerHTML = '<div class="account-avatar">' + esc(initial(ME.display_name)) + '</div><div class="account-name en">' + esc(ME.display_name) + '</div><div class="account-username en">@' + esc(ME.username) + '</div><div class="account-info-card"><div class="account-info-row"><span class="label">اسم المستخدم</span><span class="value">' + esc(ME.username) + '</span></div><div class="account-info-row"><span class="label">تاريخ الانضمام</span><span class="value" style="font-family:inherit;direction:rtl">' + new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'long',year:'numeric'}).format(new Date(ME.created_at)) + '</span></div><div class="account-info-row"><span class="label">حالة الأمان</span><span class="value" style="color:var(--success);font-family:inherit"><i class="fa-solid fa-shield-halved"></i> محمي</span></div><div class="account-info-row"><span class="label">PIN الإكراه</span><span class="value" style="color:' + (duressOn ? 'var(--danger)' : 'var(--muted)') + ';font-family:inherit">' + (duressOn ? '<i class="fa-solid fa-check"></i> مفعّل' : 'غير مفعّل') + '</span></div>' + (ME.is_admin ? '<div class="account-info-row"><span class="label">الصلاحية</span><span class="value" style="color:var(--gold);font-family:inherit"><i class="fa-solid fa-user-shield"></i> مسؤول</span></div>' : '') + '</div><div class="account-actions"><button class="btn-outline" id="btnSecurityLog"><i class="fa-solid fa-clipboard-list"></i> سجل الأمان</button><button class="btn-outline" id="btnDuress" style="border-color:rgba(232,67,95,.25);color:var(--danger)"><i class="fa-solid fa-triangle-exclamation"></i> ' + (duressOn ? 'إلغاء PIN الإكراه' : 'إعداد PIN الإكراه') + '</button><button class="btn-outline" id="btnBackup"><i class="fa-solid fa-download"></i> نسخة احتياطية</button><button class="btn-outline" id="btnLockNow" style="border-color:rgba(201,143,61,.3);color:var(--gold)"><i class="fa-solid fa-lock"></i> قفل الآن</button><button class="btn-outline" id="btnPrivacy"><i class="fa-solid fa-shield-halved"></i> سياسة الخصوصية</button><button class="btn-danger-outline" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button></div>';
+    var noPin = E2EE.hasNoPin();
+    var pinRow = '<div class="account-info-row"><span class="label">رمز الأمان</span><span class="value" style="color:' + (noPin ? 'var(--danger)' : 'var(--success)') + ';font-family:inherit">' + (noPin ? '<i class="fa-solid fa-unlock"></i> غير مفعّل' : '<i class="fa-solid fa-lock"></i> مفعّل') + '</span></div>';
+    var removePinBtn = noPin ? '' : '<button class="btn-outline" id="btnRemovePin" style="border-color:rgba(232,67,95,.25);color:var(--danger)"><i class="fa-solid fa-unlock"></i> إزالة رمز الأمان</button>';
+    box.innerHTML = '<div class="account-avatar">' + esc(initial(ME.display_name)) + '</div><div class="account-name en">' + esc(ME.display_name) + '</div><div class="account-username en">@' + esc(ME.username) + '</div><div class="account-info-card"><div class="account-info-row"><span class="label">اسم المستخدم</span><span class="value">' + esc(ME.username) + '</span></div><div class="account-info-row"><span class="label">تاريخ الانضمام</span><span class="value" style="font-family:inherit;direction:rtl">' + new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'long',year:'numeric'}).format(new Date(ME.created_at)) + '</span></div><div class="account-info-row"><span class="label">حالة الأمان</span><span class="value" style="color:var(--success);font-family:inherit"><i class="fa-solid fa-shield-halved"></i> محمي</span></div>' + pinRow + '<div class="account-info-row"><span class="label">PIN الإكراه</span><span class="value" style="color:' + (duressOn ? 'var(--danger)' : 'var(--muted)') + ';font-family:inherit">' + (duressOn ? '<i class="fa-solid fa-check"></i> مفعّل' : 'غير مفعّل') + '</span></div>' + (ME.is_admin ? '<div class="account-info-row"><span class="label">الصلاحية</span><span class="value" style="color:var(--gold);font-family:inherit"><i class="fa-solid fa-user-shield"></i> مسؤول</span></div>' : '') + '</div><div class="account-actions"><button class="btn-outline" id="btnSecurityLog"><i class="fa-solid fa-clipboard-list"></i> سجل الأمان</button><button class="btn-outline" id="btnDuress" style="border-color:rgba(232,67,95,.25);color:var(--danger)"><i class="fa-solid fa-triangle-exclamation"></i> ' + (duressOn ? 'إلغاء PIN الإكراه' : 'إعداد PIN الإكراه') + '</button><button class="btn-outline" id="btnBackup"><i class="fa-solid fa-download"></i> نسخة احتياطية</button><button class="btn-outline" id="btnLockNow" style="border-color:rgba(201,143,61,.3);color:var(--gold)"><i class="fa-solid fa-lock"></i> قفل الآن</button>' + removePinBtn + '<button class="btn-outline" id="btnPrivacy"><i class="fa-solid fa-shield-halved"></i> سياسة الخصوصية</button><button class="btn-danger-outline" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button></div>';
     $('btnSecurityLog').addEventListener('click', showSecurityLog);
     $('btnDuress').addEventListener('click', showDuressSetup);
     $('btnBackup').addEventListener('click', function(){
@@ -1275,6 +1333,7 @@ async function loadAccount(){
       $('bkImport').addEventListener('click', function(){ closeModal(); importBackup(); });
     });
     $('btnLockNow').addEventListener('click', function(){ lockAppNow('manual'); });
+    if ($('btnRemovePin')) $('btnRemovePin').addEventListener('click', showRemovePinModal);
     $('btnPrivacy').addEventListener('click', showPrivacyPolicy);
     $('btnLogout').addEventListener('click', function(){
       showConfirm({ title: 'تسجيل الخروج', text: '⚠️ سيتم حذف حسابك وكل رسائلك.', confirmText: 'حذف', danger: true, onConfirm: async function(){
@@ -1284,6 +1343,57 @@ async function loadAccount(){
       }});
     });
   } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
+}
+
+/* ✅ نافذة إزالة رمز الأمان */
+function showRemovePinModal(){
+  if (E2EE.hasNoPin()) { toast('رمز الأمان مُزال بالفعل', 'info'); return; }
+  showModal(
+    '<div class="modal-header">' +
+      '<button class="back-btn" id="rpBack"><i class="fa-solid fa-chevron-right"></i></button>' +
+      '<div class="title">إزالة رمز الأمان</div><div class="spacer"></div>' +
+    '</div>' +
+    '<div style="padding:14px;background:var(--danger-soft);border:1px solid rgba(232,67,95,.3);' +
+         'border-radius:14px;font-size:.82rem;line-height:1.75;color:var(--danger);margin-bottom:18px">' +
+      '<b><i class="fa-solid fa-triangle-exclamation"></i> تحذير:</b><br>' +
+      'سيُخزّن مفتاحك الخاص <b>بدون تشفير PIN</b>. أي شخص يفتح جهازك سيرى رسائلك مباشرة. ' +
+      'الحماية ستعتمد على قفل الجهاز فقط.' +
+    '</div>' +
+    '<div class="field"><label>أدخل رمز PIN الحالي للتأكيد</label>' +
+      '<input type="password" id="rpPin" inputmode="numeric" maxlength="8" ' +
+             'class="en" dir="ltr" style="text-align:center;letter-spacing:8px;font-size:1.4rem" />' +
+    '</div>' +
+    '<div id="rpErr" style="color:var(--danger);font-size:.85rem;font-weight:700;' +
+         'text-align:center;min-height:20px;margin-bottom:10px"></div>' +
+    '<button class="btn-main" id="rpConfirm" ' +
+            'style="background:linear-gradient(135deg,#ef4444,#dc2626)">' +
+      '<i class="fa-solid fa-unlock"></i> إزالة رمز الأمان' +
+    '</button>'
+  );
+  $('rpBack').addEventListener('click', closeModal);
+  setTimeout(function(){ var i = $('rpPin'); if(i) i.focus(); }, 200);
+
+  $('rpConfirm').addEventListener('click', async function(){
+    var pin = $('rpPin').value.trim();
+    if (!pin) { $('rpErr').textContent = 'أدخل الرمز'; return; }
+    var btn = $('rpConfirm');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div>';
+    var ok = await E2EE.removePin(pin);
+    if (ok) {
+      logSecurityEvent('pin_removed', 'إزالة رمز الأمان');
+      closeModal();
+      toast('✓ تمت إزالة رمز الأمان', 'ok');
+      loadAccount();
+    } else {
+      $('rpErr').textContent = 'رمز خاطئ';
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-unlock"></i> إزالة رمز الأمان';
+    }
+  });
+  $('rpPin').addEventListener('keydown', function(e){
+    if (e.key === 'Enter') $('rpConfirm').click();
+  });
 }
 
 function showPrivacyPolicy(){
@@ -1361,9 +1471,6 @@ function extractQrId(text){
 }
 function scrollChat(inst){ var el = $('chatMsgs'); requestAnimationFrame(function(){ el.scrollTo({ top: el.scrollHeight, behavior: inst ? 'auto' : 'smooth' }); }); }
 
-/* ============================================================
-   renderDMMsg — مع cache للأرسال والمستقبل
-   ============================================================ */
 async function renderDMMsg(m){
   var el = document.createElement('div');
   var mine = m.from_id === ME.id;
@@ -1382,12 +1489,10 @@ async function renderDMMsg(m){
     var displayText = m.text || '';
     var isEncrypted = displayText.indexOf('🔒') === 0;
     if (isEncrypted) {
-      // ✅ 1. cache للرسائل التي أرسلتها
       var cached = lookupSentMsg(displayText) || lookupRecvMsg(displayText);
       if (cached) {
         displayText = cached;
       } else {
-        // ✅ 2. حاول فك التشفير
         try {
           if (displayText.indexOf('🔒R') === 0 && CURRENT_DM && CURRENT_DM.user.public_key) {
             var result = await Ratchet.decrypt(CURRENT_DM.user.id, CURRENT_DM.user.public_key, displayText);
@@ -1395,7 +1500,6 @@ async function renderDMMsg(m){
               displayText = '🔐 رسالة مشفرة (لا يمكن قراءتها)';
             } else {
               displayText = result;
-              // ✅ احفظ في cache للمستقبل
               if (mine) cacheSentMsg(m.text, result);
               else cacheReceivedMsg(m.text, result);
             }
@@ -1406,7 +1510,7 @@ async function renderDMMsg(m){
             } else {
               displayText = r2;
               if (mine) cacheSentMsg(m.text, r2);
-              else cacheReceivedMsg(m.text, r2);
+              else cacheRecvMsg(m.text, r2);
             }
           } else {
             displayText = '🔐 رسالة مشفرة';
@@ -1505,7 +1609,6 @@ async function sendChat(){
     else { toast('لا يوجد مفتاح', 'err'); return; }
   } catch(e) { toast('فشل التشفير', 'err'); return; }
 
-  // ✅ احفظ plaintext في cache قبل الإرسال
   cacheSentMsg(encrypted, txt);
 
   socket.emit('dm-send', { toId: toId, text: encrypted });
