@@ -1,5 +1,5 @@
 /* ============================================================
-   Dust Server v12.2 — E2EE + Admin + Anti-MITM
+   Dust Server v12.3 — Chat + Admin + Arabic Names
    ============================================================ */
 'use strict';
 
@@ -180,6 +180,15 @@ function hashToken(token) {
 }
 const ONLINE_USERS = new Map();
 
+/* ✅ اسمح بالأسماء العربية والإنجليزية — منع السكربت */
+const NAME_REGEX = /^[\u0600-\u06FFa-zA-Z][\u0600-\u06FFa-zA-Z0-9_]{1,19}$/;
+function validateUsername(name) {
+  if (!NAME_REGEX.test(name)) return false;
+  /* منع الأحرف الخطيرة إضافياً */
+  if (/[<>&"'`\\\/;(){}\[\]\s]/.test(name)) return false;
+  return true;
+}
+
 function publicUser(row, includePrivate = false) {
   if (!row) return null;
   const u = {
@@ -304,18 +313,26 @@ function adminRequired(req, res, next) {
 
 /* ===== 11. Auth routes ===== */
 app.post('/api/register',
-  body('name').trim().isLength({ min: 2, max: 20 }).matches(/^[a-z][a-z0-9_]*$/i),
+  body('name').trim().isLength({ min: 2, max: 20 })
+    .matches(/^[\u0600-\u06FFa-zA-Z][\u0600-\u06FFa-zA-Z0-9_]{1,19}$/)
+    .custom((v) => !/[<>&"'`\\\/;(){}\[\]\s]/.test(v)),
   body('color').optional().matches(/^#[0-9a-f]{6}$/i),
   validate,
   (req, res) => {
     const { name, color } = req.body;
-    const baseName = name.toLowerCase();
+    const baseName = name.trim();
     let username = baseName;
+
+    /* التحقق مرة أخرى من صحة الاسم */
+    if (!validateUsername(username)) {
+      return res.status(400).json({ error: 'invalid_input' });
+    }
 
     const exists = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
     if (exists) {
       for (let i = 0; i < 10; i++) {
         const candidate = baseName + Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+        if (!validateUsername(candidate)) continue;
         if (!db.prepare('SELECT id FROM users WHERE username = ?').get(candidate)) {
           username = candidate;
           break;
@@ -467,7 +484,7 @@ app.get('/api/admin/stats', authRequired, adminRequired, (req, res) => {
     totalUsers, activeUsers, bannedUsers,
     totalMessages, messages24h, totalFriendships, onlineNow,
     uptime: process.uptime(),
-    version: '12.2.0'
+    version: '12.3.0'
   });
 });
 
@@ -929,8 +946,7 @@ app.get('/health', (req, res) => {
     users: db.prepare('SELECT COUNT(*) as c FROM users WHERE deleted = 0').get().c,
     admins: db.prepare('SELECT COUNT(*) as c FROM users WHERE is_admin = 1').get().c,
     online: ONLINE_USERS.size,
-    e2ee: 'ECDH-P256',
-    version: '12.2.0'
+    version: '12.3.0'
   });
 });
 
@@ -950,9 +966,8 @@ app.use((err, req, res, next) => {
 
 /* ===== 25. Start ===== */
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Dust Server v12.2 on port ${PORT}`);
+  console.log(`🚀 Dust Server v12.3 on port ${PORT}`);
   console.log(`🔗 ${PUBLIC_URL}`);
-  console.log(`🔐 E2EE: ECDH P-256 + HKDF`);
   console.log(`🔑 Admin: ${ADMIN_SECRET ? 'configured' : 'NOT SET'}`);
   console.log(`📦 DB: ${path.resolve(DB_PATH)}`);
 });
