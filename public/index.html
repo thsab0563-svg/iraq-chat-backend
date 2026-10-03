@@ -234,7 +234,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
     </div>
     <div id="tab-admin" class="tab">
       <header class="app-header">
-        <h1>لوحة الإدارة</h1>
+        <h1>الإدارة</h1>
         <button class="hbtn" id="btnAdminRefresh" title="تحديث"><i class="fa-solid fa-rotate"></i></button>
       </header>
       <div id="adminContent"></div>
@@ -317,51 +317,34 @@ var onlineUsers = {};
 var globalPollInterval = null;
 var lastConvData = null;
 var qrScanner = null;
-var qrFileInput = null;
 var lastLongPressAt = 0;
 
-/* ========== View Stack (Android Back Button) ========== */
 var viewStack = [];
-
-function pushView(v) {
-  viewStack.push(v);
-  try { history.pushState({ v: v }, ''); } catch(e){}
-}
-function popView() {
-  return viewStack.pop();
-}
+function pushView(v) { viewStack.push(v); try { history.pushState({ v: v }, ''); } catch(e){} }
 function popAllViews() {
   var n = viewStack.length;
-  for (var i = 0; i < n; i++) {
-    try { history.back(); } catch(e){}
-  }
+  for (var i = 0; i < n; i++) { try { history.back(); } catch(e){} }
   viewStack = [];
 }
 
 window.addEventListener('popstate', function(e) {
-  /* 1. modal مفتوح؟ أغلقه */
   if ($('modal').classList.contains('open')) {
-    closeModalInternal(true);
+    $('modal').classList.remove('open');
+    if (viewStack.length && viewStack[viewStack.length - 1] === 'modal') viewStack.pop();
     return;
   }
-  /* 2. chat مفتوح؟ أغلقه */
   if ($('chatView').classList.contains('open')) {
     $('chatView').classList.remove('open');
     CURRENT_DM = null;
     if (viewStack.length && viewStack[viewStack.length - 1] === 'chat') viewStack.pop();
     return;
   }
-  /* 3. قائمة جانبية؟ لا شيء هنا */
-  /* لا نمنع الخروج */
 });
 
-/* ========== Name validation (منع السكربت) ========== */
 var NAME_REGEX = /^[\u0600-\u06FFa-zA-Z][\u0600-\u06FFa-zA-Z0-9_]{1,19}$/;
 function sanitizeName(raw) {
   var s = String(raw || '').trim();
-  /* حذف الأحرف الخطيرة فوراً */
   s = s.replace(/[<>&"'`\\\/;(){}\[\]]/g, '');
-  /* حذف المسافات المتعددة */
   s = s.replace(/\s+/g, '_');
   return s;
 }
@@ -418,7 +401,6 @@ var esc = function(s){
 };
 var initial = function(n){ return (n||'?').trim().charAt(0).toUpperCase(); };
 
-/* ========== linkify — نسخة آمنة من XSS ========== */
 function linkify(text){
   var raw = String(text || '');
   var regex = /(https?:\/\/[^\s<]+)/g;
@@ -428,7 +410,6 @@ function linkify(text){
   while ((match = regex.exec(raw)) !== null) {
     parts.push(esc(raw.slice(lastIndex, match.index)));
     var url = match[1];
-    /* السماح فقط بأحرف URL الآمنة — منع أي محاولة كسر href */
     if (/^https?:\/\/[a-zA-Z0-9\-._~:\/?#\[\]@!$&()*+,;=%]+$/.test(url)) {
       parts.push('<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + esc(url) + '</a>');
     } else {
@@ -521,7 +502,6 @@ function handleApiError(e){
 window.addEventListener('online', function(){ $('netBanner').classList.remove('show'); });
 window.addEventListener('offline', function(){ $('netBanner').classList.add('show'); });
 
-/* ========== Register ========== */
 $('btnRegister').addEventListener('click', async function(){
   var raw = $('rgName').value;
   var name = sanitizeName(raw);
@@ -543,7 +523,6 @@ $('btnRegister').addEventListener('click', async function(){
   this.disabled = false;
 });
 
-/* ========== Enter app ========== */
 async function enterApp(user){
   ME = user;
   soundOn = true;
@@ -552,7 +531,6 @@ async function enterApp(user){
   socket.emit('auth', { token: TOKEN });
   lastConvData = null;
   showAdminNav();
-  /* نضع حالة أساسية بدل الفارغة */
   try { history.replaceState({ v: 'root' }, ''); } catch(e){}
 
   var pendingSecret = sessionStorage.getItem('dust_pending_admin_claim');
@@ -598,14 +576,31 @@ function showAdminNav(){
   else nav.classList.add('hide');
 }
 
-/* ========== Admin ========== */
+/* ========== ADMIN DASHBOARD ========== */
 async function loadAdmin(){
   var box = $('adminContent');
   box.innerHTML = '<div style="text-align:center;padding:40px"><div class="spinner"></div></div>';
   try {
     var stats = await api('/admin/stats');
     var users = await api('/admin/users');
-    var html = '<div class="admin-stats">';
+
+    var html = '';
+
+    /* بطاقة ترحيب */
+    html += '<div style="margin:16px 18px;padding:22px;background:var(--grad-gold);border-radius:22px;color:#1a1207;box-shadow:var(--shadow-gold);position:relative;overflow:hidden">';
+    html += '<div style="position:absolute;inset-inline-end:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(26,18,7,.08)"></div>';
+    html += '<div style="position:relative;display:flex;align-items:center;gap:14px">';
+    html += '<div style="width:54px;height:54px;border-radius:17px;background:rgba(26,18,7,.15);display:grid;place-items:center;font-size:26px"><i class="fa-solid fa-user-shield"></i></div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div style="font-size:.72rem;font-weight:700;opacity:.75;letter-spacing:.5px">لوحة التحكم</div>';
+    html += '<div style="font-size:1.15rem;font-weight:900;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">مرحباً ' + esc(ME.display_name) + '</div>';
+    html += '<div style="font-size:.72rem;opacity:.7;margin-top:2px">نسخة ' + stats.version + ' • نشط منذ ' + Math.floor(stats.uptime / 3600) + ' ساعة</div>';
+    html += '</div></div>';
+    html += '</div>';
+
+    /* إحصائيات */
+    html += '<div class="admin-section-title">نظرة عامة</div>';
+    html += '<div class="admin-stats">';
     html += '<div class="admin-stat"><div class="as-icon"><i class="fa-solid fa-users"></i></div><div class="as-num">' + stats.totalUsers + '</div><div class="as-label">إجمالي المستخدمين</div></div>';
     html += '<div class="admin-stat"><div class="as-icon" style="background:var(--success-soft);color:var(--success)"><i class="fa-solid fa-circle" style="font-size:10px"></i></div><div class="as-num" style="color:var(--success)">' + stats.onlineNow + '</div><div class="as-label">متصل الآن</div></div>';
     html += '<div class="admin-stat"><div class="as-icon"><i class="fa-solid fa-comments"></i></div><div class="as-num">' + stats.totalMessages + '</div><div class="as-label">إجمالي الرسائل</div></div>';
@@ -615,13 +610,25 @@ async function loadAdmin(){
     html += '<div class="admin-stat"><div class="as-icon"><i class="fa-solid fa-handshake"></i></div><div class="as-num">' + Math.round(stats.totalFriendships) + '</div><div class="as-label">الصداقات</div></div>';
     html += '<div class="admin-stat"><div class="as-icon" style="background:var(--accent-soft);color:var(--accent)"><i class="fa-solid fa-stopwatch"></i></div><div class="as-num" style="color:var(--accent);font-size:1.2rem">' + Math.floor(stats.uptime / 3600) + 'h</div><div class="as-label">مدة التشغيل</div></div>';
     html += '</div>';
-    html += '<div style="padding:0 18px 8px"><button class="btn-main" id="btnBroadcast"><i class="fa-solid fa-bullhorn"></i> إرسال إعلان جماعي</button></div>';
-    html += '<div class="admin-search"><i class="fa-solid fa-magnifying-glass"></i><input id="adminSearch" placeholder="ابحث..." /></div>';
-    html += '<div class="admin-section-title">المستخدمون (' + users.users.length + ')</div>';
+
+    /* إجراءات سريعة */
+    html += '<div class="admin-section-title">إجراءات سريعة</div>';
+    html += '<div style="padding:0 18px 12px;display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+    html += '<button class="btn-outline" id="btnBroadcast" style="padding:16px 12px;flex-direction:column;height:auto;gap:8px;font-size:.82rem"><i class="fa-solid fa-bullhorn" style="font-size:22px;color:var(--gold)"></i> إعلان جماعي</button>';
+    html += '<button class="btn-outline" id="btnRefreshUsers" style="padding:16px 12px;flex-direction:column;height:auto;gap:8px;font-size:.82rem"><i class="fa-solid fa-rotate" style="font-size:22px;color:var(--gold)"></i> تحديث الآن</button>';
+    html += '</div>';
+
+    /* إدارة المستخدمين */
+    html += '<div class="admin-section-title">إدارة المستخدمين</div>';
+    html += '<div class="admin-search"><i class="fa-solid fa-magnifying-glass"></i><input id="adminSearch" placeholder="ابحث باسم المستخدم..." /></div>';
     html += '<div style="padding:0 18px 24px" id="adminUsersList"></div>';
+
     box.innerHTML = html;
     renderAdminUsers(users.users);
+
     $('btnBroadcast').addEventListener('click', showBroadcastModal);
+    $('btnRefreshUsers').addEventListener('click', loadAdmin);
+
     var searchTimer;
     $('adminSearch').addEventListener('input', function(e){
       clearTimeout(searchTimer);
@@ -637,8 +644,13 @@ async function loadAdmin(){
     box.innerHTML = '<div class="empty" style="padding:40px 20px"><p>فشل: ' + esc(e.message) + '</p></div>';
   }
 }
+
 function renderAdminUsers(users){
   var box = $('adminUsersList'); if (!box) return;
+  if (!users.length) {
+    box.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:.88rem">لا يوجد مستخدمون</div>';
+    return;
+  }
   var html = '';
   users.forEach(function(u){
     var rowCls = 'admin-user-row';
@@ -653,6 +665,7 @@ function renderAdminUsers(users){
   box.innerHTML = html;
   attachAdminActions(box);
 }
+
 function attachAdminActions(box){
   box.querySelectorAll('[data-act]').forEach(function(btn){
     btn.addEventListener('click', async function(){
@@ -687,6 +700,7 @@ function attachAdminActions(box){
     });
   });
 }
+
 function showBroadcastModal(){
   showModal('<div class="modal-header"><button class="back-btn" id="bdBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">إعلان جماعي</div><div class="spacer"></div></div><div class="field"><label>نص الإعلان</label><textarea id="bdText" maxlength="500" style="min-height:120px" placeholder="اكتب..."></textarea></div><button class="btn-main" id="bdSend">إرسال</button>');
   $('bdBack').addEventListener('click', function(){ closeModal(); });
@@ -709,7 +723,7 @@ function showBroadcastModal(){
   });
 }
 
-/* ========== Socket events ========== */
+/* ========== Socket ========== */
 socket.on('auth-error', function(data){
   var err = data && data.error;
   if(err === 'session_expired' || err === 'invalid_token' || err === 'user_not_found'){
@@ -909,7 +923,6 @@ function switchTab(name){
   $$('.tab').forEach(function(t){ t.classList.remove('active'); });
   var el = $('tab-' + name); if(el) el.classList.add('active');
   $$('.bottom-nav button').forEach(function(b){ b.classList.toggle('on', b.dataset.tab === name); });
-  /* FAB يظهر فقط في تبويب الرسائل */
   var fab = $('fabAddFriend');
   if (fab) {
     if (name === 'chats') fab.classList.remove('hide');
@@ -989,7 +1002,6 @@ function showConversationMenu(userId, name){
   });
 }
 
-/* ========== Account ========== */
 async function loadAccount(){
   try {
     var r = await api('/me');
@@ -1026,7 +1038,6 @@ async function loadAccount(){
   } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
 }
 
-/* ========== QR ========== */
 async function showMyQrModal(){
   showModal('<div class="modal-header"><button class="back-btn" id="qmBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">QR الخاص بي</div><div class="spacer"></div></div><div id="qrModalContent"><div style="text-align:center;padding:30px"><div class="spinner"></div></div></div>');
   $('qmBack').addEventListener('click', function(){ closeModal(); });
@@ -1051,42 +1062,14 @@ async function showMyQrModal(){
 $('btnMyQrMini').addEventListener('click', showMyQrModal);
 $('fabAddFriend').addEventListener('click', showAddFriendMenu);
 
+/* ✅ قائمة إضافة صديق — بدون زر "تحميل QR" */
 function showAddFriendMenu(){
-  showModal('<div class="modal-header"><button class="back-btn" id="afmBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">إضافة صديق</div><div class="spacer"></div></div><div class="modal-list"><button class="modal-item" id="afmUpload"><div class="mi-icon"><i class="fa-solid fa-image"></i></div><div class="mi-info"><div class="mi-title">تحميل QR</div></div></button><button class="modal-item" id="afmCamera"><div class="mi-icon"><i class="fa-solid fa-camera"></i></div><div class="mi-info"><div class="mi-title">مسح بالكاميرا</div></div></button><button class="modal-item" id="afmCode"><div class="mi-icon"><i class="fa-solid fa-keyboard"></i></div><div class="mi-info"><div class="mi-title">إدخال الكود</div></div></button></div>');
+  showModal('<div class="modal-header"><button class="back-btn" id="afmBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">إضافة صديق</div><div class="spacer"></div></div><div class="modal-list"><button class="modal-item" id="afmCamera"><div class="mi-icon"><i class="fa-solid fa-camera"></i></div><div class="mi-info"><div class="mi-title">مسح بالكاميرا</div></div></button><button class="modal-item" id="afmCode"><div class="mi-icon"><i class="fa-solid fa-keyboard"></i></div><div class="mi-info"><div class="mi-title">إدخال الكود</div></div></button></div>');
   $('afmBack').addEventListener('click', function(){ closeModal(); });
-  $('afmUpload').addEventListener('click', function(){ closeModal(); setTimeout(openQrUpload, 150); });
   $('afmCamera').addEventListener('click', function(){ closeModal(); setTimeout(startQrCamera, 150); });
   $('afmCode').addEventListener('click', function(){ closeModal(); setTimeout(showEnterQrId, 150); });
 }
-function openQrUpload(){
-  if(!qrFileInput){
-    qrFileInput = document.createElement('input');
-    qrFileInput.type = 'file';
-    qrFileInput.accept = 'image/*';
-    qrFileInput.style.display = 'none';
-    document.body.appendChild(qrFileInput);
-  }
-  if(!document.getElementById('qrHiddenReader')){
-    var hiddenDiv = document.createElement('div');
-    hiddenDiv.id = 'qrHiddenReader';
-    hiddenDiv.style.display = 'none';
-    document.body.appendChild(hiddenDiv);
-  }
-  qrFileInput.value = '';
-  qrFileInput.onchange = async function(e){
-    var f = e.target.files[0]; if(!f) return;
-    toast('جارٍ القراءة...', 'info');
-    try {
-      var scanner = new Html5Qrcode("qrHiddenReader", { verbose: false });
-      var decoded = await scanner.scanFile(f, false);
-      try { scanner.clear(); } catch(_){}
-      var qrId = extractQrId(decoded);
-      if(!qrId) return toast('QR غير صالح', 'err');
-      await addFriendByQrId(qrId);
-    } catch(err) { toast('تعذر', 'err'); }
-  };
-  qrFileInput.click();
-}
+
 async function startQrCamera(){
   showModal('<div class="modal-header"><button class="back-btn" id="scanBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">مسح QR</div><div class="spacer"></div></div><div id="qrReader"></div>');
   $('scanBack').addEventListener('click', function(){ stopQrCamera(); closeModal(); });
@@ -1156,7 +1139,6 @@ function scrollChat(inst){
   requestAnimationFrame(function(){ el.scrollTo({ top: el.scrollHeight, behavior: inst ? 'auto' : 'smooth' }); });
 }
 
-/* ========== Render DM ========== */
 function renderDMMsg(m){
   var el = document.createElement('div');
   var mine = m.from_id === ME.id;
@@ -1192,14 +1174,10 @@ function renderDMMsg(m){
   $('chatMsgs').appendChild(el);
 }
 
-/* ========== Message actions ========== */
 $('chatBack').addEventListener('click', function(){
   $('chatView').classList.remove('open');
   CURRENT_DM = null;
-  if (viewStack.length && viewStack[viewStack.length - 1] === 'chat') {
-    viewStack.pop();
-    /* لن نستدعي history.back لأن المستخدم ضغط الزر يدوياً */
-  }
+  if (viewStack.length && viewStack[viewStack.length - 1] === 'chat') viewStack.pop();
 });
 attachLongPress($('chatMsgs'), function(e){
   var msgEl = e.target.closest('.cmsg'); if (!msgEl) return;
@@ -1277,7 +1255,6 @@ function showEditMessageModal(msgId, currentText){
   });
 }
 
-/* ========== Send chat ========== */
 function autoGrow(){
   var t = $('chatInput');
   t.style.height = 'auto';
@@ -1319,7 +1296,6 @@ function sendChat(){
   autoGrow();
 }
 
-/* ========== Open DM ========== */
 async function openDMById(userId){
   if(ME && userId === ME.id) return toast('نفسك', 'err');
   try {
@@ -1357,7 +1333,6 @@ async function openDM(user){
     $('chatSend').disabled = false;
   }
   $('chatView').classList.add('open');
-  /* ✅ إضافة حالة لزر الرجوع */
   pushView('chat');
   $('chatMsgs').innerHTML = '';
   try {
@@ -1368,19 +1343,13 @@ async function openDM(user){
   } catch(_){}
 }
 
-/* ========== Modal helpers ========== */
-function closeModalInternal(noHistory) {
+function closeModal(){
   $('modal').classList.remove('open');
-  if (!noHistory) {
-    if (viewStack.length && viewStack[viewStack.length - 1] === 'modal') {
-      viewStack.pop();
-      try { history.back(); } catch(e){}
-    }
-  } else {
-    if (viewStack.length && viewStack[viewStack.length - 1] === 'modal') viewStack.pop();
+  if (viewStack.length && viewStack[viewStack.length - 1] === 'modal') {
+    viewStack.pop();
+    try { history.back(); } catch(e){}
   }
 }
-function closeModal(){ closeModalInternal(false); }
 function showModal(html){
   $('modalBody').innerHTML = html;
   $('modal').classList.add('open');
@@ -1404,7 +1373,6 @@ function showConfirm(opts){
   });
 }
 
-/* ========== Sound ========== */
 var audioCtx = null;
 function getAudioCtx(){
   var Ctx = window.AudioContext || window.webkitAudioContext;
@@ -1429,7 +1397,6 @@ function playBeep(){
   } catch(_){}
 }
 
-/* ========== Boot ========== */
 (async function(){
   var minWait = new Promise(function(r){ setTimeout(r, 800); });
   try {
@@ -1458,4 +1425,4 @@ function playBeep(){
 })();
 </script>
 </body>
-  </html>
+</html>
