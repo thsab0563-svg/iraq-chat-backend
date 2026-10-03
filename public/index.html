@@ -75,6 +75,9 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .bottom-nav button.on{color:var(--gold);background:var(--gold-soft)}
 .bottom-nav button i{font-size:20px}
 .bottom-nav .badge{position:absolute;top:2px;inset-inline-end:calc(50% - 20px);min-width:17px;height:17px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--surface)}
+.fab{position:fixed;bottom:calc(96px + env(safe-area-inset-bottom));inset-inline-end:24px;width:58px;height:58px;border-radius:50%;background:var(--grad-gold);color:#1a1207;display:grid;place-items:center;box-shadow:0 10px 28px rgba(201,143,61,.45);z-index:55;font-size:26px;transition:transform .15s,box-shadow .15s;font-weight:900}
+.fab:active{transform:scale(.9);box-shadow:0 5px 16px rgba(201,143,61,.35)}
+.fab.hide{display:none}
 .list-pad{padding:16px 18px;display:flex;flex-direction:column;gap:11px}
 .user-row{display:flex;align-items:center;gap:13px;padding:13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:transform .15s,background .2s}
 .user-row:active{transform:scale(.98);background:var(--surface-2)}
@@ -115,7 +118,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .cmsg.me{align-self:flex-end;flex-direction:row-reverse}
 .cmsg-body{display:flex;flex-direction:column;gap:5px;min-width:0}
 .cmsg .cmeta{font-size:.68rem;color:var(--muted);padding:0 10px}
-.cmsg .cbubble{padding:11px 15px;border-radius:18px;font-size:.93rem;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;position:relative}
+.cmsg .cbubble{padding:11px 15px;border-radius:18px;font-size:.93rem;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;position:relative;word-break:break-word}
 .cmsg.other .cbubble{background:var(--surface);border:1px solid var(--border-2);border-start-start-radius:5px}
 .cmsg.me .cbubble{background:var(--grad-gold);color:#1a1207;border-start-end-radius:5px;box-shadow:var(--shadow-gold);font-weight:500}
 .cmsg[data-local="1"] .cbubble{opacity:.75}
@@ -164,8 +167,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .empty{padding:70px 30px;text-align:center;color:var(--muted)}
 .empty i,.empty svg{display:none!important}
 .empty p{font-size:.92rem;line-height:1.65}
-.panic-overlay{position:fixed;inset:0;z-index:9999;background:#0e1018;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;font-family:'Cairo',sans-serif}
-.panic-overlay .spinner{border-color:rgba(255,255,255,.2);border-top-color:#fff}
 .admin-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px 18px}
 .admin-stat{padding:16px;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius);display:flex;flex-direction:column;gap:6px}
 .admin-stat .as-num{font-size:1.6rem;font-weight:900;color:var(--gold)}
@@ -189,7 +190,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .admin-user-row .au-actions button.danger{color:var(--danger)}
 .admin-user-row .au-actions button.gold{color:var(--gold)}
 .admin-section-title{padding:16px 20px 6px;font-size:.78rem;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-@media(min-width:720px){.modal{align-items:center}.modal-card{border-radius:var(--radius-xl);margin:20px}.bottom-nav{inset-inline:auto;left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 32px))}}
+@media(min-width:720px){.modal{align-items:center}.modal-card{border-radius:var(--radius-xl);margin:20px}.bottom-nav{inset-inline:auto;left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 32px))}.fab{inset-inline-end:calc(50% - 280px + 24px)}}
 </style>
 </head>
 <body>
@@ -210,9 +211,9 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
     <h1 class="auth-title">Dust<span>.</span></h1>
     <p class="auth-sub">اختر اسمك وابدأ</p>
     <div class="field">
-      <label>اسم المستخدم (إنجليزي فقط)</label>
-      <input id="rgName" placeholder="ahmed_ali" maxlength="20" autocomplete="off" class="en" dir="ltr" style="text-align:left" />
-      <div class="hint">أحرف إنجليزية، أرقام، و _ (مثال: ahmed_92)</div>
+      <label>اسم المستخدم</label>
+      <input id="rgName" placeholder="أحمد أو ahmed" maxlength="20" autocomplete="off" dir="auto" />
+      <div class="hint">عربي أو إنجليزي — أرقام و _ — بدون رموز خاصة</div>
     </div>
     <button id="btnRegister" class="btn-main"><i class="fa-solid fa-arrow-left"></i> ابدأ الدردشة</button>
     <div class="warn-card">
@@ -227,8 +228,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
   <div class="tab-content">
     <div id="tab-chats" class="tab active">
       <header class="app-header">
-        <h1>الرسائل</h1>
-        <button class="hbtn" id="btnAddFriend" title="إضافة صديق"><i class="fa-solid fa-user-plus"></i></button>
+        <h1>Dust</h1>
       </header>
       <div class="list-pad" id="chatsList"></div>
     </div>
@@ -248,6 +248,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
       <div class="account-wrap" id="accountContent"></div>
     </div>
   </div>
+  <button class="fab" id="fabAddFriend" title="إضافة صديق"><i class="fa-solid fa-plus"></i></button>
   <nav class="bottom-nav">
     <button type="button" data-tab="chats" class="on">
       <i class="fa-solid fa-comment-dots"></i>
@@ -319,6 +320,52 @@ var qrScanner = null;
 var qrFileInput = null;
 var lastLongPressAt = 0;
 
+/* ========== View Stack (Android Back Button) ========== */
+var viewStack = [];
+
+function pushView(v) {
+  viewStack.push(v);
+  try { history.pushState({ v: v }, ''); } catch(e){}
+}
+function popView() {
+  return viewStack.pop();
+}
+function popAllViews() {
+  var n = viewStack.length;
+  for (var i = 0; i < n; i++) {
+    try { history.back(); } catch(e){}
+  }
+  viewStack = [];
+}
+
+window.addEventListener('popstate', function(e) {
+  /* 1. modal مفتوح؟ أغلقه */
+  if ($('modal').classList.contains('open')) {
+    closeModalInternal(true);
+    return;
+  }
+  /* 2. chat مفتوح؟ أغلقه */
+  if ($('chatView').classList.contains('open')) {
+    $('chatView').classList.remove('open');
+    CURRENT_DM = null;
+    if (viewStack.length && viewStack[viewStack.length - 1] === 'chat') viewStack.pop();
+    return;
+  }
+  /* 3. قائمة جانبية؟ لا شيء هنا */
+  /* لا نمنع الخروج */
+});
+
+/* ========== Name validation (منع السكربت) ========== */
+var NAME_REGEX = /^[\u0600-\u06FFa-zA-Z][\u0600-\u06FFa-zA-Z0-9_]{1,19}$/;
+function sanitizeName(raw) {
+  var s = String(raw || '').trim();
+  /* حذف الأحرف الخطيرة فوراً */
+  s = s.replace(/[<>&"'`\\\/;(){}\[\]]/g, '');
+  /* حذف المسافات المتعددة */
+  s = s.replace(/\s+/g, '_');
+  return s;
+}
+
 function wipeAllData(){
   try {
     var toDelete = [];
@@ -370,6 +417,29 @@ var esc = function(s){
   });
 };
 var initial = function(n){ return (n||'?').trim().charAt(0).toUpperCase(); };
+
+/* ========== linkify — نسخة آمنة من XSS ========== */
+function linkify(text){
+  var raw = String(text || '');
+  var regex = /(https?:\/\/[^\s<]+)/g;
+  var parts = [];
+  var lastIndex = 0;
+  var match;
+  while ((match = regex.exec(raw)) !== null) {
+    parts.push(esc(raw.slice(lastIndex, match.index)));
+    var url = match[1];
+    /* السماح فقط بأحرف URL الآمنة — منع أي محاولة كسر href */
+    if (/^https?:\/\/[a-zA-Z0-9\-._~:\/?#\[\]@!$&()*+,;=%]+$/.test(url)) {
+      parts.push('<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + esc(url) + '</a>');
+    } else {
+      parts.push(esc(url));
+    }
+    lastIndex = match.index + match[1].length;
+  }
+  parts.push(esc(raw.slice(lastIndex)));
+  return parts.join('');
+}
+
 var fmtTime = function(ts){
   return new Intl.DateTimeFormat('ar-EG',{hour:'2-digit',minute:'2-digit'}).format(new Date(ts));
 };
@@ -382,11 +452,6 @@ var fmtLastSeen = function(ts){
   if(diff < 172800) return 'أمس';
   return new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'short'}).format(new Date(ts));
 };
-function linkify(text){
-  var s = esc(text);
-  s = s.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
-  return s;
-}
 function avatarHTML(user, size){
   var sz = size ? 'width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size*0.42) + 'px' : '';
   if (user && user.deleted) {
@@ -456,9 +521,11 @@ function handleApiError(e){
 window.addEventListener('online', function(){ $('netBanner').classList.remove('show'); });
 window.addEventListener('offline', function(){ $('netBanner').classList.add('show'); });
 
+/* ========== Register ========== */
 $('btnRegister').addEventListener('click', async function(){
-  var name = $('rgName').value.trim().toLowerCase();
-  if(!/^[a-z][a-z0-9_]{1,19}$/.test(name)) return showErr('الاسم يجب أن يبدأ بحرف إنجليزي (2-20 حرف)');
+  var raw = $('rgName').value;
+  var name = sanitizeName(raw);
+  if (!NAME_REGEX.test(name)) return showErr('اسم غير صالح — استخدم حروف عربية أو إنجليزية و _ (2-20)');
   this.disabled = true;
   var colors = ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399"];
   var randomColor = colors[Math.floor(Math.random() * colors.length)];
@@ -476,6 +543,7 @@ $('btnRegister').addEventListener('click', async function(){
   this.disabled = false;
 });
 
+/* ========== Enter app ========== */
 async function enterApp(user){
   ME = user;
   soundOn = true;
@@ -484,6 +552,8 @@ async function enterApp(user){
   socket.emit('auth', { token: TOKEN });
   lastConvData = null;
   showAdminNav();
+  /* نضع حالة أساسية بدل الفارغة */
+  try { history.replaceState({ v: 'root' }, ''); } catch(e){}
 
   var pendingSecret = sessionStorage.getItem('dust_pending_admin_claim');
   if (pendingSecret) {
@@ -528,6 +598,7 @@ function showAdminNav(){
   else nav.classList.add('hide');
 }
 
+/* ========== Admin ========== */
 async function loadAdmin(){
   var box = $('adminContent');
   box.innerHTML = '<div style="text-align:center;padding:40px"><div class="spinner"></div></div>';
@@ -618,7 +689,7 @@ function attachAdminActions(box){
 }
 function showBroadcastModal(){
   showModal('<div class="modal-header"><button class="back-btn" id="bdBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">إعلان جماعي</div><div class="spacer"></div></div><div class="field"><label>نص الإعلان</label><textarea id="bdText" maxlength="500" style="min-height:120px" placeholder="اكتب..."></textarea></div><button class="btn-main" id="bdSend">إرسال</button>');
-  $('bdBack').addEventListener('click', closeModal);
+  $('bdBack').addEventListener('click', function(){ closeModal(); });
   $('bdSend').addEventListener('click', async function(){
     var txt = $('bdText').value.trim();
     if (!txt) return toast('اكتب نصاً', 'err');
@@ -638,6 +709,7 @@ function showBroadcastModal(){
   });
 }
 
+/* ========== Socket events ========== */
 socket.on('auth-error', function(data){
   var err = data && data.error;
   if(err === 'session_expired' || err === 'invalid_token' || err === 'user_not_found'){
@@ -837,6 +909,12 @@ function switchTab(name){
   $$('.tab').forEach(function(t){ t.classList.remove('active'); });
   var el = $('tab-' + name); if(el) el.classList.add('active');
   $$('.bottom-nav button').forEach(function(b){ b.classList.toggle('on', b.dataset.tab === name); });
+  /* FAB يظهر فقط في تبويب الرسائل */
+  var fab = $('fabAddFriend');
+  if (fab) {
+    if (name === 'chats') fab.classList.remove('hide');
+    else fab.classList.add('hide');
+  }
   if(name === 'chats'){ updateChatBadge(0); loadChats(); }
   if(name === 'account'){ loadAccount(); }
   if(name === 'admin'){ loadAdmin(); }
@@ -869,7 +947,7 @@ async function loadChats(){
       var subClass = c.user.deleted ? 'offline' : (online ? 'online' : '');
       html += '<div class="user-row" data-dmuid="' + c.user.id + '"' + (c.user.deleted ? ' style="opacity:.65"' : '') + '>' + avatarHTML(c.user) + '<div class="ur-info"><div class="ur-name" style="' + (c.user.deleted ? 'color:var(--muted);font-style:italic' : '') + '">' + displayName + '</div><div class="ur-sub ' + subClass + '">' + subText + '</div></div>' + (c.unread && !c.user.deleted ? '<span class="ur-unread">' + c.unread + '</span>' : '') + '</div>';
     }
-    $('chatsList').innerHTML = r.conversations.length ? html : '<div class="empty"><p>لا توجد محادثات<br><br>اضغط زر الإضافة لإضافة صديق</p></div>';
+    $('chatsList').innerHTML = r.conversations.length ? html : '<div class="empty"><p>لا توجد محادثات<br><br>اضغط زر + لإضافة صديق</p></div>';
     $('chatsList').querySelectorAll('[data-dmuid]').forEach(function(r2){
       r2.addEventListener('click', function(){
         if (wasLongPress()) return;
@@ -889,7 +967,7 @@ attachLongPress($('chatsList'), function(e){
 });
 function showConversationMenu(userId, name){
   showModal('<div class="modal-header"><button class="back-btn" id="cvmBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">' + esc(name) + '</div><div class="spacer"></div></div><div class="modal-list"><button class="modal-item" id="cvmDelete"><div class="mi-icon danger"><i class="fa-solid fa-trash"></i></div><div class="mi-info"><div class="mi-title">حذف الدردشة</div><div class="mi-sub">من الطرفين</div></div></button></div>');
-  $('cvmBack').addEventListener('click', closeModal);
+  $('cvmBack').addEventListener('click', function(){ closeModal(); });
   $('cvmDelete').addEventListener('click', function(){
     closeModal();
     showConfirm({
@@ -911,6 +989,7 @@ function showConversationMenu(userId, name){
   });
 }
 
+/* ========== Account ========== */
 async function loadAccount(){
   try {
     var r = await api('/me');
@@ -918,10 +997,10 @@ async function loadAccount(){
     var box = $('accountContent');
     box.innerHTML =
       '<div class="account-avatar">' + esc(initial(ME.display_name)) + '</div>' +
-      '<div class="account-name en">' + esc(ME.display_name) + '</div>' +
-      '<div class="account-username en">@' + esc(ME.username) + '</div>' +
+      '<div class="account-name">' + esc(ME.display_name) + '</div>' +
+      '<div class="account-username">@' + esc(ME.username) + '</div>' +
       '<div class="account-info-card">' +
-        '<div class="account-info-row"><span class="label">اسم المستخدم</span><span class="value">' + esc(ME.username) + '</span></div>' +
+        '<div class="account-info-row"><span class="label">اسم المستخدم</span><span class="value" style="font-family:inherit">' + esc(ME.username) + '</span></div>' +
         '<div class="account-info-row"><span class="label">تاريخ الانضمام</span><span class="value" style="font-family:inherit;direction:rtl">' + new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'long',year:'numeric'}).format(new Date(ME.created_at)) + '</span></div>' +
         (ME.is_admin ? '<div class="account-info-row"><span class="label">الصلاحية</span><span class="value" style="color:var(--gold);font-family:inherit"><i class="fa-solid fa-user-shield"></i> مسؤول</span></div>' : '') +
       '</div>' +
@@ -947,34 +1026,34 @@ async function loadAccount(){
   } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
 }
 
+/* ========== QR ========== */
 async function showMyQrModal(){
   showModal('<div class="modal-header"><button class="back-btn" id="qmBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">QR الخاص بي</div><div class="spacer"></div></div><div id="qrModalContent"><div style="text-align:center;padding:30px"><div class="spinner"></div></div></div>');
-  $('qmBack').addEventListener('click', closeModal);
+  $('qmBack').addEventListener('click', function(){ closeModal(); });
   try {
     var q = await api('/qr/image');
-    $('qrModalContent').innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0"><div style="background:#fff;padding:16px;border-radius:20px"><img src="' + q.qr + '" alt="QR" style="width:240px;height:240px;display:block;border-radius:8px" /></div><div style="font-size:.82rem;color:var(--muted);text-align:center;line-height:1.7;max-width:280px">دع صديقك يمسح الكود</div><div class="en" style="width:100%;padding:14px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:14px;font-family:ui-monospace,monospace;font-size:.9rem;text-align:center;font-weight:700;letter-spacing:1px">' + esc(q.qr_id) + '</div><button class="btn-copy" id="btnCopyQrCode" style="width:100%"><i class="fa-solid fa-copy"></i> نسخ كود QR</button><button class="btn-outline" id="btnDownloadQrCode" style="width:100%"><i class="fa-solid fa-download"></i> تحميل صورة QR</button></div>';
+    $('qrModalContent').innerHTML =
+      '<div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0">' +
+        '<div style="background:#fff;padding:16px;border-radius:20px"><img src="' + q.qr + '" alt="QR" style="width:240px;height:240px;display:block;border-radius:8px" /></div>' +
+        '<div style="font-size:.82rem;color:var(--muted);text-align:center;line-height:1.7;max-width:280px">دع صديقك يمسح الكود</div>' +
+        '<div class="en" style="width:100%;padding:14px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:14px;font-family:ui-monospace,monospace;font-size:.9rem;text-align:center;font-weight:700;letter-spacing:1px">' + esc(q.qr_id) + '</div>' +
+        '<button class="btn-copy" id="btnCopyQrCode" style="width:100%"><i class="fa-solid fa-copy"></i> نسخ كود QR</button>' +
+      '</div>';
     $('btnCopyQrCode').addEventListener('click', function(){
       navigator.clipboard.writeText(q.qr_id)
         .then(function(){ toast('تم النسخ', 'ok'); })
         .catch(function(){ toast('فشل', 'err'); });
-    });
-    $('btnDownloadQrCode').addEventListener('click', function(){
-      var a = document.createElement('a');
-      a.href = q.qr;
-      a.download = 'dust-qr-' + ME.username + '.png';
-      document.body.appendChild(a); a.click(); a.remove();
-      toast('تم التحميل', 'ok');
     });
   } catch(e) {
     $('qrModalContent').innerHTML = '<div class="empty" style="padding:40px 20px"><p>فشل</p></div>';
   }
 }
 $('btnMyQrMini').addEventListener('click', showMyQrModal);
-$('btnAddFriend').addEventListener('click', showAddFriendMenu);
+$('fabAddFriend').addEventListener('click', showAddFriendMenu);
 
 function showAddFriendMenu(){
   showModal('<div class="modal-header"><button class="back-btn" id="afmBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">إضافة صديق</div><div class="spacer"></div></div><div class="modal-list"><button class="modal-item" id="afmUpload"><div class="mi-icon"><i class="fa-solid fa-image"></i></div><div class="mi-info"><div class="mi-title">تحميل QR</div></div></button><button class="modal-item" id="afmCamera"><div class="mi-icon"><i class="fa-solid fa-camera"></i></div><div class="mi-info"><div class="mi-title">مسح بالكاميرا</div></div></button><button class="modal-item" id="afmCode"><div class="mi-icon"><i class="fa-solid fa-keyboard"></i></div><div class="mi-info"><div class="mi-title">إدخال الكود</div></div></button></div>');
-  $('afmBack').addEventListener('click', closeModal);
+  $('afmBack').addEventListener('click', function(){ closeModal(); });
   $('afmUpload').addEventListener('click', function(){ closeModal(); setTimeout(openQrUpload, 150); });
   $('afmCamera').addEventListener('click', function(){ closeModal(); setTimeout(startQrCamera, 150); });
   $('afmCode').addEventListener('click', function(){ closeModal(); setTimeout(showEnterQrId, 150); });
@@ -1039,7 +1118,7 @@ async function stopQrCamera(){
 }
 function showEnterQrId(){
   showModal('<div class="modal-header"><button class="back-btn" id="eqrBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">كود QR</div><div class="spacer"></div></div><div class="field"><input id="eqrInput" placeholder="a3f9b2e8c4d1" maxlength="32" class="en" dir="ltr" style="text-align:left" /></div><button class="btn-main" id="eqrSubmit">إضافة</button>');
-  $('eqrBack').addEventListener('click', closeModal);
+  $('eqrBack').addEventListener('click', function(){ closeModal(); });
   $('eqrSubmit').addEventListener('click', async function(){
     var raw = $('eqrInput').value.trim();
     if(!raw) return toast('أدخل الكود', 'err');
@@ -1077,6 +1156,7 @@ function scrollChat(inst){
   requestAnimationFrame(function(){ el.scrollTo({ top: el.scrollHeight, behavior: inst ? 'auto' : 'smooth' }); });
 }
 
+/* ========== Render DM ========== */
 function renderDMMsg(m){
   var el = document.createElement('div');
   var mine = m.from_id === ME.id;
@@ -1112,9 +1192,14 @@ function renderDMMsg(m){
   $('chatMsgs').appendChild(el);
 }
 
+/* ========== Message actions ========== */
 $('chatBack').addEventListener('click', function(){
   $('chatView').classList.remove('open');
   CURRENT_DM = null;
+  if (viewStack.length && viewStack[viewStack.length - 1] === 'chat') {
+    viewStack.pop();
+    /* لن نستدعي history.back لأن المستخدم ضغط الزر يدوياً */
+  }
 });
 attachLongPress($('chatMsgs'), function(e){
   var msgEl = e.target.closest('.cmsg'); if (!msgEl) return;
@@ -1130,7 +1215,7 @@ attachLongPress($('chatMsgs'), function(e){
 function showMessageMenu(msgId, isMine, text){
   if (!isMine) { toast('يمكنك فقط تعديل رسائلك', 'info'); return; }
   showModal('<div class="modal-header"><button class="back-btn" id="mmBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">خيارات</div><div class="spacer"></div></div><div class="modal-list"><button class="modal-item" id="mmEdit"><div class="mi-icon blue"><i class="fa-solid fa-pen"></i></div><div class="mi-info"><div class="mi-title">تعديل</div></div></button><button class="modal-item" id="mmDelete"><div class="mi-icon danger"><i class="fa-solid fa-trash"></i></div><div class="mi-info"><div class="mi-title">حذف</div></div></button></div>');
-  $('mmBack').addEventListener('click', closeModal);
+  $('mmBack').addEventListener('click', function(){ closeModal(); });
   $('mmEdit').addEventListener('click', function(){ closeModal(); showEditMessageModal(msgId, text); });
   $('mmDelete').addEventListener('click', function(){
     closeModal();
@@ -1160,7 +1245,7 @@ function showMessageMenu(msgId, isMine, text){
 }
 function showEditMessageModal(msgId, currentText){
   showModal('<div class="modal-header"><button class="back-btn" id="emmBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">تعديل</div><div class="spacer"></div></div><div class="field"><textarea id="emmText" maxlength="5000" style="min-height:120px">' + esc(currentText) + '</textarea></div><button class="btn-main" id="emmSave">حفظ</button>');
-  $('emmBack').addEventListener('click', closeModal);
+  $('emmBack').addEventListener('click', function(){ closeModal(); });
   setTimeout(function(){
     var t = $('emmText');
     if(t){ t.focus(); t.setSelectionRange(t.value.length, t.value.length); }
@@ -1192,6 +1277,7 @@ function showEditMessageModal(msgId, currentText){
   });
 }
 
+/* ========== Send chat ========== */
 function autoGrow(){
   var t = $('chatInput');
   t.style.height = 'auto';
@@ -1233,6 +1319,7 @@ function sendChat(){
   autoGrow();
 }
 
+/* ========== Open DM ========== */
 async function openDMById(userId){
   if(ME && userId === ME.id) return toast('نفسك', 'err');
   try {
@@ -1270,6 +1357,8 @@ async function openDM(user){
     $('chatSend').disabled = false;
   }
   $('chatView').classList.add('open');
+  /* ✅ إضافة حالة لزر الرجوع */
+  pushView('chat');
   $('chatMsgs').innerHTML = '';
   try {
     var r = await api('/dms/' + user.id);
@@ -1279,14 +1368,28 @@ async function openDM(user){
   } catch(_){}
 }
 
-function closeModal(){ $('modal').classList.remove('open'); }
+/* ========== Modal helpers ========== */
+function closeModalInternal(noHistory) {
+  $('modal').classList.remove('open');
+  if (!noHistory) {
+    if (viewStack.length && viewStack[viewStack.length - 1] === 'modal') {
+      viewStack.pop();
+      try { history.back(); } catch(e){}
+    }
+  } else {
+    if (viewStack.length && viewStack[viewStack.length - 1] === 'modal') viewStack.pop();
+  }
+}
+function closeModal(){ closeModalInternal(false); }
 function showModal(html){
   $('modalBody').innerHTML = html;
   $('modal').classList.add('open');
+  pushView('modal');
 }
 $('modal').addEventListener('click', function(e){
   if(e.target === $('modal')) closeModal();
 });
+
 function showConfirm(opts){
   var backdrop = document.createElement('div');
   backdrop.style.cssText = 'position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.5);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:20px;';
@@ -1301,6 +1404,7 @@ function showConfirm(opts){
   });
 }
 
+/* ========== Sound ========== */
 var audioCtx = null;
 function getAudioCtx(){
   var Ctx = window.AudioContext || window.webkitAudioContext;
@@ -1325,6 +1429,7 @@ function playBeep(){
   } catch(_){}
 }
 
+/* ========== Boot ========== */
 (async function(){
   var minWait = new Promise(function(r){ setTimeout(r, 800); });
   try {
@@ -1353,4 +1458,4 @@ function playBeep(){
 })();
 </script>
 </body>
-</html>
+  </html>
