@@ -180,11 +180,10 @@ function hashToken(token) {
 }
 const ONLINE_USERS = new Map();
 
-/* ✅ اسمح بالأسماء العربية والإنجليزية — منع السكربت */
+/* ✅ الأسماء: عربي + إنجليزي — بدون رموز خطيرة */
 const NAME_REGEX = /^[\u0600-\u06FFa-zA-Z][\u0600-\u06FFa-zA-Z0-9_]{1,19}$/;
 function validateUsername(name) {
   if (!NAME_REGEX.test(name)) return false;
-  /* منع الأحرف الخطيرة إضافياً */
   if (/[<>&"'`\\\/;(){}\[\]\s]/.test(name)) return false;
   return true;
 }
@@ -323,7 +322,6 @@ app.post('/api/register',
     const baseName = name.trim();
     let username = baseName;
 
-    /* التحقق مرة أخرى من صحة الاسم */
     if (!validateUsername(username)) {
       return res.status(400).json({ error: 'invalid_input' });
     }
