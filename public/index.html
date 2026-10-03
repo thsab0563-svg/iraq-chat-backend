@@ -10,7 +10,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{--bg:#f5f6fa;--surface:#ffffff;--surface-2:#eef0f6;--surface-3:#e2e5ee;--text:#0e1018;--text-2:#3a3d4d;--muted:#6b7285;--muted-2:#9ca3b5;--border:rgba(0,0,0,.06);--border-2:rgba(0,0,0,.1);--gold:#c98f3d;--gold-2:#e8b567;--gold-soft:rgba(201,143,61,.12);--accent:#5b8cff;--accent-soft:rgba(91,140,255,.12);--danger:#e8435f;--danger-soft:rgba(232,67,95,.12);--success:#10b981;--success-soft:rgba(16,185,129,.12);--grad-gold:linear-gradient(135deg,#f4c885,#e8b567 50%,#d4a574);--shadow-sm:0 2px 8px rgba(0,0,0,.04);--shadow-md:0 8px 24px rgba(0,0,0,.08);--shadow-lg:0 20px 50px rgba(0,0,0,.12);--shadow-gold:0 8px 24px rgba(201,143,61,.25);--ease:cubic-bezier(.2,.8,.3,1);--radius-sm:12px;--radius:16px;--radius-lg:22px;--radius-xl:28px}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
@@ -36,7 +35,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 #splash .title{font-size:1.9rem;font-weight:900;letter-spacing:-.5px}
 #splash .title span{color:var(--gold)}
 #splash .sub{color:var(--muted);font-size:.85rem;display:flex;align-items:center;gap:6px}
-#splash .sub i{font-size:14px;color:var(--success)}
 #splash .bar{width:200px;height:4px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-top:6px}
 #splash .bar::before{content:'';display:block;height:100%;width:40%;background:var(--grad-gold);border-radius:99px;animation:splashBar 1.4s ease-in-out infinite}
 @keyframes splashBar{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
@@ -107,7 +105,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .chat-head{display:flex;align-items:center;gap:10px;padding:14px 16px;padding-top:calc(14px + env(safe-area-inset-top));border-bottom:1px solid var(--border);background:var(--bg)}
 .chat-head .back{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--border-2);color:var(--text);flex:0 0 auto;font-size:18px}
 .chat-head .back:active{transform:scale(.92)}
-.chat-head .verify{background:var(--success-soft);border-color:rgba(16,185,129,.3);color:var(--success)}
 .chat-head .ch-text{flex:1;min-width:0}
 .chat-head .ch-name{font-weight:800;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chat-head .ch-sub{font-size:.73rem;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:5px}
@@ -122,10 +119,8 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .cmsg.other .cbubble{background:var(--surface);border:1px solid var(--border-2);border-start-start-radius:5px}
 .cmsg.me .cbubble{background:var(--grad-gold);color:#1a1207;border-start-end-radius:5px;box-shadow:var(--shadow-gold);font-weight:500}
 .cmsg[data-local="1"] .cbubble{opacity:.75}
-.cbubble .lock-ic{display:inline-block;font-size:11px;vertical-align:middle;margin-inline-end:4px;opacity:.7}
 .cbubble .edited-mark{font-size:.68rem;opacity:.7;font-style:italic;margin-inline-start:4px}
 .cbubble.deleted{opacity:.6;font-style:italic;background:var(--surface-2)!important;color:var(--muted)!important;border:1px dashed var(--border-2)!important}
-.cbubble.deleted .lock-ic{display:none}
 .cmsg .read-marks{font-size:.72rem;padding:0 10px;font-weight:700;line-height:1}
 .cmsg .read-marks.sent{color:var(--muted)}
 .cmsg .read-marks.delivered{color:var(--success)}
@@ -162,7 +157,6 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .toast.info{border-color:rgba(201,143,61,.35);color:var(--gold)}
 @keyframes slideDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 .spinner{width:22px;height:22px;border:2.5px solid var(--gold-soft);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 #netBanner{position:fixed;top:0;inset-inline:0;z-index:1000;background:var(--danger);color:#fff;padding:11px 16px;text-align:center;font-weight:700;font-size:.85rem;display:none;align-items:center;justify-content:center;gap:12px;padding-top:calc(11px + env(safe-area-inset-top))}
@@ -195,23 +189,15 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .admin-user-row .au-actions button.danger{color:var(--danger)}
 .admin-user-row .au-actions button.gold{color:var(--gold)}
 .admin-section-title{padding:16px 20px 6px;font-size:.78rem;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-.sec-log-item{padding:12px;background:var(--surface-2);border-radius:12px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
-.sec-log-item .sl-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:0 0 auto;font-size:16px}
-.sec-log-item .sl-icon.ok{background:var(--success-soft);color:var(--success)}
-.sec-log-item .sl-icon.warn{background:var(--gold-soft);color:var(--gold)}
-.sec-log-item .sl-icon.danger{background:var(--danger-soft);color:var(--danger)}
-.sec-log-item .sl-info{flex:1;min-width:0}
-.sec-log-item .sl-title{font-weight:800;font-size:.86rem}
-.sec-log-item .sl-time{font-size:.7rem;color:var(--muted);margin-top:2px}
 @media(min-width:720px){.modal{align-items:center}.modal-card{border-radius:var(--radius-xl);margin:20px}.bottom-nav{inset-inline:auto;left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 32px))}}
 </style>
 </head>
 <body>
 
 <div id="splash">
-  <div class="logo"><i class="fa-solid fa-shield-halved"></i></div>
+  <div class="logo"><i class="fa-solid fa-comment-dots"></i></div>
   <div class="title">Dust<span>.</span></div>
-  <div class="sub"><i class="fa-solid fa-lock"></i> تشفير من الطرف إلى الطرف</div>
+  <div class="sub"><i class="fa-solid fa-bolt"></i> دردشة سريعة</div>
   <div class="bar"></div>
 </div>
 
@@ -220,18 +206,18 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 
 <div id="auth" class="screen">
   <div class="auth-wrap">
-    <div class="auth-logo"><i class="fa-solid fa-shield-halved"></i></div>
+    <div class="auth-logo"><i class="fa-solid fa-comment-dots"></i></div>
     <h1 class="auth-title">Dust<span>.</span></h1>
-    <p class="auth-sub">تطبيق مشفر — اختر اسمك وابدأ</p>
+    <p class="auth-sub">اختر اسمك وابدأ</p>
     <div class="field">
       <label>اسم المستخدم (إنجليزي فقط)</label>
       <input id="rgName" placeholder="ahmed_ali" maxlength="20" autocomplete="off" class="en" dir="ltr" style="text-align:left" />
       <div class="hint">أحرف إنجليزية، أرقام، و _ (مثال: ahmed_92)</div>
     </div>
-    <button id="btnRegister" class="btn-main"><i class="fa-solid fa-lock"></i> ابدأ الدردشة</button>
+    <button id="btnRegister" class="btn-main"><i class="fa-solid fa-arrow-left"></i> ابدأ الدردشة</button>
     <div class="warn-card">
-      <div class="w-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-      <div class="w-text"><b>ملاحظة أمنية:</b><br>رسائلك مشفرة من الطرف إلى الطرف. عند <b>تسجيل الخروج</b> سيتم حذف حسابك ومفاتيحك نهائياً.</div>
+      <div class="w-icon"><i class="fa-solid fa-circle-info"></i></div>
+      <div class="w-text">عند <b>تسجيل الخروج</b> سيتم حذف حسابك وكل رسائلك نهائياً.</div>
     </div>
     <div class="err" id="authErr"></div>
   </div>
@@ -284,13 +270,12 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
     <button class="back" id="chatBack"><i class="fa-solid fa-chevron-right"></i></button>
     <div class="ch-text">
       <div class="ch-name" id="chatName">—</div>
-      <div class="ch-sub" id="chatSub"><i class="fa-solid fa-lock"></i> ...</div>
+      <div class="ch-sub" id="chatSub">...</div>
     </div>
-    <button class="back verify" id="chatVerify" title="التحقق"><i class="fa-solid fa-shield-halved"></i></button>
   </header>
   <div class="chat-msgs" id="chatMsgs"></div>
   <div class="chat-input-row">
-    <textarea id="chatInput" rows="1" placeholder="اكتب رسالة مشفرة..."></textarea>
+    <textarea id="chatInput" rows="1" placeholder="اكتب رسالة..."></textarea>
     <button class="send" id="chatSend"><i class="fa-solid fa-paper-plane" style="transform:scaleX(-1)"></i></button>
   </div>
 </div>
@@ -334,43 +319,6 @@ var qrScanner = null;
 var qrFileInput = null;
 var lastLongPressAt = 0;
 
-/* ========== Message cache ========== */
-function cacheSentMsg(encrypted, plaintext) {
-  try {
-    var cache = JSON.parse(localStorage.getItem('dust_sent_cache') || '{}');
-    var key = encrypted.substring(0, 80);
-    cache[key] = { t: plaintext, ts: Date.now() };
-    var keys = Object.keys(cache).sort(function(a,b){ return cache[a].ts - cache[b].ts; });
-    if (keys.length > 500) keys.slice(0, keys.length - 500).forEach(function(k){ delete cache[k]; });
-    localStorage.setItem('dust_sent_cache', JSON.stringify(cache));
-  } catch(e){}
-}
-function lookupSentMsg(encrypted) {
-  try {
-    var cache = JSON.parse(localStorage.getItem('dust_sent_cache') || '{}');
-    var entry = cache[encrypted.substring(0, 80)];
-    return entry ? entry.t : null;
-  } catch(e){ return null; }
-}
-function cacheReceivedMsg(encrypted, plaintext) {
-  try {
-    var cache = JSON.parse(localStorage.getItem('dust_recv_cache') || '{}');
-    var key = encrypted.substring(0, 80);
-    cache[key] = { t: plaintext, ts: Date.now() };
-    var keys = Object.keys(cache).sort(function(a,b){ return cache[a].ts - cache[b].ts; });
-    if (keys.length > 500) keys.slice(0, keys.length - 500).forEach(function(k){ delete cache[k]; });
-    localStorage.setItem('dust_recv_cache', JSON.stringify(cache));
-  } catch(e){}
-}
-function lookupRecvMsg(encrypted) {
-  try {
-    var cache = JSON.parse(localStorage.getItem('dust_recv_cache') || '{}');
-    var entry = cache[encrypted.substring(0, 80)];
-    return entry ? entry.t : null;
-  } catch(e){ return null; }
-}
-
-/* ========== Wipe ========== */
 function wipeAllData(){
   try {
     var toDelete = [];
@@ -385,355 +333,7 @@ function wipeAllData(){
     });
   } catch(e){}
 }
-function logSecurityEvent(type, message){
-  try {
-    var log = JSON.parse(localStorage.getItem('dust_security_log') || '[]');
-    log.unshift({ type: type, msg: message, time: Date.now() });
-    if (log.length > 100) log.length = 100;
-    localStorage.setItem('dust_security_log', JSON.stringify(log));
-  } catch(e){}
-}
-function fmtDateTime(ts){
-  return new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})
-    .format(new Date(ts));
-}
-function showSecurityLog(){
-  var log = [];
-  try { log = JSON.parse(localStorage.getItem('dust_security_log') || '[]'); } catch(e){}
-  var html = '<div class="modal-header"><button class="back-btn" id="slBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">سجل الأمان</div><div class="spacer"></div></div>';
-  if (!log.length) html += '<div class="empty" style="padding:40px 20px"><p>لا توجد أحداث</p></div>';
-  else {
-    html += '<div style="max-height:60vh;overflow-y:auto;padding:0 4px">';
-    log.forEach(function(e){
-      var icon = 'ok', iconTxt = 'fa-check';
-      if (e.type.indexOf('fail') !== -1 || e.type === 'wipe' || e.type.indexOf('change') !== -1 || e.type === 'banned') {
-        icon = 'danger'; iconTxt = 'fa-triangle-exclamation';
-      }
-      html += '<div class="sec-log-item"><div class="sl-icon ' + icon + '"><i class="fa-solid ' + iconTxt + '"></i></div><div class="sl-info"><div class="sl-title">' + esc(e.msg) + '</div><div class="sl-time">' + fmtDateTime(e.time) + '</div></div></div>';
-    });
-    html += '</div>';
-  }
-  html += '<button class="btn-danger-outline" id="slClear" style="margin-top:14px"><i class="fa-solid fa-trash"></i> مسح السجل</button>';
-  showModal(html);
-  $('slBack').addEventListener('click', closeModal);
-  $('slClear').addEventListener('click', function(){
-    localStorage.removeItem('dust_security_log');
-    toast('تم مسح السجل', 'ok');
-    closeModal();
-  });
-}
 
-/* ========== E2EE — بدون PIN ========== */
-var E2EE = {
-  keyPair: null, ready: false, cache: {},
-
-  autoLoad: async function() {
-    var privB64 = localStorage.getItem('dust_e2ee_priv');
-    var pubB64 = localStorage.getItem('dust_e2ee_pub');
-    if (!privB64 || !pubB64) return false;
-    try {
-      var publicKey = await this.importPublicKey(pubB64);
-      var privateKey = await this.importPrivateKey(privB64);
-      this.keyPair = { publicKey: publicKey, privateKey: privateKey };
-      this.ready = true;
-      try { await api('/me/public-key', { method: 'PUT', body: JSON.stringify({ public_key: pubB64 }) }); } catch(e) {}
-      return true;
-    } catch(e) { return false; }
-  },
-
-  setup: async function() {
-    var kp = await this.generateKeyPair();
-    var pubB64 = await this.exportPublicKey(kp.publicKey);
-    var privB64 = await this.exportPrivateKey(kp.privateKey);
-    localStorage.setItem('dust_e2ee_pub', pubB64);
-    localStorage.setItem('dust_e2ee_priv', privB64);
-    this.keyPair = kp;
-    this.ready = true;
-    try { await api('/me/public-key', { method: 'PUT', body: JSON.stringify({ public_key: pubB64 }) }); } catch(e) {}
-    return true;
-  },
-
-  generateKeyPair: async function() {
-    return crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']);
-  },
-  exportPublicKey: async function(key) {
-    var raw = await crypto.subtle.exportKey('spki', key);
-    var bytes = new Uint8Array(raw); var bin = '';
-    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-    return btoa(bin);
-  },
-  importPublicKey: async function(b64) {
-    var bin = atob(b64); var bytes = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    return crypto.subtle.importKey('spki', bytes, { name: 'ECDH', namedCurve: 'P-256' }, true, []);
-  },
-  exportPrivateKey: async function(key) {
-    var raw = await crypto.subtle.exportKey('pkcs8', key);
-    var bytes = new Uint8Array(raw); var bin = '';
-    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-    return btoa(bin);
-  },
-  importPrivateKey: async function(b64) {
-    var bin = atob(b64); var bytes = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    return crypto.subtle.importKey('pkcs8', bytes, { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']);
-  },
-  deriveSharedKey: async function(peerPublicKey) {
-    var bits = await crypto.subtle.deriveBits({ name: 'ECDH', public: peerPublicKey }, this.keyPair.privateKey, 256);
-    var hkdfKey = await crypto.subtle.importKey('raw', bits, 'HKDF', false, ['deriveKey']);
-    return crypto.subtle.deriveKey(
-      { name: 'HKDF', hash: 'SHA-256', salt: new TextEncoder().encode('Dust-E2EE-Salt-v3'), info: new TextEncoder().encode('Dust-Shared-Key-v3') },
-      hkdfKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
-    );
-  },
-  computeFingerprint: async function(pub1, pub2) {
-    var sorted = [pub1, pub2].sort().join('|');
-    var hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(sorted));
-    var bytes = new Uint8Array(hash).slice(0, 8); var hex = '';
-    for (var i = 0; i < bytes.length; i++) hex += bytes[i].toString(16).padStart(2, '0');
-    return hex.match(/.{1,4}/g).join(' ');
-  },
-  getSharedBits: async function(userId, peerPublicKeyB64) {
-    if (!this.keyPair || !peerPublicKeyB64) return null;
-    try {
-      var peerPub = await this.importPublicKey(peerPublicKeyB64);
-      return new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: peerPub }, this.keyPair.privateKey, 256));
-    } catch(e) { return null; }
-  },
-  getSharedKey: async function(userId, peerPublicKeyB64) {
-    if (!peerPublicKeyB64) throw new Error('no_peer_key');
-    if (this.cache[userId] && this.cache[userId].peerPublicKey === peerPublicKeyB64) return this.cache[userId];
-    var peerPub = await this.importPublicKey(peerPublicKeyB64);
-    var sharedKey = await this.deriveSharedKey(peerPub);
-    var fp = await this.computeFingerprint(localStorage.getItem('dust_e2ee_pub'), peerPublicKeyB64);
-    var entry = { key: sharedKey, fingerprint: fp, peerPublicKey: peerPublicKeyB64 };
-    this.cache[userId] = entry;
-    return entry;
-  },
-  encrypt: async function(sharedKey, plainText) {
-    var textBytes = new TextEncoder().encode(plainText);
-    var targetLen = Math.ceil((textBytes.length + 4) / 64) * 64;
-    var padLen = targetLen - textBytes.length - 4;
-    var padded = new Uint8Array(targetLen);
-    padded[0] = (textBytes.length >>> 24) & 0xff;
-    padded[1] = (textBytes.length >>> 16) & 0xff;
-    padded[2] = (textBytes.length >>> 8) & 0xff;
-    padded[3] = textBytes.length & 0xff;
-    padded.set(textBytes, 4);
-    padded.set(crypto.getRandomValues(new Uint8Array(padLen)), 4 + textBytes.length);
-    var iv = crypto.getRandomValues(new Uint8Array(12));
-    var cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, sharedKey, padded);
-    var combined = new Uint8Array(iv.length + cipher.byteLength);
-    combined.set(iv, 0); combined.set(new Uint8Array(cipher), iv.length);
-    var bin = '';
-    for (var i = 0; i < combined.length; i++) bin += String.fromCharCode(combined[i]);
-    return '🔒' + btoa(bin);
-  },
-  decrypt: async function(sharedKey, payload) {
-    if (!payload || payload.indexOf('🔒') !== 0) return payload;
-    try {
-      var bin = atob(payload.substring(2));
-      var raw = new Uint8Array(bin.length);
-      for (var i = 0; i < bin.length; i++) raw[i] = bin.charCodeAt(i);
-      var iv = raw.slice(0, 12); var cipher = raw.slice(12);
-      var plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, sharedKey, cipher);
-      var bytes = new Uint8Array(plain);
-      var origLen = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
-      if (origLen < 0 || origLen > bytes.length - 4) return '[🔒 تالف]';
-      return new TextDecoder().decode(bytes.slice(4, 4 + origLen));
-    } catch(e) { return '[🔒 تعذر فك التشفير]'; }
-  }
-};
-
-/* ========== Ratchet ========== */
-var Ratchet = {
-  states: {}, stateKey: null,
-  async initStateKey() {
-    if (this.stateKey) return this.stateKey;
-    try {
-      var raw = await crypto.subtle.exportKey('pkcs8', E2EE.keyPair.privateKey);
-      this.stateKey = new Uint8Array(await crypto.subtle.digest('SHA-256', raw));
-    } catch(e) {
-      this.stateKey = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('dust-fallback-' + ME.id)));
-    }
-    return this.stateKey;
-  },
-  async hkdf(input, info, len) {
-    len = len || 32;
-    var key = await crypto.subtle.importKey('raw', input, 'HKDF', false, ['deriveBits']);
-    var bits = await crypto.subtle.deriveBits(
-      { name: 'HKDF', hash: 'SHA-256', salt: new TextEncoder().encode('Dust-Ratchet-v1'), info: new TextEncoder().encode(info) },
-      key, len * 8
-    );
-    return new Uint8Array(bits);
-  },
-  async load() {
-    if (!ME) return;
-    try {
-      var saved = localStorage.getItem('dust_ratchet_' + ME.id);
-      if (!saved) return;
-      var stateKey = await this.initStateKey();
-      var raw = Uint8Array.from(atob(saved), function(c){ return c.charCodeAt(0); });
-      if (raw.length < 13) return;
-      var iv = raw.slice(0, 12); var cipher = raw.slice(12);
-      var aesKey = await crypto.subtle.importKey('raw', stateKey, { name: 'AES-GCM' }, false, ['decrypt']);
-      var plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, aesKey, cipher);
-      var parsed = JSON.parse(new TextDecoder().decode(plain));
-      for (var pid in parsed) {
-        var s = parsed[pid];
-        s.myChain.key = new Uint8Array(s.myChain.key);
-        s.peerChain.key = new Uint8Array(s.peerChain.key);
-      }
-      this.states = parsed;
-    } catch(e) { this.states = {}; }
-  },
-  async save() {
-    if (!ME || !this.stateKey) return;
-    try {
-      var toSave = {};
-      for (var pid in this.states) {
-        var s = this.states[pid];
-        toSave[pid] = {
-          isLower: s.isLower,
-          myChain: { key: Array.from(s.myChain.key), idx: s.myChain.idx, skipped: s.myChain.skipped },
-          peerChain: { key: Array.from(s.peerChain.key), idx: s.peerChain.idx, skipped: s.peerChain.skipped }
-        };
-      }
-      var iv = crypto.getRandomValues(new Uint8Array(12));
-      var aesKey = await crypto.subtle.importKey('raw', this.stateKey, { name: 'AES-GCM' }, false, ['encrypt']);
-      var cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, aesKey, new TextEncoder().encode(JSON.stringify(toSave)));
-      var combined = new Uint8Array(12 + cipher.byteLength);
-      combined.set(iv, 0); combined.set(new Uint8Array(cipher), 12);
-      var bin = '';
-      for (var i = 0; i < combined.length; i++) bin += String.fromCharCode(combined[i]);
-      localStorage.setItem('dust_ratchet_' + ME.id, btoa(bin));
-    } catch(e) {}
-  },
-  async initForPeer(peerId, peerPublicKeyB64) {
-    if (this.states[peerId]) return this.states[peerId];
-    await this.initStateKey();
-    var sharedBits = await E2EE.getSharedBits(peerId, peerPublicKeyB64);
-    if (!sharedBits) throw new Error('no_shared_bits');
-    var isLower = String(ME.id) < String(peerId);
-    var state = {
-      isLower: isLower,
-      myChain: {
-        key: isLower ? await this.hkdf(sharedBits, 'chain-lower') : await this.hkdf(sharedBits, 'chain-higher'),
-        idx: 0, skipped: {}
-      },
-      peerChain: {
-        key: isLower ? await this.hkdf(sharedBits, 'chain-higher') : await this.hkdf(sharedBits, 'chain-lower'),
-        idx: 0, skipped: {}
-      }
-    };
-    this.states[peerId] = state;
-    await this.save();
-    return state;
-  },
-  async encrypt(peerId, peerPublicKeyB64, plaintext) {
-    var state = await this.initForPeer(peerId, peerPublicKeyB64);
-    var idx = state.myChain.idx;
-    var msgKey = await this.hkdf(state.myChain.key, 'msg');
-    state.myChain.key = await this.hkdf(state.myChain.key, 'ratchet');
-    state.myChain.idx++;
-    await this.save();
-    var aesKey = await crypto.subtle.importKey('raw', msgKey, { name: 'AES-GCM' }, false, ['encrypt']);
-    var iv = crypto.getRandomValues(new Uint8Array(12));
-    var cipherBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, aesKey, new TextEncoder().encode(plaintext));
-    var combined = new Uint8Array(12 + cipherBuf.byteLength);
-    combined.set(iv, 0); combined.set(new Uint8Array(cipherBuf), 12);
-    var bin = '';
-    for (var i = 0; i < combined.length; i++) bin += String.fromCharCode(combined[i]);
-    return '🔒R' + idx + ':' + btoa(bin);
-  },
-  async decrypt(peerId, peerPublicKeyB64, payload) {
-    try {
-      var rest = payload.substring(2);
-      var colon = rest.indexOf(':');
-      if (colon < 0) return '[🔒]';
-      var idx = parseInt(rest.substring(0, colon), 10);
-      if (isNaN(idx)) return '[🔒]';
-      var bin = atob(rest.substring(colon + 1));
-      var combined = new Uint8Array(bin.length);
-      for (var i = 0; i < bin.length; i++) combined[i] = bin.charCodeAt(i);
-      if (combined.length < 13) return '[🔒 تالف]';
-      var iv = combined.slice(0, 12);
-      var cipher = combined.slice(12);
-      var state = await this.initForPeer(peerId, peerPublicKeyB64);
-      var msgKey = state.peerChain.skipped[idx];
-      if (msgKey) {
-        msgKey = new Uint8Array(msgKey);
-        delete state.peerChain.skipped[idx];
-      } else if (idx === state.peerChain.idx) {
-        msgKey = await this.hkdf(state.peerChain.key, 'msg');
-        state.peerChain.key = await this.hkdf(state.peerChain.key, 'ratchet');
-        state.peerChain.idx++;
-      } else if (idx > state.peerChain.idx) {
-        while (state.peerChain.idx < idx) {
-          state.peerChain.skipped[state.peerChain.idx] = Array.from(await this.hkdf(state.peerChain.key, 'msg'));
-          state.peerChain.key = await this.hkdf(state.peerChain.key, 'ratchet');
-          state.peerChain.idx++;
-        }
-        msgKey = await this.hkdf(state.peerChain.key, 'msg');
-        state.peerChain.key = await this.hkdf(state.peerChain.key, 'ratchet');
-        state.peerChain.idx++;
-        var keys = Object.keys(state.peerChain.skipped).map(Number).sort(function(a,b){return a-b;});
-        while (keys.length > 50) delete state.peerChain.skipped[keys.shift()];
-      } else return '[🔒 قديمة]';
-      await this.save();
-      var aesKey = await crypto.subtle.importKey('raw', msgKey, { name: 'AES-GCM' }, false, ['decrypt']);
-      return new TextDecoder().decode(
-        await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, aesKey, cipher)
-      );
-    } catch(e) { return '[🔒]'; }
-  }
-};
-
-/* ========== Backup ========== */
-function exportBackup(){
-  try {
-    var pub = localStorage.getItem('dust_e2ee_pub');
-    var priv = localStorage.getItem('dust_e2ee_priv');
-    if (!pub || !priv) return toast('لا يوجد مفتاح', 'err');
-    var data = {
-      app: 'Dust', version: 2, created_at: Date.now(),
-      username: ME ? ME.username : null,
-      public_key: pub, private_key: priv
-    };
-    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'dust-backup-' + (ME ? ME.username : 'user') + '-' + new Date().toISOString().slice(0,10) + '.json';
-    document.body.appendChild(a); a.click(); a.remove();
-    toast('تم التصدير ✓', 'ok');
-    logSecurityEvent('backup_export', 'تصدير نسخة');
-  } catch(e){ toast('فشل', 'err'); }
-}
-function importBackup(){
-  var input = document.createElement('input');
-  input.type = 'file'; input.accept = '.json,application/json'; input.style.display = 'none';
-  document.body.appendChild(input);
-  input.onchange = function(e){
-    var f = e.target.files[0]; if (!f) return;
-    var reader = new FileReader();
-    reader.onload = function(ev){
-      try {
-        var data = JSON.parse(ev.target.result);
-        if (!data.public_key || !data.private_key) throw new Error('invalid');
-        localStorage.setItem('dust_e2ee_pub', data.public_key);
-        localStorage.setItem('dust_e2ee_priv', data.private_key);
-        logSecurityEvent('backup_import', 'استيراد نسخة');
-        toast('✓ تم', 'ok');
-        setTimeout(function(){ location.reload(); }, 1200);
-      } catch(err){ toast('ملف غير صالح', 'err'); }
-    };
-    reader.readAsText(f);
-    input.remove();
-  };
-  input.click();
-}
-
-/* ========== Long press ========== */
 function attachLongPress(el, callback, duration){
   duration = duration || 500;
   var timer = null, startX = 0, startY = 0;
@@ -764,7 +364,6 @@ function attachLongPress(el, callback, duration){
 }
 function wasLongPress(){ return Date.now() - lastLongPressAt < 600; }
 
-/* ========== Helpers ========== */
 var esc = function(s){
   return String(s||'').replace(/[&<>"']/g, function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
@@ -826,7 +425,6 @@ function updateChatBadge(n){
   } else b.classList.add('hide');
 }
 
-/* ========== API ========== */
 async function api(path, opts){
   opts = opts || {};
   var headers = { 'Content-Type': 'application/json' };
@@ -858,17 +456,6 @@ function handleApiError(e){
 window.addEventListener('online', function(){ $('netBanner').classList.remove('show'); });
 window.addEventListener('offline', function(){ $('netBanner').classList.add('show'); });
 
-/* ========== Key change warning ========== */
-function showKeyChangeWarning(user, onCancel, onAccept){
-  var backdrop = document.createElement('div');
-  backdrop.style.cssText = 'position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:20px;';
-  backdrop.innerHTML = '<div style="background:var(--surface);border:2px solid var(--danger);border-radius:24px;width:100%;max-width:400px;padding:26px 22px 22px;text-align:center"><div style="width:72px;height:72px;border-radius:50%;margin:0 auto 18px;display:grid;place-items:center;background:var(--danger-soft);color:var(--danger);font-size:32px"><i class="fa-solid fa-triangle-exclamation"></i></div><div style="font-size:1.2rem;font-weight:900;color:var(--danger);margin-bottom:10px">تحذير أمني</div><div style="font-size:.9rem;color:var(--text-2);line-height:1.75;margin-bottom:18px">تغيّر مفتاح <b>' + esc(user.display_name) + '</b>.</div><div style="display:flex;gap:10px"><button id="kcCancel" style="flex:1;padding:14px;border-radius:14px;font-weight:800;background:var(--surface-2);color:var(--text);border:none;cursor:pointer">إلغاء</button><button id="kcAccept" style="flex:1;padding:14px;border-radius:14px;font-weight:800;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;cursor:pointer">متابعة</button></div></div>';
-  document.body.appendChild(backdrop);
-  backdrop.querySelector('#kcCancel').addEventListener('click', function(){ backdrop.remove(); onCancel(); });
-  backdrop.querySelector('#kcAccept').addEventListener('click', function(){ backdrop.remove(); onAccept(); });
-}
-
-/* ========== Register ========== */
 $('btnRegister').addEventListener('click', async function(){
   var name = $('rgName').value.trim().toLowerCase();
   if(!/^[a-z][a-z0-9_]{1,19}$/.test(name)) return showErr('الاسم يجب أن يبدأ بحرف إنجليزي (2-20 حرف)');
@@ -889,7 +476,6 @@ $('btnRegister').addEventListener('click', async function(){
   this.disabled = false;
 });
 
-/* ========== Enter app ========== */
 async function enterApp(user){
   ME = user;
   soundOn = true;
@@ -908,23 +494,9 @@ async function enterApp(user){
     if (urlSecret) setTimeout(function(){ doClaimAdmin(urlSecret); }, 1500);
   }
 
-  var ok = await E2EE.autoLoad();
-  if (!ok) ok = await E2EE.setup();
-  if (ok) afterUnlock();
-  else toast('فشل إعداد التشفير', 'err');
-}
-
-async function afterUnlock(){
-  logSecurityEvent('unlock_ok', 'فتح التطبيق');
-  try {
-    var pubB64 = localStorage.getItem('dust_e2ee_pub');
-    if (pubB64) await api('/me/public-key', { method: 'PUT', body: JSON.stringify({ public_key: pubB64 }) });
-  } catch(e) {}
-  await Ratchet.load();
   loadEverything();
 }
 
-/* ========== Admin claim ========== */
 async function doClaimAdmin(secret){
   try {
     var r = await api('/claim-admin', { method: 'POST', body: JSON.stringify({ secret: secret }) });
@@ -956,7 +528,6 @@ function showAdminNav(){
   else nav.classList.add('hide');
 }
 
-/* ========== Admin ========== */
 async function loadAdmin(){
   var box = $('adminContent');
   box.innerHTML = '<div style="text-align:center;padding:40px"><div class="spinner"></div></div>';
@@ -1046,7 +617,7 @@ function attachAdminActions(box){
   });
 }
 function showBroadcastModal(){
-  showModal('<div class="modal-header"><button class="back-btn" id="bdBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">إعلان جماعي</div><div class="spacer"></div></div><div class="field"><label>نص الإعلان</label><textarea id="bdText" maxlength="500" style="min-height:120px" placeholder="اكتب..."></textarea></div><div style="padding:12px;background:var(--gold-soft);border-radius:12px;font-size:.8rem;line-height:1.7;color:var(--gold);margin-bottom:14px"><i class="fa-solid fa-triangle-exclamation"></i> سيُرسل لكل المستخدمين.</div><button class="btn-main" id="bdSend">إرسال</button>');
+  showModal('<div class="modal-header"><button class="back-btn" id="bdBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">إعلان جماعي</div><div class="spacer"></div></div><div class="field"><label>نص الإعلان</label><textarea id="bdText" maxlength="500" style="min-height:120px" placeholder="اكتب..."></textarea></div><button class="btn-main" id="bdSend">إرسال</button>');
   $('bdBack').addEventListener('click', closeModal);
   $('bdSend').addEventListener('click', async function(){
     var txt = $('bdText').value.trim();
@@ -1067,7 +638,6 @@ function showBroadcastModal(){
   });
 }
 
-/* ========== Socket events ========== */
 socket.on('auth-error', function(data){
   var err = data && data.error;
   if(err === 'session_expired' || err === 'invalid_token' || err === 'user_not_found'){
@@ -1104,18 +674,16 @@ socket.on('user-deleted', function(d){
   if(CURRENT_DM && CURRENT_DM.user.id === d.userId){
     toast('المستخدم حذف حسابه', 'info');
     CURRENT_DM.deleted = true;
-    CURRENT_DM.sharedKey = null;
     $('chatName').textContent = 'حساب محذوف';
     $('chatName').style.color = 'var(--muted)';
     $('chatName').style.fontStyle = 'italic';
     $('chatSub').textContent = 'لا يمكن المراسلة';
     $('chatInput').disabled = true;
     $('chatSend').disabled = true;
-    $('chatVerify').style.display = 'none';
   }
   loadChats();
 });
-socket.on('dm-message', async function(m){
+socket.on('dm-message', function(m){
   var isCur = CURRENT_DM && (m.from_id === CURRENT_DM.user.id || m.to_id === CURRENT_DM.user.id);
   var isMine = m.from_id === ME.id;
   if(isCur){
@@ -1124,7 +692,7 @@ socket.on('dm-message', async function(m){
       for(var i = locals.length - 1; i >= 0; i--){ locals[i].remove(); break; }
     }
     if(!$('chatMsgs').querySelector('.cmsg[data-id="' + m.id + '"]')){
-      await renderDMMsg(m);
+      renderDMMsg(m);
       scrollChat();
     }
     if(m.from_id === CURRENT_DM.user.id) socket.emit('dm-read', { fromId: m.from_id });
@@ -1173,14 +741,13 @@ socket.on('dm-deleted', function(d){
   }
   if(currentTab === 'chats') loadChats();
 });
-socket.on('dm-edited', async function(d){
+socket.on('dm-edited', function(d){
   var el = $('chatMsgs').querySelector('.cmsg[data-id="' + d.id + '"]');
-  if (el && CURRENT_DM && CURRENT_DM.sharedKey) {
-    var decrypted = await E2EE.decrypt(CURRENT_DM.sharedKey, d.text);
+  if (el) {
     var bubble = el.querySelector('.cbubble');
     if (bubble) {
-      bubble.innerHTML = '<i class="fa-solid fa-lock lock-ic"></i>' + linkify(decrypted) + '<span class="edited-mark">(معدّلة)</span>';
-      bubble.dataset.plain = decrypted;
+      bubble.innerHTML = linkify(d.text) + '<span class="edited-mark">(معدّلة)</span>';
+      bubble.dataset.plain = d.text;
     }
   }
   if(currentTab === 'chats') loadChats();
@@ -1194,7 +761,6 @@ socket.on('dm-conversation-deleted', function(d){
   loadChats();
 });
 
-/* ========== Chat status ========== */
 async function updateChatStatus(userId){
   if(onlineUsers[userId]){
     $('chatSub').innerHTML = '<i class="fa-solid fa-circle" style="font-size:8px"></i> متصل الآن';
@@ -1209,7 +775,7 @@ async function updateChatStatus(userId){
 }
 
 async function pollCurrentChat(){
-  if(!CURRENT_DM || !E2EE.ready) return;
+  if(!CURRENT_DM) return;
   var userId = CURRENT_DM.user.id;
   try {
     var r = await api('/dms/' + userId);
@@ -1222,7 +788,7 @@ async function pollCurrentChat(){
           var locals = $('chatMsgs').querySelectorAll('.cmsg[data-local="1"]');
           for(var j = locals.length - 1; j >= 0; j--){ locals[j].remove(); break; }
         }
-        await renderDMMsg(m);
+        renderDMMsg(m);
         scrollChat();
         if(m.from_id !== ME.id && soundOn) playBeep();
       } else {
@@ -1244,7 +810,7 @@ async function pollCurrentChat(){
 }
 
 async function globalPoll(){
-  if(!ME || document.hidden || !E2EE.ready) return;
+  if(!ME || document.hidden) return;
   try {
     var r = await api('/dm-conversations');
     var totalUnread = 0;
@@ -1280,9 +846,7 @@ $$('.bottom-nav button').forEach(function(b){
 });
 $('btnAdminRefresh').addEventListener('click', function(){ if (currentTab === 'admin') loadAdmin(); });
 
-/* ========== Load chats ========== */
 async function loadChats(){
-  if (!E2EE.ready) return;
   try {
     var r = await api('/dm-conversations');
     lastConvData = r.conversations;
@@ -1298,21 +862,7 @@ async function loadChats(){
         preview = '🚫 تم حذف الرسالة';
       } else if (c.last && c.last.text) {
         var lastTxt = c.last.text;
-        var cached = lookupSentMsg(lastTxt) || lookupRecvMsg(lastTxt);
-        if (cached) {
-          preview = cached.length > 45 ? cached.slice(0, 45) + '...' : cached;
-        } else if (lastTxt.indexOf('🔒') === 0) {
-          try {
-            if (lastTxt.indexOf('🔒R') === 0 && c.user.public_key) {
-              var dec = await Ratchet.decrypt(c.user.id, c.user.public_key, lastTxt);
-              preview = (dec.charAt(0) === '[' ? '🔐 رسالة' : (dec.length > 45 ? dec.slice(0, 45) + '...' : dec));
-            } else if (c.user.public_key) {
-              var shared = await E2EE.getSharedKey(c.user.id, c.user.public_key);
-              var decrypted = await E2EE.decrypt(shared.key, lastTxt);
-              preview = (decrypted.charAt(0) === '[' ? '🔐 رسالة' : (decrypted.length > 45 ? decrypted.slice(0, 45) + '...' : decrypted));
-            } else preview = '🔒 رسالة مشفرة';
-          } catch(e) { preview = '🔒 رسالة مشفرة'; }
-        } else preview = lastTxt.slice(0, 45);
+        preview = lastTxt.length > 45 ? lastTxt.slice(0, 45) + '...' : lastTxt;
       }
       var displayName = c.user.deleted ? 'حساب محذوف' : esc(c.user.display_name);
       var subText = c.user.deleted ? 'الحساب محذوف' : (online ? 'متصل الآن' : esc(preview));
@@ -1361,7 +911,6 @@ function showConversationMenu(userId, name){
   });
 }
 
-/* ========== Account ========== */
 async function loadAccount(){
   try {
     var r = await api('/me');
@@ -1374,23 +923,11 @@ async function loadAccount(){
       '<div class="account-info-card">' +
         '<div class="account-info-row"><span class="label">اسم المستخدم</span><span class="value">' + esc(ME.username) + '</span></div>' +
         '<div class="account-info-row"><span class="label">تاريخ الانضمام</span><span class="value" style="font-family:inherit;direction:rtl">' + new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'long',year:'numeric'}).format(new Date(ME.created_at)) + '</span></div>' +
-        '<div class="account-info-row"><span class="label">حالة الأمان</span><span class="value" style="color:var(--success);font-family:inherit"><i class="fa-solid fa-shield-halved"></i> مشفر</span></div>' +
         (ME.is_admin ? '<div class="account-info-row"><span class="label">الصلاحية</span><span class="value" style="color:var(--gold);font-family:inherit"><i class="fa-solid fa-user-shield"></i> مسؤول</span></div>' : '') +
       '</div>' +
       '<div class="account-actions">' +
-        '<button class="btn-outline" id="btnSecurityLog"><i class="fa-solid fa-clipboard-list"></i> سجل الأمان</button>' +
-        '<button class="btn-outline" id="btnBackup"><i class="fa-solid fa-download"></i> نسخة احتياطية</button>' +
-        '<button class="btn-outline" id="btnPrivacy"><i class="fa-solid fa-shield-halved"></i> سياسة الخصوصية</button>' +
         '<button class="btn-danger-outline" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>' +
       '</div>';
-    $('btnSecurityLog').addEventListener('click', showSecurityLog);
-    $('btnBackup').addEventListener('click', function(){
-      showModal('<div class="modal-header"><button class="back-btn" id="bkBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">النسخ الاحتياطي</div><div class="spacer"></div></div><div class="modal-list"><button class="modal-item" id="bkExport"><div class="mi-icon"><i class="fa-solid fa-upload"></i></div><div class="mi-info"><div class="mi-title">تصدير نسخة</div><div class="mi-sub">احفظ مفتاحك</div></div></button><button class="modal-item" id="bkImport"><div class="mi-icon"><i class="fa-solid fa-download"></i></div><div class="mi-info"><div class="mi-title">استيراد نسخة</div><div class="mi-sub">استعد مفتاحك</div></div></button></div>');
-      $('bkBack').addEventListener('click', closeModal);
-      $('bkExport').addEventListener('click', function(){ closeModal(); exportBackup(); });
-      $('bkImport').addEventListener('click', function(){ closeModal(); importBackup(); });
-    });
-    $('btnPrivacy').addEventListener('click', showPrivacyPolicy);
     $('btnLogout').addEventListener('click', function(){
       showConfirm({
         title: 'تسجيل الخروج',
@@ -1410,12 +947,6 @@ async function loadAccount(){
   } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
 }
 
-function showPrivacyPolicy(){
-  showModal('<div class="modal-header"><button class="back-btn" id="ppBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">الخصوصية</div><div class="spacer"></div></div><div style="font-size:.88rem;line-height:1.9;color:var(--text-2);padding:0 4px"><div style="display:flex;gap:12px;padding:14px;background:var(--success-soft);border-radius:14px;margin-bottom:16px"><div style="font-size:1.5rem"><i class="fa-solid fa-shield-halved" style="color:var(--success)"></i></div><div style="font-size:.82rem;line-height:1.7;color:var(--success);font-weight:600">رسائلك مشفرة E2EE + Forward Secrecy.</div></div><h3 style="font-size:.98rem;font-weight:900;margin:18px 0 10px">لا نجمع</h3><ul style="padding-inline-start:20px;margin:8px 0"><li>محتوى رسائلك.</li><li>جهات الاتصال أو الموقع.</li><li>لا تتبع.</li></ul><h3 style="font-size:.98rem;font-weight:900;margin:18px 0 10px">حدود المسؤولية</h3><div style="padding:14px;background:var(--danger-soft);border-radius:12px;font-size:.82rem;line-height:1.8;color:var(--danger)"><b><i class="fa-solid fa-triangle-exclamation"></i>:</b> غير مخصص لمعلومات حساسة. استخدم <b>Signal</b> أو <b>Briar</b>.</div></div>');
-  $('ppBack').addEventListener('click', closeModal);
-}
-
-/* ========== QR ========== */
 async function showMyQrModal(){
   showModal('<div class="modal-header"><button class="back-btn" id="qmBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">QR الخاص بي</div><div class="spacer"></div></div><div id="qrModalContent"><div style="text-align:center;padding:30px"><div class="spinner"></div></div></div>');
   $('qmBack').addEventListener('click', closeModal);
@@ -1546,8 +1077,7 @@ function scrollChat(inst){
   requestAnimationFrame(function(){ el.scrollTo({ top: el.scrollHeight, behavior: inst ? 'auto' : 'smooth' }); });
 }
 
-/* ========== Render DM ========== */
-async function renderDMMsg(m){
+function renderDMMsg(m){
   var el = document.createElement('div');
   var mine = m.from_id === ME.id;
   el.className = 'cmsg ' + (mine ? 'me' : 'other');
@@ -1564,43 +1094,9 @@ async function renderDMMsg(m){
     bubble.dataset.plain = '';
   } else {
     var displayText = m.text || '';
-    var isEncrypted = displayText.indexOf('🔒') === 0;
-    if (isEncrypted) {
-      var cached = lookupSentMsg(displayText) || lookupRecvMsg(displayText);
-      if (cached) {
-        displayText = cached;
-      } else {
-        try {
-          if (displayText.indexOf('🔒R') === 0 && CURRENT_DM && CURRENT_DM.user.public_key) {
-            var result = await Ratchet.decrypt(CURRENT_DM.user.id, CURRENT_DM.user.public_key, displayText);
-            if (result && result.charAt(0) === '[') {
-              displayText = '🔐 رسالة مشفرة (لا يمكن قراءتها)';
-            } else {
-              displayText = result;
-              if (mine) cacheSentMsg(m.text, result);
-              else cacheReceivedMsg(m.text, result);
-            }
-          } else if (CURRENT_DM && CURRENT_DM.sharedKey) {
-            var r2 = await E2EE.decrypt(CURRENT_DM.sharedKey, displayText);
-            if (r2 && r2.charAt(0) === '[' && r2.indexOf('🔒') !== -1) {
-              displayText = '🔐 رسالة مشفرة (لا يمكن قراءتها)';
-            } else {
-              displayText = r2;
-              if (mine) cacheSentMsg(m.text, r2);
-              else cacheReceivedMsg(m.text, r2);
-            }
-          } else {
-            displayText = '🔐 رسالة مشفرة';
-          }
-        } catch(e) {
-          displayText = '🔐 لا يمكن فك التشفير';
-        }
-      }
-    }
     bubble.dataset.plain = displayText;
-    var lockIcon = isEncrypted ? '<i class="fa-solid fa-lock lock-ic"></i>' : '';
     var editedMark = m.edited ? '<span class="edited-mark">(معدّلة)</span>' : '';
-    bubble.innerHTML = lockIcon + linkify(displayText) + editedMark;
+    bubble.innerHTML = linkify(displayText) + editedMark;
   }
   body.appendChild(meta);
   body.appendChild(bubble);
@@ -1616,7 +1112,6 @@ async function renderDMMsg(m){
   $('chatMsgs').appendChild(el);
 }
 
-/* ========== Message actions ========== */
 $('chatBack').addEventListener('click', function(){
   $('chatView').classList.remove('open');
   CURRENT_DM = null;
@@ -1674,18 +1169,16 @@ function showEditMessageModal(msgId, currentText){
     var newText = $('emmText').value.trim();
     if (!newText) return toast('اكتب', 'err');
     if (newText === currentText) { closeModal(); return; }
-    if (!CURRENT_DM || !CURRENT_DM.sharedKey) return toast('لا يوجد مفتاح', 'err');
     var btn = $('emmSave');
     btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div>';
     btn.disabled = true;
     try {
-      var encrypted = await E2EE.encrypt(CURRENT_DM.sharedKey, newText);
-      await api('/dms/' + msgId, { method: 'PUT', body: JSON.stringify({ text: encrypted }) });
+      await api('/dms/' + msgId, { method: 'PUT', body: JSON.stringify({ text: newText }) });
       var el = $('chatMsgs').querySelector('.cmsg[data-id="' + msgId + '"]');
       if (el) {
         var bubble = el.querySelector('.cbubble');
         if (bubble) {
-          bubble.innerHTML = '<i class="fa-solid fa-lock lock-ic"></i>' + linkify(newText) + '<span class="edited-mark">(معدّلة)</span>';
+          bubble.innerHTML = linkify(newText) + '<span class="edited-mark">(معدّلة)</span>';
           bubble.dataset.plain = newText;
         }
       }
@@ -1699,7 +1192,6 @@ function showEditMessageModal(msgId, currentText){
   });
 }
 
-/* ========== Send chat ========== */
 function autoGrow(){
   var t = $('chatInput');
   t.style.height = 'auto';
@@ -1722,11 +1214,10 @@ $('chatInput').addEventListener('keydown', function(e){
 });
 $('chatSend').addEventListener('click', sendChat);
 
-async function sendChat(){
+function sendChat(){
   var txt = $('chatInput').value.trim();
   if(!txt || !CURRENT_DM) return;
   if (CURRENT_DM.deleted) { toast('لا يمكن المراسلة', 'err'); return; }
-  if (!E2EE.ready) { toast('غير جاهز', 'err'); return; }
   var toId = CURRENT_DM.user.id;
   var nowTs = Date.now();
   renderDMMsg({
@@ -1735,27 +1226,13 @@ async function sendChat(){
     read: false, delivered: false, _local: true
   });
   scrollChat();
-  var encrypted;
-  try {
-    if (CURRENT_DM.user.public_key) {
-      encrypted = await Ratchet.encrypt(CURRENT_DM.user.id, CURRENT_DM.user.public_key, txt);
-    } else if (CURRENT_DM.sharedKey) {
-      encrypted = await E2EE.encrypt(CURRENT_DM.sharedKey, txt);
-    } else {
-      toast('لا يوجد مفتاح', 'err'); return;
-    }
-  } catch(e) { toast('فشل التشفير', 'err'); return; }
-
-  cacheSentMsg(encrypted, txt);
-
-  socket.emit('dm-send', { toId: toId, text: encrypted });
+  socket.emit('dm-send', { toId: toId, text: txt });
   socket.emit('dm-typing', { toId: toId, isTyping: false });
   clearTimeout(dmTypingTimer);
   $('chatInput').value = '';
   autoGrow();
 }
 
-/* ========== Open DM ========== */
 async function openDMById(userId){
   if(ME && userId === ME.id) return toast('نفسك', 'err');
   try {
@@ -1765,48 +1242,9 @@ async function openDMById(userId){
 }
 async function openDM(user){
   if(ME && user.id === ME.id) return toast('نفسك', 'err');
-  if (!E2EE.ready) return toast('غير جاهز', 'err');
   var isDeleted = !!user.deleted;
-  var peerPub = user.public_key;
-  if (!peerPub && !isDeleted) {
-    try {
-      var fresh = await api('/users/' + user.id);
-      peerPub = fresh.user.public_key;
-      user.public_key = peerPub;
-      user.deleted = fresh.user.deleted;
-      isDeleted = !!user.deleted;
-    } catch(_){}
-  }
-  if (peerPub && !isDeleted) {
-    var cacheKey = 'dust_peer_key_' + user.id;
-    var cachedKey = localStorage.getItem(cacheKey);
-    if (cachedKey && cachedKey !== peerPub) {
-      logSecurityEvent('key_change', 'تغيّر مفتاح: ' + user.display_name);
-      var proceed = await new Promise(function(resolve){
-        showKeyChangeWarning(user,
-          function(){ resolve(false); },
-          function(){ resolve(true); }
-        );
-      });
-      if (!proceed) return;
-    }
-    localStorage.setItem(cacheKey, peerPub);
-  }
-  var shared = null;
-  if (peerPub) {
-    try { shared = await E2EE.getSharedKey(user.id, peerPub); } catch(_){}
-  }
-  if (!isDeleted && !shared) {
-    return showConfirm({
-      title: 'لا يمكن بدء المحادثة',
-      text: 'صديقك لم يفتح التطبيق بعد.',
-      confirmText: 'حسناً'
-    });
-  }
   CURRENT_DM = {
     user: user,
-    sharedKey: shared ? shared.key : null,
-    fingerprint: shared ? shared.fingerprint : null,
     deleted: isDeleted
   };
   if (isDeleted) {
@@ -1816,7 +1254,6 @@ async function openDM(user){
     $('chatSub').textContent = 'لا يمكن المراسلة';
     $('chatInput').disabled = true;
     $('chatSend').disabled = true;
-    $('chatVerify').style.display = 'none';
   } else {
     $('chatName').textContent = user.display_name;
     $('chatName').style.color = '';
@@ -1831,50 +1268,17 @@ async function openDM(user){
     $('chatInput').disabled = false;
     $('chatInput').placeholder = 'اكتب...';
     $('chatSend').disabled = false;
-    $('chatVerify').style.display = '';
   }
   $('chatView').classList.add('open');
   $('chatMsgs').innerHTML = '';
   try {
     var r = await api('/dms/' + user.id);
-    for (var i = 0; i < r.messages.length; i++) await renderDMMsg(r.messages[i]);
+    for (var i = 0; i < r.messages.length; i++) renderDMMsg(r.messages[i]);
     scrollChat(true);
     if (!isDeleted) socket.emit('dm-read', { fromId: user.id });
   } catch(_){}
 }
 
-/* ========== Verify ========== */
-$('chatVerify').addEventListener('click', function(){
-  if (!CURRENT_DM || !CURRENT_DM.fingerprint) return;
-  var peerId = CURRENT_DM.user.id;
-  var verified = localStorage.getItem('dust_verified_' + peerId) === '1';
-  var fp = CURRENT_DM.fingerprint;
-  showModal('<div class="modal-header"><button class="back-btn" id="vfBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">التحقق</div><div class="spacer"></div></div><div style="text-align:center;padding:8px 0"><div style="font-weight:900;margin-bottom:6px">قارن هذه البصمة</div><div style="font-size:.82rem;color:var(--muted);margin-bottom:16px">عبر مكالمة</div><div style="padding:16px;background:var(--surface-2);border-radius:16px;border:1px solid var(--border-2);margin-bottom:16px"><div class="en" style="font-family:ui-monospace,monospace;font-size:1rem;font-weight:800;letter-spacing:1px">' + fp + '</div></div><div style="display:flex;justify-content:center;margin-bottom:16px"><div style="background:#fff;padding:12px;border-radius:16px"><div id="fpQr" style="width:180px;height:180px"></div></div></div>' + (verified ? '<div style="padding:12px;background:var(--success-soft);border-radius:12px;color:var(--success);font-weight:700;font-size:.85rem;margin-bottom:14px"><i class="fa-solid fa-check"></i> تم</div>' : '<div style="padding:12px;background:var(--danger-soft);border-radius:12px;color:var(--danger);font-weight:700;font-size:.85rem;margin-bottom:14px"><i class="fa-solid fa-triangle-exclamation"></i> لم يتم</div>') + '<button class="btn-main" id="vfMark" style="margin-bottom:10px">' + (verified ? 'إلغاء' : '<i class="fa-solid fa-check"></i> تحققنا') + '</button><button class="btn-outline" id="vfClose">إغلاق</button></div>');
-  try {
-    if (typeof QRCode !== 'undefined') {
-      new QRCode(document.getElementById('fpQr'), {
-        text: 'dust-fp:' + fp.replace(/\s/g, ''),
-        width: 180, height: 180,
-        colorDark: '#0e1018', colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.M
-      });
-    }
-  } catch(e) {}
-  $('vfBack').addEventListener('click', closeModal);
-  $('vfClose').addEventListener('click', closeModal);
-  $('vfMark').addEventListener('click', function(){
-    if (verified) {
-      localStorage.removeItem('dust_verified_' + peerId);
-      toast('تم الإلغاء', 'info');
-    } else {
-      localStorage.setItem('dust_verified_' + peerId, '1');
-      toast('✓ تم', 'ok');
-    }
-    closeModal();
-  });
-});
-
-/* ========== Modal helpers ========== */
 function closeModal(){ $('modal').classList.remove('open'); }
 function showModal(html){
   $('modalBody').innerHTML = html;
@@ -1897,7 +1301,6 @@ function showConfirm(opts){
   });
 }
 
-/* ========== Sound ========== */
 var audioCtx = null;
 function getAudioCtx(){
   var Ctx = window.AudioContext || window.webkitAudioContext;
@@ -1922,7 +1325,6 @@ function playBeep(){
   } catch(_){}
 }
 
-/* ========== Boot ========== */
 (async function(){
   var minWait = new Promise(function(r){ setTimeout(r, 800); });
   try {
@@ -1951,4 +1353,4 @@ function playBeep(){
 })();
 </script>
 </body>
-  </html>
+</html>
