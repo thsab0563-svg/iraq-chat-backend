@@ -121,14 +121,14 @@ CREATE TABLE IF NOT EXISTS push_subs (
 
 console.log('✅ Database initialized at', path.resolve(DB_PATH));
 
-/* ===== 3. Migrations (safe) ===== */
+/* ===== 3. Migrations ===== */
 try { db.exec('ALTER TABLE users ADD COLUMN public_key TEXT'); } catch(e) {}
 try { db.exec('ALTER TABLE dms ADD COLUMN edited INTEGER DEFAULT 0'); } catch(e) {}
 try { db.exec('ALTER TABLE dms ADD COLUMN deleted INTEGER DEFAULT 0'); } catch(e) {}
 try { db.exec('ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0'); } catch(e) {}
 try { db.exec('ALTER TABLE users ADD COLUMN banned INTEGER DEFAULT 0'); } catch(e) {}
 
-/* ===== 4. Admin Secret System ===== */
+/* ===== 4. Admin Secret ===== */
 const ADMIN_SECRET = process.env.ADMIN_SECRET || '';
 const ADMIN_USER_ID = process.env.ADMIN_USER_ID || '';
 
@@ -178,7 +178,7 @@ function now() { return Date.now(); }
 function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
-const ONLINE_USERS = new Map(); // userId -> Set(socketId)
+const ONLINE_USERS = new Map();
 
 function publicUser(row, includePrivate = false) {
   if (!row) return null;
@@ -249,7 +249,7 @@ const UPLOAD_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d' }));
 
-/* ===== 8. HTTP Server + Socket.io (declared EARLY) ===== */
+/* ===== 8. HTTP + Socket.io ===== */
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
@@ -259,29 +259,15 @@ const io = new Server(server, {
 });
 
 /* ===== 9. Rate limiting ===== */
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, max: 30,
-  message: { error: 'too_many_requests' }
-});
-const apiLimiter = rateLimit({
-  windowMs: 60 * 1000, max: 240,
-  message: { error: 'rate_limit_exceeded' }
-});
-const dmLimiter = rateLimit({
-  windowMs: 60 * 1000, max: 80,
-  keyGenerator: (req) => req.userId ? String(req.userId) : req.ip,
-  message: { error: 'slow_down' }
-});
-const claimLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, max: 5,
-  message: { error: 'too_many_claims' }
-});
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, message: { error: 'too_many_requests' } });
+const apiLimiter = rateLimit({ windowMs: 60 * 1000, max: 240, message: { error: 'rate_limit_exceeded' } });
+const claimLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 5, message: { error: 'too_many_claims' } });
 
 app.use('/api/', apiLimiter);
 app.use('/api/register', authLimiter);
 app.use('/api/claim-admin', claimLimiter);
 
-/* ===== 10. Auth middleware ===== */
+/* ===== 10. Middleware ===== */
 function authRequired(req, res, next) {
   const h = req.headers.authorization || '';
   const token = h.startsWith('Bearer ') ? h.slice(7) : null;
@@ -366,7 +352,6 @@ app.post('/api/logout', authRequired, (req, res) => {
   });
   tx();
 
-  io.emit('user-deleted', { userId: uid });
   for (const f of friendRows) {
     io.to(`u_${f.friend_id}`).emit('user-deleted', { userId: uid });
   }
@@ -392,16 +377,13 @@ app.post('/api/claim-admin', authRequired, (req, res) => {
   if (a.length !== b.length) return res.status(403).json({ error: 'invalid_secret' });
   try {
     if (!crypto.timingSafeEqual(a, b)) return res.status(403).json({ error: 'invalid_secret' });
-  } catch(e) {
-    return res.status(403).json({ error: 'invalid_secret' });
-  }
+  } catch(e) { return res.status(403).json({ error: 'invalid_secret' }); }
 
   const existingAdmins = db.prepare('SELECT COUNT(*) as c FROM users WHERE is_admin = 1').get().c;
   const me = db.prepare('SELECT is_admin FROM users WHERE id = ?').get(req.userId);
   const iAmAdmin = me && me.is_admin === 1;
 
   if (existingAdmins > 0 && !iAmAdmin) {
-    console.log(`⚠️  Admin claim rejected: admins exist (user ${req.userId})`);
     return res.status(403).json({ error: 'admin_already_exists' });
   }
 
@@ -474,21 +456,16 @@ app.get('/api/users/:id', authRequired, (req, res) => {
 /* ===== 14. Admin routes ===== */
 app.get('/api/admin/stats', authRequired, adminRequired, (req, res) => {
   const totalUsers = db.prepare('SELECT COUNT(*) as c FROM users WHERE deleted = 0').get().c;
-  const activeUsers = db.prepare(
-    'SELECT COUNT(*) as c FROM users WHERE deleted = 0 AND last_seen > ?'
-  ).get(Date.now() - 24 * 60 * 60 * 1000).c;
+  const activeUsers = db.prepare('SELECT COUNT(*) as c FROM users WHERE deleted = 0 AND last_seen > ?').get(Date.now() - 24*60*60*1000).c;
   const bannedUsers = db.prepare('SELECT COUNT(*) as c FROM users WHERE banned = 1').get().c;
   const totalMessages = db.prepare('SELECT COUNT(*) as c FROM dms').get().c;
-  const messages24h = db.prepare(
-    'SELECT COUNT(*) as c FROM dms WHERE time > ?'
-  ).get(Date.now() - 24 * 60 * 60 * 1000).c;
+  const messages24h = db.prepare('SELECT COUNT(*) as c FROM dms WHERE time > ?').get(Date.now() - 24*60*60*1000).c;
   const totalFriendships = db.prepare('SELECT COUNT(*) as c FROM friendships').get().c / 2;
   const onlineNow = ONLINE_USERS.size;
 
   res.json({
     totalUsers, activeUsers, bannedUsers,
-    totalMessages, messages24h,
-    totalFriendships, onlineNow,
+    totalMessages, messages24h, totalFriendships, onlineNow,
     uptime: process.uptime(),
     version: '12.2.0'
   });
@@ -499,20 +476,14 @@ app.get('/api/admin/users', authRequired, adminRequired, (req, res) => {
   let rows;
 
   if (q) {
-    rows = db.prepare(
-      'SELECT * FROM users WHERE username LIKE ? OR display_name LIKE ? ORDER BY last_seen DESC LIMIT 100'
-    ).all(`%${q}%`, `%${q}%`);
+    rows = db.prepare('SELECT * FROM users WHERE username LIKE ? OR display_name LIKE ? ORDER BY last_seen DESC LIMIT 100').all(`%${q}%`, `%${q}%`);
   } else {
     rows = db.prepare('SELECT * FROM users ORDER BY last_seen DESC LIMIT 100').all();
   }
 
   const users = rows.map(r => {
-    const msgCount = db.prepare(
-      'SELECT COUNT(*) as c FROM dms WHERE from_id = ? OR to_id = ?'
-    ).get(r.id, r.id).c;
-    const friends = db.prepare(
-      'SELECT COUNT(*) as c FROM friendships WHERE user_id = ?'
-    ).get(r.id).c;
+    const msgCount = db.prepare('SELECT COUNT(*) as c FROM dms WHERE from_id = ? OR to_id = ?').get(r.id, r.id).c;
+    const friends = db.prepare('SELECT COUNT(*) as c FROM friendships WHERE user_id = ?').get(r.id).c;
     const u = publicUser(r, true);
     u.msg_count = msgCount;
     u.friends_count = friends;
@@ -534,9 +505,7 @@ app.post('/api/admin/user/:id/ban', authRequired, adminRequired, (req, res) => {
 
   if (banned === 1) {
     const socks = ONLINE_USERS.get(id);
-    if (socks) {
-      for (const sid of socks) io.to(sid).emit('auth-error', { error: 'banned' });
-    }
+    if (socks) for (const sid of socks) io.to(sid).emit('auth-error', { error: 'banned' });
     ONLINE_USERS.delete(id);
   }
   res.json({ ok: true, banned: banned === 1 });
@@ -558,13 +527,9 @@ app.delete('/api/admin/user/:id', authRequired, adminRequired, (req, res) => {
   });
   tx();
 
-  for (const f of friendRows) {
-    io.to(`u_${f.friend_id}`).emit('user-deleted', { userId: id });
-  }
+  for (const f of friendRows) io.to(`u_${f.friend_id}`).emit('user-deleted', { userId: id });
   const socks = ONLINE_USERS.get(id);
-  if (socks) {
-    for (const sid of socks) io.to(sid).emit('auth-error', { error: 'session_expired' });
-  }
+  if (socks) for (const sid of socks) io.to(sid).emit('auth-error', { error: 'session_expired' });
   ONLINE_USERS.delete(id);
 
   res.json({ ok: true });
@@ -596,16 +561,11 @@ app.post('/api/admin/broadcast', authRequired, adminRequired,
     for (const u of users) {
       if (u.id === senderId) continue;
       try {
-        const info = db.prepare(
-          'INSERT INTO dms (from_id, to_id, text, time, delivered) VALUES (?, ?, ?, ?, 0)'
-        ).run(senderId, u.id, '📢 ' + text, t);
-
+        const info = db.prepare('INSERT INTO dms (from_id, to_id, text, time, delivered) VALUES (?, ?, ?, ?, 0)').run(senderId, u.id, '📢 ' + text, t);
         const msg = {
           id: info.lastInsertRowid,
-          from_id: senderId,
-          to_id: u.id,
-          text: '📢 ' + text,
-          time: t,
+          from_id: senderId, to_id: u.id,
+          text: '📢 ' + text, time: t,
           delivered: ONLINE_USERS.has(u.id),
           read: false, edited: false, deleted: false
         };
@@ -613,7 +573,6 @@ app.post('/api/admin/broadcast', authRequired, adminRequired,
         sent++;
       } catch(e) {}
     }
-
     res.json({ ok: true, sent });
   }
 );
@@ -622,11 +581,7 @@ app.post('/api/admin/broadcast', authRequired, adminRequired,
 app.get('/api/qr/image', authRequired, async (req, res) => {
   try {
     const link = `${PUBLIC_URL}/?qr=${req.user.qr_id}`;
-    const dataUrl = await QRCode.toDataURL(link, {
-      width: 512,
-      margin: 2,
-      color: { dark: '#0b0d14', light: '#ffffff' }
-    });
+    const dataUrl = await QRCode.toDataURL(link, { width: 512, margin: 2, color: { dark: '#0b0d14', light: '#ffffff' } });
     res.json({ qr: dataUrl, link, qr_id: req.user.qr_id });
   } catch (e) {
     res.status(500).json({ error: 'qr_failed' });
@@ -643,27 +598,16 @@ app.post('/api/friends/add-by-qr', authRequired,
     if (!target) return res.status(404).json({ error: 'user_not_found' });
     if (target.id === req.userId) return res.status(400).json({ error: 'self' });
 
-    const blocked = db.prepare(
-      'SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)'
-    ).get(req.userId, target.id, target.id, req.userId);
+    const blocked = db.prepare('SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)').get(req.userId, target.id, target.id, req.userId);
     if (blocked) return res.status(403).json({ error: 'blocked' });
 
-    const existing = db.prepare(
-      'SELECT 1 FROM friendships WHERE user_id = ? AND friend_id = ?'
-    ).get(req.userId, target.id);
-
-    if (existing) {
-      return res.json({ status: 'already_friends', user: publicUser(target) });
-    }
+    const existing = db.prepare('SELECT 1 FROM friendships WHERE user_id = ? AND friend_id = ?').get(req.userId, target.id);
+    if (existing) return res.json({ status: 'already_friends', user: publicUser(target) });
 
     const t = now();
     const tx = db.transaction(() => {
-      db.prepare(
-        'INSERT OR IGNORE INTO friendships (user_id, friend_id, status, time) VALUES (?, ?, ?, ?)'
-      ).run(req.userId, target.id, 'accepted', t);
-      db.prepare(
-        'INSERT OR IGNORE INTO friendships (user_id, friend_id, status, time) VALUES (?, ?, ?, ?)'
-      ).run(target.id, req.userId, 'accepted', t);
+      db.prepare('INSERT OR IGNORE INTO friendships (user_id, friend_id, status, time) VALUES (?, ?, ?, ?)').run(req.userId, target.id, 'accepted', t);
+      db.prepare('INSERT OR IGNORE INTO friendships (user_id, friend_id, status, time) VALUES (?, ?, ?, ?)').run(target.id, req.userId, 'accepted', t);
     });
     tx();
 
@@ -680,29 +624,17 @@ app.post('/api/friends/add-by-qr', authRequired,
 /* ===== 17. DM ===== */
 app.get('/api/dm-conversations', authRequired, (req, res) => {
   const rows = db.prepare(`
-    SELECT
-      CASE WHEN from_id = ? THEN to_id ELSE from_id END AS other_id,
-      MAX(time) AS last_time
-    FROM dms
-    WHERE from_id = ? OR to_id = ?
-    GROUP BY other_id
-    ORDER BY last_time DESC
-    LIMIT 100
+    SELECT CASE WHEN from_id = ? THEN to_id ELSE from_id END AS other_id, MAX(time) AS last_time
+    FROM dms WHERE from_id = ? OR to_id = ?
+    GROUP BY other_id ORDER BY last_time DESC LIMIT 100
   `).all(req.userId, req.userId, req.userId);
 
   const conversations = rows.map(r => {
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(r.other_id);
     if (!user) return null;
 
-    const last = db.prepare(`
-      SELECT id, text, time, deleted FROM dms
-      WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)
-      ORDER BY time DESC LIMIT 1
-    `).get(req.userId, r.other_id, r.other_id, req.userId);
-
-    const unread = db.prepare(
-      'SELECT COUNT(*) as c FROM dms WHERE from_id = ? AND to_id = ? AND read = 0'
-    ).get(r.other_id, req.userId).c;
+    const last = db.prepare('SELECT id, text, time, deleted FROM dms WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?) ORDER BY time DESC LIMIT 1').get(req.userId, r.other_id, r.other_id, req.userId);
+    const unread = db.prepare('SELECT COUNT(*) as c FROM dms WHERE from_id = ? AND to_id = ? AND read = 0').get(r.other_id, req.userId).c;
 
     return {
       user: publicUser(user),
@@ -725,12 +657,10 @@ app.get('/api/dms/:userId', authRequired, (req, res) => {
   const rows = db.prepare(`
     SELECT * FROM dms
     WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)
-    ORDER BY time ASC
-    LIMIT 500
+    ORDER BY time ASC LIMIT 500
   `).all(req.userId, otherId, otherId, req.userId);
 
-  db.prepare('UPDATE dms SET read = 1 WHERE from_id = ? AND to_id = ? AND read = 0')
-    .run(otherId, req.userId);
+  db.prepare('UPDATE dms SET read = 1 WHERE from_id = ? AND to_id = ? AND read = 0').run(otherId, req.userId);
   io.to(`u_${otherId}`).emit('dm-read-receipt', { byId: req.userId });
 
   res.json({ messages: rows.map(mapMessage) });
@@ -740,10 +670,7 @@ app.delete('/api/dm-conversations/:userId', authRequired, (req, res) => {
   const otherId = parseInt(req.params.userId, 10);
   if (!otherId) return res.status(400).json({ error: 'invalid' });
 
-  db.prepare(
-    'DELETE FROM dms WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)'
-  ).run(req.userId, otherId, otherId, req.userId);
-
+  db.prepare('DELETE FROM dms WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)').run(req.userId, otherId, otherId, req.userId);
   io.to(`u_${otherId}`).emit('dm-conversation-deleted', { byId: req.userId });
   res.json({ ok: true });
 });
@@ -761,10 +688,7 @@ app.put('/api/dms/:messageId', authRequired,
     if (msg.deleted === 1) return res.status(400).json({ error: 'already_deleted' });
 
     db.prepare('UPDATE dms SET text = ?, edited = 1 WHERE id = ?').run(req.body.text, msgId);
-
-    io.to(`u_${msg.to_id}`).emit('dm-edited', {
-      id: msgId, text: req.body.text, edited: true, byId: req.userId
-    });
+    io.to(`u_${msg.to_id}`).emit('dm-edited', { id: msgId, text: req.body.text, edited: true, byId: req.userId });
     res.json({ ok: true });
   }
 );
@@ -779,7 +703,6 @@ app.delete('/api/dms/:messageId', authRequired, (req, res) => {
   if (msg.deleted === 1) return res.json({ ok: true });
 
   db.prepare('UPDATE dms SET deleted = 1, text = ? WHERE id = ?').run('', msgId);
-
   io.to(`u_${msg.to_id}`).emit('dm-deleted', { id: msgId, byId: req.userId });
   res.json({ ok: true });
 });
@@ -886,7 +809,6 @@ function activateSocket(socket, row) {
   if (!ONLINE_USERS.has(row.id)) ONLINE_USERS.set(row.id, new Set());
   ONLINE_USERS.get(row.id).add(socket.id);
 
-  // ✅ إرسال للأصدقاء فقط (تحسين أداء)
   const friends = db.prepare('SELECT friend_id FROM friendships WHERE user_id = ?').all(row.id);
   for (const f of friends) {
     io.to(`u_${f.friend_id}`).emit('user-online', { userId: row.id });
@@ -930,9 +852,7 @@ io.on('connection', (socket) => {
       const userId = socket.userId;
       const toId = data.toId;
 
-      const blocked = db.prepare(
-        'SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)'
-      ).get(userId, toId, toId, userId);
+      const blocked = db.prepare('SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)').get(userId, toId, toId, userId);
       if (blocked) return;
 
       const target = db.prepare('SELECT id, deleted FROM users WHERE id = ?').get(toId);
@@ -940,20 +860,14 @@ io.on('connection', (socket) => {
 
       const t = now();
       const isOnline = ONLINE_USERS.has(toId);
-      const info = db.prepare(
-        'INSERT INTO dms (from_id, to_id, text, time, delivered) VALUES (?, ?, ?, ?, ?)'
-      ).run(userId, toId, data.text, t, isOnline ? 1 : 0);
+      const info = db.prepare('INSERT INTO dms (from_id, to_id, text, time, delivered) VALUES (?, ?, ?, ?, ?)').run(userId, toId, data.text, t, isOnline ? 1 : 0);
 
       const msg = {
         id: info.lastInsertRowid,
-        from_id: userId,
-        to_id: toId,
-        text: data.text,
-        time: t,
+        from_id: userId, to_id: toId,
+        text: data.text, time: t,
         delivered: isOnline,
-        read: false,
-        edited: false,
-        deleted: false
+        read: false, edited: false, deleted: false
       };
 
       io.to(`u_${toId}`).emit('dm-message', msg);
@@ -968,8 +882,7 @@ io.on('connection', (socket) => {
 
   socket.on('dm-read', (data) => {
     if (!socket.userId || !data || typeof data.fromId !== 'number') return;
-    db.prepare('UPDATE dms SET read = 1 WHERE from_id = ? AND to_id = ? AND read = 0')
-      .run(data.fromId, socket.userId);
+    db.prepare('UPDATE dms SET read = 1 WHERE from_id = ? AND to_id = ? AND read = 0').run(data.fromId, socket.userId);
     io.to(`u_${data.fromId}`).emit('dm-read-receipt', { byId: socket.userId });
   });
 
@@ -1021,14 +934,14 @@ app.get('/health', (req, res) => {
   });
 });
 
-/* ===== 23. Fallback SPA ===== */
+/* ===== 23. Fallback ===== */
 app.get('*', (req, res) => {
   const idx = path.join(PUBLIC_DIR, 'index.html');
   if (fs.existsSync(idx)) return res.sendFile(idx);
   res.status(404).json({ error: 'not_found' });
 });
 
-/* ===== 24. Error handler ===== */
+/* ===== 24. Errors ===== */
 app.use((err, req, res, next) => {
   console.error('❌ Error:', err.message);
   if (err.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ error: 'file_too_large' });
@@ -1040,7 +953,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Dust Server v12.2 on port ${PORT}`);
   console.log(`🔗 ${PUBLIC_URL}`);
   console.log(`🔐 E2EE: ECDH P-256 + HKDF`);
-  console.log(`🔑 Admin secret: ${ADMIN_SECRET ? 'configured' : 'NOT SET'}`);
+  console.log(`🔑 Admin: ${ADMIN_SECRET ? 'configured' : 'NOT SET'}`);
   console.log(`📦 DB: ${path.resolve(DB_PATH)}`);
 });
 
