@@ -40,7 +40,7 @@ async function initDb() {
         console.log('✅ Old tables dropped successfully');
     }
 
-    // 3. إنشاء الجداول بالمخطط الصحيح
+    // 3. إنشاء الجداول بالمخطط الصحيح (بدون أي أوامر ALTER TABLE)
     const schemaQueries = [
         `CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,14 +96,10 @@ async function initDb() {
     ];
 
     for (const query of schemaQueries) {
-        try {
-            await db.execute(query);
-        } catch (e) {
-            console.error('Schema error:', e.message);
-        }
+        try { await db.execute(query); } catch (e) { console.error('Schema error:', e.message); }
     }
 
-    // 4. التحقق النهائي: تأكد من وجود عمود deleted
+    // 4. التحقق النهائي
     try {
         await db.execute('SELECT deleted FROM users LIMIT 1');
         console.log('✅ Database initialized successfully with Turso');
