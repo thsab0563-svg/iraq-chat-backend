@@ -1,5 +1,5 @@
 /* ============================================================
-   Dust Server v13.3 — Auth + Recovery + Avatars + Reports
+   Dust Server v13.3.0 — Auth + Recovery + Avatars + Reports
    ============================================================ */
 'use strict';
 
@@ -105,7 +105,7 @@ CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);
 
 console.log('✅ Database initialized at', path.resolve(DB_PATH));
 
-/* ===== 3. Migrations ===== */
+/* ===== 3. Migrations (safe adds for existing DBs) ===== */
 try { db.exec('ALTER TABLE users ADD COLUMN public_key TEXT'); } catch(e) {}
 try { db.exec('ALTER TABLE dms ADD COLUMN edited INTEGER DEFAULT 0'); } catch(e) {}
 try { db.exec('ALTER TABLE dms ADD COLUMN deleted INTEGER DEFAULT 0'); } catch(e) {}
@@ -117,20 +117,25 @@ try { db.exec('ALTER TABLE users ADD COLUMN avatar_id TEXT'); } catch(e) {}
 try { db.exec('ALTER TABLE users ADD COLUMN security_q INTEGER'); } catch(e) {}
 try { db.exec('ALTER TABLE users ADD COLUMN security_a_hash TEXT'); } catch(e) {}
 
-/* ===== 4. Password hashing ===== */
+/* ===== 4. Password hashing (scrypt) ===== */
 const SCRYPT_N = 16384, SCRYPT_R = 8, SCRYPT_P = 1, SCRYPT_KEYLEN = 64;
 
 function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto.scryptSync(password, salt, SCRYPT_KEYLEN, { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P }).toString('hex');
+  const hash = crypto.scryptSync(password, salt, SCRYPT_KEYLEN, {
+    N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P
+  }).toString('hex');
   return 'scrypt$' + SCRYPT_N + '$' + SCRYPT_R + '$' + SCRYPT_P + '$' + salt + '$' + hash;
 }
+
 function verifyPassword(password, stored) {
   try {
     if (!stored || typeof stored !== 'string') return false;
     const parts = stored.split('$');
     if (parts.length !== 6 || parts[0] !== 'scrypt') return false;
-    const N = parseInt(parts[1], 10), r = parseInt(parts[2], 10), p = parseInt(parts[3], 10);
+    const N = parseInt(parts[1], 10);
+    const r = parseInt(parts[2], 10);
+    const p = parseInt(parts[3], 10);
     const salt = parts[4];
     const expected = Buffer.from(parts[5], 'hex');
     const computed = crypto.scryptSync(password, salt, expected.length, { N, r, p });
@@ -139,12 +144,11 @@ function verifyPassword(password, stored) {
   } catch (e) { return false; }
 }
 
-/* Security answer normalization */
 function normalizeAnswer(a) {
   return String(a || '').trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
-/* ===== 5. Admin ===== */
+/* ===== 5. Admin Secret ===== */
 const ADMIN_SECRET = process.env.ADMIN_SECRET || '';
 const ADMIN_USER_ID = process.env.ADMIN_USER_ID || '';
 
@@ -177,9 +181,12 @@ function decryptField(payload) {
   if (!payload) return null;
   try {
     const raw = Buffer.from(payload, 'base64');
-    const decipher = crypto.createDecipheriv('aes-256-gcm', DB_KEY, raw.slice(0, 12));
-    decipher.setAuthTag(raw.slice(12, 28));
-    return Buffer.concat([decipher.update(raw.slice(28)), decipher.final()]).toString('utf8');
+    const iv = raw.slice(0, 12);
+    const tag = raw.slice(12, 28);
+    const enc = raw.slice(28);
+    const decipher = crypto.createDecipheriv('aes-256-gcm', DB_KEY, iv);
+    decipher.setAuthTag(tag);
+    return Buffer.concat([decipher.update(enc), decipher.final()]).toString('utf8');
   } catch (e) { return null; }
 }
 
@@ -227,11 +234,12 @@ function publicUser(row, includePrivate = false) {
     is_admin: row.is_admin === 1,
     verified: row.verified === 1,
     banned: row.banned === 1,
-    has_security: !!(row.security_q !== null && row.security_a_hash)
+    has_security: !!(row.security_q !== null && row.security_q !== undefined && row.security_a_hash)
   };
   if (includePrivate) { u.theme = row.theme; u.sound = !!row.sound; }
   return u;
 }
+
 function mapMessage(m) {
   return {
     id: m.id, from_id: m.from_id, to_id: m.to_id,
@@ -240,6 +248,7 @@ function mapMessage(m) {
     edited: !!m.edited, deleted: !!m.deleted
   };
 }
+
 const REPORT_REASONS = ['spam', 'harassment', 'inappropriate', 'scam', 'impersonation', 'other'];
 
 /* ===== 8. Express ===== */
@@ -324,7 +333,7 @@ app.post('/api/register',
 
     const passwordHash = hashPassword(password);
     let secQ = null, secAHash = null;
-    if (typeof security_q === 'number' && security_a && security_a.trim().length >= 2) {
+    if (typeof security_q === 'number' && security_q >= 0 && security_a && security_a.trim().length >= 2) {
       secQ = security_q;
       secAHash = hashPassword(normalizeAnswer(security_a));
     }
@@ -372,7 +381,7 @@ app.post('/api/login',
   }
 );
 
-/* ===== 14. Change Password ===== */
+/* ===== 14. Change Password (لا يُخرج المستخدم) ===== */
 app.post('/api/change-password', authRequired,
   body('current_password').isLength({ min: 1, max: 128 }),
   body('new_password').isLength({ min: 6, max: 128 }),
@@ -382,6 +391,7 @@ app.post('/api/change-password', authRequired,
     if (user.password_hash && !verifyPassword(req.body.current_password, user.password_hash)) {
       return res.status(401).json({ error: 'wrong_password' });
     }
+    /* ✅ لا نلمس token_hash — المستخدم يبقى مسجلاً */
     db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(req.body.new_password), user.id);
     res.json({ ok: true });
   }
@@ -433,7 +443,7 @@ app.post('/api/recovery/reset',
   }
 );
 
-/* ===== 16. Logout ===== */
+/* ===== 16. Logout (بدون حذف الحساب) ===== */
 app.post('/api/logout', authRequired, (req, res) => {
   const uid = req.userId;
   db.prepare('UPDATE users SET token_hash = ?, public_key = NULL WHERE id = ?')
@@ -483,26 +493,6 @@ app.put('/api/me/avatar', authRequired,
   }
 );
 
-app.post('/api/me/security-question', authRequired,
-  body('question_index').isInt({ min: 0, max: 7 }),
-  body('answer').trim().isLength({ min: 2, max: 100 }),
-  body('password').isLength({ min: 1, max: 128 }),
-  validate,
-  (req, res) => {
-    const user = req.user;
-    if (!user.password_hash) return res.status(400).json({ error: 'no_password' });
-    if (!verifyPassword(req.body.password, user.password_hash)) return res.status(401).json({ error: 'wrong_password' });
-    const secAHash = hashPassword(normalizeAnswer(req.body.answer));
-    db.prepare('UPDATE users SET security_q = ?, security_a_hash = ? WHERE id = ?')
-      .run(req.body.question_index, secAHash, user.id);
-    res.json({ ok: true });
-  }
-);
-
-app.get('/api/security-questions', (req, res) => {
-  res.json({ questions: SECURITY_QUESTIONS });
-});
-
 app.put('/api/me/public-key', authRequired,
   body('public_key').trim().isLength({ min: 40, max: 500 }),
   validate,
@@ -520,6 +510,10 @@ app.get('/api/users/:id', authRequired, (req, res) => {
   const blocked = !!db.prepare('SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)').get(req.userId, id, id, req.userId);
   const isFriend = !!db.prepare('SELECT 1 FROM friendships WHERE user_id = ? AND friend_id = ?').get(req.userId, id);
   res.json({ user: publicUser(row), isFriend, blocked });
+});
+
+app.get('/api/security-questions', (req, res) => {
+  res.json({ questions: SECURITY_QUESTIONS });
 });
 
 /* ===== 18. Reports ===== */
@@ -586,6 +580,7 @@ app.get('/api/admin/users', authRequired, adminRequired, (req, res) => {
     const u = publicUser(r, true);
     u.msg_count = msgCount; u.friends_count = friends;
     u.has_password = !!r.password_hash;
+    u.has_security = !!(r.security_q !== null && r.security_q !== undefined && r.security_a_hash);
     u.reports_against = reportsAgainst;
     return u;
   });
@@ -966,6 +961,7 @@ app.get('/health', (req, res) => {
     users: db.prepare('SELECT COUNT(*) as c FROM users WHERE deleted = 0').get().c,
     admins: db.prepare('SELECT COUNT(*) as c FROM users WHERE is_admin = 1').get().c,
     verified: db.prepare('SELECT COUNT(*) as c FROM users WHERE verified = 1 AND deleted = 0').get().c,
+    with_password: db.prepare('SELECT COUNT(*) as c FROM users WHERE deleted = 0 AND password_hash IS NOT NULL').get().c,
     with_security: db.prepare('SELECT COUNT(*) as c FROM users WHERE deleted = 0 AND security_a_hash IS NOT NULL').get().c,
     pending_reports: db.prepare('SELECT COUNT(*) as c FROM reports WHERE status = ?').get('pending').c,
     online: ONLINE_USERS.size,
@@ -973,6 +969,7 @@ app.get('/health', (req, res) => {
   });
 });
 
+/* ===== 28. Fallback ===== */
 app.get('*', (req, res) => {
   const idx = path.join(PUBLIC_DIR, 'index.html');
   if (fs.existsSync(idx)) return res.sendFile(idx);
@@ -985,11 +982,12 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'server_error' });
 });
 
+/* ===== 29. Start ===== */
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Dust Server v13.3 on port ${PORT}`);
+  console.log(`🚀 Dust Server v13.3.0 on port ${PORT}`);
   console.log(`🔗 ${PUBLIC_URL}`);
-  console.log(`🔐 Password: scrypt`);
-  console.log(`🛡️  Recovery: ${SECURITY_QUESTIONS.length} questions available`);
+  console.log(`🔐 Password: scrypt (N=${SCRYPT_N})`);
+  console.log(`🛡️  Recovery: ${SECURITY_QUESTIONS.length} questions`);
   console.log(`🎨 Avatars: ${ALLOWED_AVATARS.length}`);
   console.log(`📦 DB: ${path.resolve(DB_PATH)}`);
 });
