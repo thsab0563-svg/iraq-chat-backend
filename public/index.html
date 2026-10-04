@@ -1822,5 +1822,15 @@ function playBeep(){
 
 })();
 </script>
+  <script>
+// حماية إضافية: حذف خيار "بدون سؤال أمان" من الواجهة إذا ظهر
+setTimeout(function() {
+    document.querySelectorAll('.modal-item').forEach(function(el) {
+        if (el.textContent && el.textContent.includes('بدون سؤال أمان')) {
+            el.remove();
+        }
+    });
+}, 1000);
+  </script>
 </body>
   </html>
