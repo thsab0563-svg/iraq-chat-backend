@@ -276,15 +276,15 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 
     <div id="securityFields">
       <div class="field">
-        <label>سؤال الأمان <span style="color:var(--muted);font-weight:500">(اختياري — لاسترجاع كلمة المرور)</span></label>
+        <label>سؤال الأمان <span style="color:var(--danger);font-weight:700">*</span></label>
         <button type="button" id="rgSecQBtn" class="sec-q-btn">
-          <span id="rgSecQLabel" style="color:var(--muted)">— بدون سؤال أمان —</span>
+          <span id="rgSecQLabel" style="color:var(--muted)">— اختر سؤال أمان —</span>
           <i class="fa-solid fa-chevron-down" style="color:var(--muted);font-size:14px"></i>
         </button>
-        <input type="hidden" id="rgSecQ" value="-1">
+        <input type="hidden" id="rgSecQ" value="">
       </div>
       <div class="field" id="secAnswerField" style="display:none">
-        <label>إجابة السؤال</label>
+        <label>إجابة السؤال <span style="color:var(--danger);font-weight:700">*</span></label>
         <input id="rgSecA" placeholder="الجواب" maxlength="100" autocomplete="off" />
         <div class="hint">احفظها جيداً — ستحتاجها إن نسيت كلمة المرور</div>
       </div>
@@ -295,7 +295,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 
     <div class="warn-card">
       <div class="w-icon"><i class="fa-solid fa-circle-info"></i></div>
-      <div class="w-text" id="authNote">أضف سؤال أمان لاسترجاع كلمة المرور إن نسيتها.</div>
+      <div class="w-text" id="authNote">اختيار سؤال الأمان وإجابته <b>إجباري</b> — يُستخدم لاسترجاع كلمة المرور إن نسيتها.</div>
     </div>
     <div class="err" id="authErr"></div>
   </div>
@@ -662,7 +662,7 @@ function setAuthMode(mode){
     $('btnRegister').innerHTML = '<i class="fa-solid fa-arrow-left"></i> إنشاء حساب';
     $('authSub').textContent = 'اختر اسمك وكلمة مرور';
     $('nameHint').textContent = 'عربي أو إنجليزي — أرقام و _ — بدون رموز خاصة';
-    $('authNote').innerHTML = 'أضف سؤال أمان لاسترجاع كلمة المرور إن نسيتها.';
+    $('authNote').innerHTML = 'اختيار سؤال الأمان وإجابته <b>إجباري</b> — يُستخدم لاسترجاع كلمة المرور إن نسيتها.';
   } else {
     tabL.classList.add('on'); tabR.classList.remove('on');
     $('confirmField').style.display = 'none';
@@ -679,8 +679,8 @@ $('tabRegister').addEventListener('click', function(){ setAuthMode('register'); 
 $('tabLogin').addEventListener('click', function(){ setAuthMode('login'); });
 
 /* ========== Security Question Picker (Modal) ========== */
+// ملاحظة: تم حذف خيار "بدون سؤال أمان" — السؤال الآن إجباري
 var SEC_QUESTIONS = [
-  '— بدون سؤال أمان —',
   'ما اسم أول مدرسة لك؟',
   'ما اسم حيوانك الأليف الأول؟',
   'ما اسم مدينتك المفضلة؟',
@@ -694,10 +694,10 @@ var SEC_QUESTIONS = [
 $('rgSecQBtn').addEventListener('click', function(){
   var currentVal = $('rgSecQ').value;
   var html = '<div class="modal-header"><button class="back-btn" id="sqBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">اختر سؤال الأمان</div><div class="spacer"></div></div>';
-  html += '<div style="padding:12px 14px;background:var(--gold-soft);border:1px solid rgba(201,143,61,.25);border-radius:12px;font-size:.8rem;line-height:1.7;color:var(--gold);margin-bottom:16px"><i class="fa-solid fa-shield-halved"></i> يُستخدم السؤال لاسترجاع كلمة المرور إن نسيتها. اختر سؤالاً لا ينسى جوابه.</div>';
+  html += '<div style="padding:12px 14px;background:var(--gold-soft);border:1px solid rgba(201,143,61,.25);border-radius:12px;font-size:.8rem;line-height:1.7;color:var(--gold);margin-bottom:16px"><i class="fa-solid fa-shield-halved"></i> <b>إجباري:</b> يجب اختيار سؤال والإجابة عليه. يُستخدم لاسترجاع كلمة المرور إن نسيتها.</div>';
   html += '<div class="modal-list" id="sqList">';
   SEC_QUESTIONS.forEach(function(q, i){
-    var val = i === 0 ? -1 : i - 1;
+    var val = i;
     var selected = String(val) === currentVal;
     html += '<button class="modal-item" data-qidx="' + val + '" data-qlabel="' + esc(q) + '"' +
       (selected ? ' style="background:var(--gold-soft);border:1.5px solid var(--gold)"' : '') + '>' +
@@ -716,14 +716,9 @@ $('rgSecQBtn').addEventListener('click', function(){
       var v = parseInt(b.dataset.qidx, 10);
       $('rgSecQ').value = String(v);
       $('rgSecQLabel').textContent = b.dataset.qlabel;
-      $('rgSecQLabel').style.color = (v === -1) ? 'var(--muted)' : 'var(--text)';
-      if (v === -1) {
-        $('secAnswerField').style.display = 'none';
-        $('rgSecA').value = '';
-      } else {
-        $('secAnswerField').style.display = '';
-        setTimeout(function(){ $('rgSecA').focus(); }, 200);
-      }
+      $('rgSecQLabel').style.color = 'var(--text)';
+      $('secAnswerField').style.display = '';
+      setTimeout(function(){ $('rgSecA').focus(); }, 200);
       closeModal();
     });
   });
@@ -805,22 +800,33 @@ $('btnRegister').addEventListener('click', async function(){
   var password2 = $('rgPass2').value;
   if (!NAME_REGEX.test(name)) return showErr('اسم غير صالح — استخدم حروف عربية أو إنجليزية و _ (2-20)');
   if (!password || password.length < 6) return showErr('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+  
+  // 🔒 التحقق الإجباري من سؤال الأمان (فقط عند التسجيل)
+  if (authMode === 'register') {
+    var sqVal = $('rgSecQ').value;
+    if (sqVal === '' || sqVal === null || sqVal === undefined) {
+      return showErr('⚠️ يجب عليك اختيار سؤال أمان قبل المتابعة');
+    }
+    var sa = $('rgSecA').value.trim();
+    if (sa.length < 2) {
+      return showErr('⚠️ يجب عليك إدخال إجابة صحيحة لسؤال الأمان (حرفان على الأقل)');
+    }
+    if (password !== password2) {
+      return showErr('كلمتا المرور غير متطابقتين');
+    }
+  }
+  
   this.disabled = true;
   var colors = ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399"];
   var randomColor = colors[Math.floor(Math.random() * colors.length)];
   try {
     var endpoint, body;
     if (authMode === 'register') {
-      if (password !== password2) { this.disabled = false; return showErr('كلمتا المرور غير متطابقتين'); }
       endpoint = '/register';
       body = { name: name, color: randomColor, password: password };
-      var sq = parseInt($('rgSecQ').value, 10);
-      if (sq >= 0) {
-        var sa = $('rgSecA').value.trim();
-        if (sa.length < 2) { this.disabled = false; return showErr('أدخل إجابة سؤال الأمان'); }
-        body.security_q = sq;
-        body.security_a = sa;
-      }
+      // السؤال والإجابة إجباريان الآن
+      body.security_q = parseInt($('rgSecQ').value, 10);
+      body.security_a = $('rgSecA').value.trim();
     } else {
       endpoint = '/login';
       body = { name: name, password: password };
@@ -834,7 +840,7 @@ $('btnRegister').addEventListener('click', async function(){
   } catch(e) {
     if (e.message === 'username_taken') showErr('هذا الاسم مستخدم — جرّب غيره');
     else if (e.message === 'invalid_credentials') showErr('اسم أو كلمة مرور خاطئة');
-    else if (e.message === 'invalid_input') showErr('الاسم غير صالح');
+    else if (e.message === 'invalid_input') showErr('الاسم غير صالح أو بيانات ناقصة');
     else if (e.message === 'too_many_login_attempts') showErr('محاولات كثيرة — انتظر 15 دقيقة');
     else if (e.message === 'banned') showErr('هذا الحساب محظور');
     else showErr(e.message);
@@ -1817,4 +1823,4 @@ function playBeep(){
 })();
 </script>
 </body>
-</html>
+  </html>
