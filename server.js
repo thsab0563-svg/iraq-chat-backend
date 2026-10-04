@@ -15,12 +15,14 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
-const { createClient } = require('@libsql/client');
 const multer = require('multer');
 const webpush = require('web-push');
 const QRCode = require('qrcode');
 const cors = require('cors');
 const { nanoid } = require('nanoid');
+
+// 👇 استيراد قاعدة البيانات من ملف db.js
+const { db, initDb } = require('./db');
 
 /* ===== 1. Environment ===== */
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -33,101 +35,7 @@ const DB_KEY = Buffer.from(DB_KEY_HEX, 'utf8');
 const PUBLIC_URL = process.env.PUBLIC_URL || 'http://localhost:8080';
 const PORT = parseInt(process.env.PORT || '8080', 10);
 
-const TURSO_URL = process.env.TURSO_DATABASE_URL;
-const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN;
-
-if (!TURSO_URL || !TURSO_TOKEN) {
-  console.error('❌ TURSO_DATABASE_URL or TURSO_AUTH_TOKEN is missing');
-  process.exit(1);
-}
-
-const db = createClient({
-  url: TURSO_URL,
-  authToken: TURSO_TOKEN,
-});
-
-/* ===== 2. Database Initialization ===== */
-async function initDb() {
-  const schemaQueries = [
-    `CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
-      display_name TEXT NOT NULL,
-      color TEXT DEFAULT '#e8b567',
-      bio_enc TEXT, location_enc TEXT, avatar TEXT, avatar_id TEXT, cover TEXT,
-      qr_id TEXT UNIQUE, token_hash TEXT NOT NULL, password_hash TEXT,
-      security_q INTEGER, security_a_hash TEXT,
-      theme TEXT DEFAULT 'light', sound INTEGER DEFAULT 1,
-      created_at INTEGER NOT NULL, last_seen INTEGER NOT NULL,
-      public_key TEXT, is_admin INTEGER DEFAULT 0, verified INTEGER DEFAULT 0,
-      banned INTEGER DEFAULT 0, deleted INTEGER DEFAULT 0,
-      verification_expiry DATETIME, has_used_trial BOOLEAN DEFAULT 0
-    )`,
-    `CREATE INDEX IF NOT EXISTS idx_users_qr ON users(qr_id)`,
-    `CREATE INDEX IF NOT EXISTS idx_users_token ON users(token_hash)`,
-    `CREATE TABLE IF NOT EXISTS friendships (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL, friend_id INTEGER NOT NULL,
-      status TEXT NOT NULL DEFAULT 'accepted', time INTEGER NOT NULL,
-      UNIQUE(user_id, friend_id)
-    )`,
-    `CREATE TABLE IF NOT EXISTS blocks (
-      blocker_id INTEGER NOT NULL, blocked_id INTEGER NOT NULL, time INTEGER NOT NULL,
-      PRIMARY KEY (blocker_id, blocked_id)
-    )`,
-    `CREATE TABLE IF NOT EXISTS dms (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      from_id INTEGER NOT NULL, to_id INTEGER NOT NULL, text TEXT NOT NULL,
-      time INTEGER NOT NULL, delivered INTEGER DEFAULT 0, read INTEGER DEFAULT 0,
-      edited INTEGER DEFAULT 0, deleted INTEGER DEFAULT 0
-    )`,
-    `CREATE INDEX IF NOT EXISTS idx_dms_from_to ON dms(from_id, to_id, time)`,
-    `CREATE INDEX IF NOT EXISTS idx_dms_to ON dms(to_id, read)`,
-    `CREATE TABLE IF NOT EXISTS push_subs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL, endpoint TEXT NOT NULL UNIQUE,
-      p256dh TEXT NOT NULL, auth TEXT NOT NULL, time INTEGER NOT NULL
-    )`,
-    `CREATE TABLE IF NOT EXISTS reports (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      reporter_id INTEGER NOT NULL, reported_user_id INTEGER, reported_msg_id INTEGER,
-      reason TEXT NOT NULL, note TEXT, msg_snapshot TEXT,
-      status TEXT NOT NULL DEFAULT 'pending',
-      created_at INTEGER NOT NULL, reviewed_at INTEGER, reviewed_by INTEGER, action TEXT
-    )`,
-    `CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status)`,
-    `CREATE TABLE IF NOT EXISTS admin_logs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      action_type TEXT, details TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`
-  ];
-
-  for (const query of schemaQueries) {
-    try { await db.execute(query); } catch (e) { console.error('Schema error:', e.message); }
-  }
-
-  const migrations = [
-    'ALTER TABLE users ADD COLUMN public_key TEXT',
-    'ALTER TABLE dms ADD COLUMN edited INTEGER DEFAULT 0',
-    'ALTER TABLE dms ADD COLUMN deleted INTEGER DEFAULT 0',
-    'ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0',
-    'ALTER TABLE users ADD COLUMN banned INTEGER DEFAULT 0',
-    'ALTER TABLE users ADD COLUMN password_hash TEXT',
-    'ALTER TABLE users ADD COLUMN verified INTEGER DEFAULT 0',
-    'ALTER TABLE users ADD COLUMN avatar_id TEXT',
-    'ALTER TABLE users ADD COLUMN security_q INTEGER',
-    'ALTER TABLE users ADD COLUMN security_a_hash TEXT',
-    'ALTER TABLE users ADD COLUMN verification_expiry DATETIME',
-    'ALTER TABLE users ADD COLUMN has_used_trial BOOLEAN DEFAULT 0'
-  ];
-  for (const q of migrations) {
-    try { await db.execute(q); } catch(e) {}
-  }
-
-  console.log('✅ Database initialized successfully with Turso');
-}
-
-/* ===== 3. Password hashing ===== */
+/* ===== 2. Password hashing ===== */
 const SCRYPT_N = 16384, SCRYPT_R = 8, SCRYPT_P = 1, SCRYPT_KEYLEN = 64;
 
 function hashPassword(password) {
@@ -156,7 +64,7 @@ function normalizeAnswer(a) {
   return String(a || '').trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
-/* ===== 4. Admin Secret ===== */
+/* ===== 3. Admin Secret ===== */
 const ADMIN_SECRET = process.env.ADMIN_SECRET || '';
 const ADMIN_USER_ID = process.env.ADMIN_USER_ID || '';
 
@@ -176,7 +84,7 @@ async function ensureAdminById() {
 ensureAdminById();
 setInterval(ensureAdminById, 60 * 1000);
 
-/* ===== 5. Field encryption ===== */
+/* ===== 4. Field encryption ===== */
 function encryptField(plain) {
   if (!plain) return null;
   const iv = crypto.randomBytes(12);
@@ -198,7 +106,7 @@ function decryptField(payload) {
   } catch (e) { return null; }
 }
 
-/* ===== 6. Helpers ===== */
+/* ===== 5. Helpers ===== */
 function now() { return Date.now(); }
 function hashToken(token) { return crypto.createHash('sha256').update(token).digest('hex'); }
 const ONLINE_USERS = new Map();
@@ -255,7 +163,7 @@ function mapMessage(m) {
 
 const REPORT_REASONS = ['spam', 'harassment', 'inappropriate', 'scam', 'impersonation', 'other'];
 
-/* ===== 7. Express ===== */
+/* ===== 6. Express ===== */
 const app = express();
 app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: { policy: 'cross-origin' } }));
@@ -274,14 +182,14 @@ const UPLOAD_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d' }));
 
-/* ===== 8. HTTP + Socket.io ===== */
+/* ===== 7. HTTP + Socket.io ===== */
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
   pingTimeout: 30000, pingInterval: 25000, maxHttpBufferSize: 1e6
 });
 
-/* ===== 9. Rate limit ===== */
+/* ===== 8. Rate limit ===== */
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: { error: 'too_many_requests' } });
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 15, message: { error: 'too_many_login_attempts' } });
 const recoveryLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: { error: 'too_many_recovery_attempts' } });
@@ -294,7 +202,7 @@ app.use('/api/login', loginLimiter);
 app.use('/api/recovery', recoveryLimiter);
 app.use('/api/reports', reportLimiter);
 
-/* ===== 10. Middleware ===== */
+/* ===== 9. Middleware ===== */
 async function authRequired(req, res, next) {
   const h = req.headers.authorization || '';
   const token = h.startsWith('Bearer ') ? h.slice(7) : null;
@@ -320,7 +228,7 @@ function adminRequired(req, res, next) {
   next();
 }
 
-/* ===== 11. Register ===== */
+/* ===== 10. Register ===== */
 app.post('/api/register',
   body('name').trim().isLength({ min: 2, max: 20 }).matches(NAME_REGEX).custom((v) => !/[<>&"'`\\\/;(){}\[\]\s]/.test(v)),
   body('password').isLength({ min: 6, max: 128 }),
@@ -359,7 +267,7 @@ app.post('/api/register',
   }
 );
 
-/* ===== 12. Login ===== */
+/* ===== 11. Login ===== */
 app.post('/api/login',
   body('name').trim().isLength({ min: 2, max: 20 }),
   body('password').isLength({ min: 1, max: 128 }),
@@ -389,7 +297,7 @@ app.post('/api/login',
   }
 );
 
-/* ===== 13. Change Password ===== */
+/* ===== 12. Change Password ===== */
 app.post('/api/change-password', authRequired,
   body('current_password').isLength({ min: 1, max: 128 }),
   body('new_password').isLength({ min: 6, max: 128 }),
@@ -404,7 +312,7 @@ app.post('/api/change-password', authRequired,
   }
 );
 
-/* ===== 14. Password Recovery ===== */
+/* ===== 13. Password Recovery ===== */
 app.post('/api/recovery/lookup',
   body('name').trim().isLength({ min: 2, max: 20 }),
   validate,
@@ -449,7 +357,7 @@ app.post('/api/recovery/reset',
   }
 );
 
-/* ===== 15. Logout ===== */
+/* ===== 14. Logout ===== */
 app.post('/api/logout', authRequired, async (req, res) => {
   const uid = req.userId;
   await db.execute({ sql: 'UPDATE users SET token_hash = ?, public_key = NULL WHERE id = ?', args: [hashToken('loggedout_' + uid + '_' + Date.now()), uid] });
@@ -464,7 +372,7 @@ app.post('/api/logout', authRequired, async (req, res) => {
   res.json({ ok: true });
 });
 
-/* ===== 16. User routes ===== */
+/* ===== 15. User routes ===== */
 app.get('/api/me', authRequired, (req, res) => res.json({ user: publicUser(req.user, true) }));
 
 app.put('/api/me', authRequired,
@@ -528,7 +436,7 @@ app.get('/api/security-questions', (req, res) => {
   res.json({ questions: SECURITY_QUESTIONS });
 });
 
-/* ===== 17. Reports ===== */
+/* ===== 16. Reports ===== */
 app.post('/api/reports', authRequired,
   body('reported_user_id').optional().isInt({ min: 1 }),
   body('reported_msg_id').optional().isInt({ min: 1 }),
@@ -572,7 +480,7 @@ app.post('/api/reports', authRequired,
   }
 );
 
-/* ===== 18. Admin Routes ===== */
+/* ===== 17. Admin Routes ===== */
 app.get('/api/admin/stats', authRequired, adminRequired, async (req, res) => {
   const totalUsers = (await db.execute('SELECT COUNT(*) as c FROM users WHERE deleted = 0')).rows[0].c;
   const activeUsers = (await db.execute({ sql: 'SELECT COUNT(*) as c FROM users WHERE deleted = 0 AND last_seen > ?', args: [Date.now() - 24*60*60*1000] })).rows[0].c;
@@ -768,7 +676,7 @@ app.delete('/api/admin/reports/:id', authRequired, adminRequired, async (req, re
   res.json({ ok: true });
 });
 
-/* ===== 19. QR ===== */
+/* ===== 18. QR ===== */
 app.get('/api/qr/image', authRequired, async (req, res) => {
   try {
     const link = `${PUBLIC_URL}/?qr=${req.user.qr_id}`;
@@ -777,7 +685,7 @@ app.get('/api/qr/image', authRequired, async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'qr_failed' }); }
 });
 
-/* ===== 20. Friends ===== */
+/* ===== 19. Friends ===== */
 app.post('/api/friends/add-by-qr', authRequired,
   body('qr_id').trim().isLength({ min: 8, max: 32 }).matches(/^[a-z0-9]+$/i),
   validate,
@@ -804,7 +712,7 @@ app.post('/api/friends/add-by-qr', authRequired,
   }
 );
 
-/* ===== 21. DM ===== */
+/* ===== 20. DM ===== */
 app.get('/api/dm-conversations', authRequired, async (req, res) => {
   const rows = (await db.execute({
     sql: `SELECT CASE WHEN from_id = ? THEN to_id ELSE from_id END AS other_id, MAX(time) AS last_time
@@ -872,7 +780,7 @@ app.delete('/api/dms/:messageId', authRequired, async (req, res) => {
   res.json({ ok: true });
 });
 
-/* ===== 22. Upload ===== */
+/* ===== 21. Upload ===== */
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
   filename: (req, file, cb) => {
@@ -890,7 +798,7 @@ app.post('/upload', authRequired, upload.single('image'), (req, res) => {
   res.json({ url: `${PUBLIC_URL}/uploads/${req.file.filename}` });
 });
 
-/* ===== 23. Push ===== */
+/* ===== 22. Push ===== */
 let pushEnabled = false;
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:admin@dust.app', process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
@@ -918,7 +826,7 @@ async function sendPush(userId, payload) {
   for (const id of dead) await db.execute({ sql: 'DELETE FROM push_subs WHERE id = ?', args: [id] });
 }
 
-/* ===== 24. Socket.io ===== */
+/* ===== 23. Socket.io ===== */
 async function verifyToken(token) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
@@ -1017,14 +925,14 @@ io.on('connection', (socket) => {
   });
 });
 
-/* ===== 25. Cleanup ===== */
+/* ===== 24. Cleanup ===== */
 setInterval(async () => {
   const cutoff = now() - (48 * 60 * 60 * 1000);
   const r = await db.execute({ sql: 'DELETE FROM dms WHERE time < ? AND read = 1', args: [cutoff] });
   if (r.rowsAffected > 0) console.log(`🧹 Cleaned ${r.rowsAffected} messages`);
 }, 60 * 60 * 1000);
 
-/* ===== 26. Health ===== */
+/* ===== 25. Health ===== */
 app.get('/health', async (req, res) => {
   try {
     res.json({
@@ -1043,7 +951,7 @@ app.get('/health', async (req, res) => {
   }
 });
 
-/* ===== 27. Fallback ===== */
+/* ===== 26. Fallback ===== */
 app.get('*', (req, res) => {
   const idx = path.join(PUBLIC_DIR, 'index.html');
   if (fs.existsSync(idx)) return res.sendFile(idx);
@@ -1056,7 +964,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'server_error' });
 });
 
-/* ===== 28. Start ===== */
+/* ===== 27. Start ===== */
 initDb().then(() => {
   server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Dust Server v13.3.0 on port ${PORT}`);
