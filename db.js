@@ -6,7 +6,6 @@
 require('dotenv').config();
 const { createClient } = require('@libsql/client');
 
-// التحقق من وجود المتغيرات
 const TURSO_URL = process.env.TURSO_DATABASE_URL;
 const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN;
 
@@ -15,13 +14,11 @@ if (!TURSO_URL || !TURSO_TOKEN) {
     process.exit(1);
 }
 
-// إنشاء الاتصال بقاعدة البيانات
 const db = createClient({
     url: TURSO_URL,
     authToken: TURSO_TOKEN,
 });
 
-// دالة تهيئة الجداول
 async function initDb() {
     const schemaQueries = [
         `CREATE TABLE IF NOT EXISTS users (
@@ -78,18 +75,15 @@ async function initDb() {
     ];
 
     for (const query of schemaQueries) {
-        try {
-            await db.execute(query);
-        } catch (e) {
-            console.error('Schema error:', e.message);
-        }
+        try { await db.execute(query); } catch (e) { console.error('Schema error:', e.message); }
     }
 
-    // Migrations (إضافة الأعمدة الجديدة إذا لم تكن موجودة)
+    // أوامر إجبارية لإضافة الأعمدة المفقودة (حل مشكلة no such column: deleted)
     const migrations = [
+        'ALTER TABLE users ADD COLUMN deleted INTEGER DEFAULT 0',
+        'ALTER TABLE dms ADD COLUMN deleted INTEGER DEFAULT 0',
         'ALTER TABLE users ADD COLUMN public_key TEXT',
         'ALTER TABLE dms ADD COLUMN edited INTEGER DEFAULT 0',
-        'ALTER TABLE dms ADD COLUMN deleted INTEGER DEFAULT 0',
         'ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0',
         'ALTER TABLE users ADD COLUMN banned INTEGER DEFAULT 0',
         'ALTER TABLE users ADD COLUMN password_hash TEXT',
@@ -102,10 +96,8 @@ async function initDb() {
     ];
     
     for (const q of migrations) {
-        try {
-            await db.execute(q);
-        } catch (e) {
-            // نتجاهل الأخطاء لأن الأعمدة قد تكون موجودة مسبقاً
+        try { await db.execute(q); } catch (e) {
+            // نتجاهل الخطأ لأن العمود قد يكون موجوداً مسبقاً
         }
     }
 
