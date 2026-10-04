@@ -228,13 +228,13 @@ function adminRequired(req, res, next) {
   next();
 }
 
-/* ===== 10. Register ===== */
+/* ===== 10. Register (سؤال الأمان إجباري) ===== */
 app.post('/api/register',
   body('name').trim().isLength({ min: 2, max: 20 }).matches(NAME_REGEX).custom((v) => !/[<>&"'`\\\/;(){}\[\]\s]/.test(v)),
   body('password').isLength({ min: 6, max: 128 }),
   body('color').optional().matches(/^#[0-9a-f]{6}$/i),
-  body('security_q').optional().isInt({ min: 0, max: 7 }),
-  body('security_a').optional().trim().isLength({ min: 2, max: 100 }),
+  body('security_q').isInt({ min: 0, max: 7 }).withMessage('يجب اختيار سؤال أمان'),
+  body('security_a').trim().isLength({ min: 2, max: 100 }).withMessage('يجب إدخال إجابة صحيحة'),
   validate,
   async (req, res) => {
     const { name, color, password, security_q, security_a } = req.body;
@@ -245,11 +245,8 @@ app.post('/api/register',
     if (existsResult.rows.length > 0) return res.status(409).json({ error: 'username_taken' });
 
     const passwordHash = hashPassword(password);
-    let secQ = null, secAHash = null;
-    if (typeof security_q === 'number' && security_q >= 0 && security_a && security_a.trim().length >= 2) {
-      secQ = security_q;
-      secAHash = hashPassword(normalizeAnswer(security_a));
-    }
+    const secQ = security_q;
+    const secAHash = hashPassword(normalizeAnswer(security_a));
 
     const qrId = nanoid(16).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16);
     const insertResult = await db.execute({
