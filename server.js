@@ -15,7 +15,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
-const { createClient } = require('@libsql/client'); // 👈 تغيير 1: استيراد Turso
+const { createClient } = require('@libsql/client');
 const multer = require('multer');
 const webpush = require('web-push');
 const QRCode = require('qrcode');
@@ -33,7 +33,6 @@ const DB_KEY = Buffer.from(DB_KEY_HEX, 'utf8');
 const PUBLIC_URL = process.env.PUBLIC_URL || 'http://localhost:8080';
 const PORT = parseInt(process.env.PORT || '8080', 10);
 
-// 👈 تغيير 2: إعداد Turso
 const TURSO_URL = process.env.TURSO_DATABASE_URL;
 const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN;
 
@@ -47,7 +46,7 @@ const db = createClient({
   authToken: TURSO_TOKEN,
 });
 
-/* ===== 2. Database Initialization (Async) ===== */
+/* ===== 2. Database Initialization ===== */
 async function initDb() {
   const schemaQueries = [
     `CREATE TABLE IF NOT EXISTS users (
@@ -62,7 +61,6 @@ async function initDb() {
       created_at INTEGER NOT NULL, last_seen INTEGER NOT NULL,
       public_key TEXT, is_admin INTEGER DEFAULT 0, verified INTEGER DEFAULT 0,
       banned INTEGER DEFAULT 0, deleted INTEGER DEFAULT 0,
-      security_question TEXT, security_answer TEXT, is_verified BOOLEAN DEFAULT 0,
       verification_expiry DATETIME, has_used_trial BOOLEAN DEFAULT 0
     )`,
     `CREATE INDEX IF NOT EXISTS idx_users_qr ON users(qr_id)`,
@@ -108,7 +106,6 @@ async function initDb() {
     try { await db.execute(query); } catch (e) { console.error('Schema error:', e.message); }
   }
 
-  // Migrations
   const migrations = [
     'ALTER TABLE users ADD COLUMN public_key TEXT',
     'ALTER TABLE dms ADD COLUMN edited INTEGER DEFAULT 0',
@@ -130,14 +127,12 @@ async function initDb() {
   console.log('✅ Database initialized successfully with Turso');
 }
 
-/* ===== 3. Password hashing (scrypt) ===== */
+/* ===== 3. Password hashing ===== */
 const SCRYPT_N = 16384, SCRYPT_R = 8, SCRYPT_P = 1, SCRYPT_KEYLEN = 64;
 
 function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto.scryptSync(password, salt, SCRYPT_KEYLEN, {
-    N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P
-  }).toString('hex');
+  const hash = crypto.scryptSync(password, salt, SCRYPT_KEYLEN, { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P }).toString('hex');
   return 'scrypt$' + SCRYPT_N + '$' + SCRYPT_R + '$' + SCRYPT_P + '$' + salt + '$' + hash;
 }
 
@@ -666,6 +661,8 @@ app.delete('/api/admin/user/:id', authRequired, adminRequired, async (req, res) 
     { sql: 'DELETE FROM users WHERE id = ?', args: [id] }
   ]);
   
+  await db.execute({ sql: 'INSERT INTO admin_logs (action_type, details) VALUES (?, ?)', args: ['ACCOUNT_DELETED_BY_ADMIN', `Admin deleted user ID: ${id}`] });
+  
   for (const f of friendRows) io.to(`u_${f.friend_id}`).emit('user-deleted', { userId: id });
   const socks = ONLINE_USERS.get(id);
   if (socks) for (const sid of socks) io.to(sid).emit('auth-error', { error: 'session_expired' });
@@ -1029,17 +1026,21 @@ setInterval(async () => {
 
 /* ===== 26. Health ===== */
 app.get('/health', async (req, res) => {
-  res.json({
-    ok: true, uptime: process.uptime(),
-    users: (await db.execute('SELECT COUNT(*) as c FROM users WHERE deleted = 0')).rows[0].c,
-    admins: (await db.execute('SELECT COUNT(*) as c FROM users WHERE is_admin = 1')).rows[0].c,
-    verified: (await db.execute('SELECT COUNT(*) as c FROM users WHERE verified = 1 AND deleted = 0')).rows[0].c,
-    with_password: (await db.execute('SELECT COUNT(*) as c FROM users WHERE deleted = 0 AND password_hash IS NOT NULL')).rows[0].c,
-    with_security: (await db.execute('SELECT COUNT(*) as c FROM users WHERE deleted = 0 AND security_a_hash IS NOT NULL')).rows[0].c,
-    pending_reports: (await db.execute({ sql: 'SELECT COUNT(*) as c FROM reports WHERE status = ?', args: ['pending'] })).rows[0].c,
-    online: ONLINE_USERS.size,
-    version: '13.3.0'
-  });
+  try {
+    res.json({
+      ok: true, uptime: process.uptime(),
+      users: (await db.execute('SELECT COUNT(*) as c FROM users WHERE deleted = 0')).rows[0].c,
+      admins: (await db.execute('SELECT COUNT(*) as c FROM users WHERE is_admin = 1')).rows[0].c,
+      verified: (await db.execute('SELECT COUNT(*) as c FROM users WHERE verified = 1 AND deleted = 0')).rows[0].c,
+      with_password: (await db.execute('SELECT COUNT(*) as c FROM users WHERE deleted = 0 AND password_hash IS NOT NULL')).rows[0].c,
+      with_security: (await db.execute('SELECT COUNT(*) as c FROM users WHERE deleted = 0 AND security_a_hash IS NOT NULL')).rows[0].c,
+      pending_reports: (await db.execute({ sql: 'SELECT COUNT(*) as c FROM reports WHERE status = ?', args: ['pending'] })).rows[0].c,
+      online: ONLINE_USERS.size,
+      version: '13.3.0'
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 /* ===== 27. Fallback ===== */
