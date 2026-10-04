@@ -51,10 +51,12 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .auth-tabs button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow-sm)}
 .field{margin-bottom:16px}
 .field label{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:9px;padding-inline-start:6px}
-.field input,.field textarea,.field select{width:100%;padding:15px 17px;border-radius:var(--radius);background:var(--surface);border:1.5px solid var(--border-2);color:var(--text);font-size:.95rem;transition:border-color .2s,box-shadow .2s}
-.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--gold);box-shadow:0 0 0 4px var(--gold-soft)}
-.field select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%236b7285' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:left 17px center;padding-inline-start:44px}
+.field input,.field textarea{width:100%;padding:15px 17px;border-radius:var(--radius);background:var(--surface);border:1.5px solid var(--border-2);color:var(--text);font-size:.95rem;transition:border-color .2s,box-shadow .2s}
+.field input:focus,.field textarea:focus{border-color:var(--gold);box-shadow:0 0 0 4px var(--gold-soft)}
 .field .hint{font-size:.7rem;color:var(--muted);margin-top:6px;padding-inline-start:6px}
+.sec-q-btn{width:100%;padding:15px 17px;border-radius:var(--radius);background:var(--surface);border:1.5px solid var(--border-2);color:var(--text);font-size:.95rem;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:start;transition:.2s;font-family:inherit}
+.sec-q-btn:active{background:var(--surface-2);border-color:var(--gold);transform:scale(.99)}
+.sec-q-btn span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btn-main{width:100%;padding:16px;border-radius:var(--radius);background:var(--grad-gold);color:#1a1207;font-size:1rem;font-weight:800;box-shadow:var(--shadow-gold);display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .15s}
 .btn-main:active{transform:scale(.97)}
 .btn-main:disabled{opacity:.55}
@@ -275,17 +277,11 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
     <div id="securityFields">
       <div class="field">
         <label>سؤال الأمان <span style="color:var(--muted);font-weight:500">(اختياري — لاسترجاع كلمة المرور)</span></label>
-        <select id="rgSecQ">
-          <option value="-1">— بدون سؤال أمان —</option>
-          <option value="0">ما اسم أول مدرسة لك؟</option>
-          <option value="1">ما اسم حيوانك الأليف الأول؟</option>
-          <option value="2">ما اسم مدينتك المفضلة؟</option>
-          <option value="3">ما اسم أفضل صديق في طفولتك؟</option>
-          <option value="4">ما هي مهنة والدك؟</option>
-          <option value="5">ما اسم أول كتاب قرأته؟</option>
-          <option value="6">ما هو طبقك المفضل؟</option>
-          <option value="7">ما اسم فريقك الرياضي المفضل؟</option>
-        </select>
+        <button type="button" id="rgSecQBtn" class="sec-q-btn">
+          <span id="rgSecQLabel" style="color:var(--muted)">— بدون سؤال أمان —</span>
+          <i class="fa-solid fa-chevron-down" style="color:var(--muted);font-size:14px"></i>
+        </button>
+        <input type="hidden" id="rgSecQ" value="-1">
       </div>
       <div class="field" id="secAnswerField" style="display:none">
         <label>إجابة السؤال</label>
@@ -299,7 +295,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 
     <div class="warn-card">
       <div class="w-icon"><i class="fa-solid fa-circle-info"></i></div>
-      <div class="w-text" id="authNote">كلمة مرورك محفوظة بتشفير قوي — لا يمكن استرجاعها إن نسيتها.</div>
+      <div class="w-text" id="authNote">أضف سؤال أمان لاسترجاع كلمة المرور إن نسيتها.</div>
     </div>
     <div class="err" id="authErr"></div>
   </div>
@@ -682,10 +678,55 @@ function setAuthMode(mode){
 $('tabRegister').addEventListener('click', function(){ setAuthMode('register'); });
 $('tabLogin').addEventListener('click', function(){ setAuthMode('login'); });
 
-$('rgSecQ').addEventListener('change', function(){
-  var v = this.value;
-  if (v === '-1') $('secAnswerField').style.display = 'none';
-  else $('secAnswerField').style.display = '';
+/* ========== Security Question Picker (Modal) ========== */
+var SEC_QUESTIONS = [
+  '— بدون سؤال أمان —',
+  'ما اسم أول مدرسة لك؟',
+  'ما اسم حيوانك الأليف الأول؟',
+  'ما اسم مدينتك المفضلة؟',
+  'ما اسم أفضل صديق في طفولتك؟',
+  'ما هي مهنة والدك؟',
+  'ما اسم أول كتاب قرأته؟',
+  'ما هو طبقك المفضل؟',
+  'ما اسم فريقك الرياضي المفضل؟'
+];
+
+$('rgSecQBtn').addEventListener('click', function(){
+  var currentVal = $('rgSecQ').value;
+  var html = '<div class="modal-header"><button class="back-btn" id="sqBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">اختر سؤال الأمان</div><div class="spacer"></div></div>';
+  html += '<div style="padding:12px 14px;background:var(--gold-soft);border:1px solid rgba(201,143,61,.25);border-radius:12px;font-size:.8rem;line-height:1.7;color:var(--gold);margin-bottom:16px"><i class="fa-solid fa-shield-halved"></i> يُستخدم السؤال لاسترجاع كلمة المرور إن نسيتها. اختر سؤالاً لا ينسى جوابه.</div>';
+  html += '<div class="modal-list" id="sqList">';
+  SEC_QUESTIONS.forEach(function(q, i){
+    var val = i === 0 ? -1 : i - 1;
+    var selected = String(val) === currentVal;
+    html += '<button class="modal-item" data-qidx="' + val + '" data-qlabel="' + esc(q) + '"' +
+      (selected ? ' style="background:var(--gold-soft);border:1.5px solid var(--gold)"' : '') + '>' +
+      '<div class="mi-icon" style="background:' + (selected ? 'var(--grad-gold)' : 'var(--gold-soft)') + ';color:' + (selected ? '#1a1207' : 'var(--gold)') + '">' +
+        '<i class="fa-solid fa-' + (selected ? 'check' : 'circle-question') + '"></i>' +
+      '</div>' +
+      '<div class="mi-info"><div class="mi-title">' + esc(q) + '</div></div>' +
+      (selected ? '<i class="fa-solid fa-circle-check" style="color:var(--gold);font-size:18px"></i>' : '') +
+    '</button>';
+  });
+  html += '</div>';
+  showModal(html);
+  $('sqBack').addEventListener('click', closeModal);
+  $('sqList').querySelectorAll('[data-qidx]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var v = parseInt(b.dataset.qidx, 10);
+      $('rgSecQ').value = String(v);
+      $('rgSecQLabel').textContent = b.dataset.qlabel;
+      $('rgSecQLabel').style.color = (v === -1) ? 'var(--muted)' : 'var(--text)';
+      if (v === -1) {
+        $('secAnswerField').style.display = 'none';
+        $('rgSecA').value = '';
+      } else {
+        $('secAnswerField').style.display = '';
+        setTimeout(function(){ $('rgSecA').focus(); }, 200);
+      }
+      closeModal();
+    });
+  });
 });
 
 $('btnForgot').addEventListener('click', showForgotModal);
@@ -709,9 +750,7 @@ function showForgotModal(){
     '</div>'
   );
   $('fpBack').addEventListener('click', closeModal);
-
   var lookedUpName = '';
-
   $('fpNext').addEventListener('click', async function(){
     var name = sanitizeName($('fpName').value);
     if (!name) { $('fpErr1').textContent = 'أدخل اسمك'; return; }
@@ -734,7 +773,6 @@ function showForgotModal(){
       btn.textContent = 'التالي';
     }
   });
-
   $('fpReset').addEventListener('click', async function(){
     var answer = $('fpAnswer').value.trim();
     var p1 = $('fpNewPass').value;
@@ -1327,11 +1365,9 @@ async function loadAccount(){
       '</div>' +
       '<div class="account-actions">' +
         '<button class="btn-outline" id="btnChangePass"><i class="fa-solid fa-key"></i> تغيير كلمة المرور</button>' +
-        '<button class="btn-outline" id="btnChangeAvatar"><i class="fa-solid fa-image-portrait"></i> تغيير الصورة الشخصية</button>' +
         '<button class="btn-danger-outline" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>' +
       '</div>';
     $('accountAvatarClick').addEventListener('click', showAvatarPicker);
-    $('btnChangeAvatar').addEventListener('click', showAvatarPicker);
     $('btnChangePass').addEventListener('click', showChangePasswordModal);
     $('btnLogout').addEventListener('click', function(){
       showConfirm({
@@ -1394,6 +1430,7 @@ async function saveAvatar(aid){
 function showChangePasswordModal(){
   showModal(
     '<div class="modal-header"><button class="back-btn" id="cpBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">تغيير كلمة المرور</div><div class="spacer"></div></div>' +
+    '<div style="padding:12px 14px;background:var(--gold-soft);border:1px solid rgba(201,143,61,.25);border-radius:12px;font-size:.8rem;line-height:1.7;color:var(--gold);margin-bottom:16px"><i class="fa-solid fa-circle-info"></i> لن يتم تسجيل خروجك بعد التغيير — تبقى مسجلاً على هذا الجهاز.</div>' +
     '<div class="field"><label>كلمة المرور الحالية</label><input type="password" id="cpOld" autocomplete="current-password" dir="ltr" style="text-align:left" /></div>' +
     '<div class="field"><label>كلمة المرور الجديدة</label><input type="password" id="cpNew" autocomplete="new-password" dir="ltr" style="text-align:left" /><div class="hint">6 أحرف على الأقل</div></div>' +
     '<div class="field"><label>تأكيد الجديدة</label><input type="password" id="cpNew2" autocomplete="new-password" dir="ltr" style="text-align:left" /></div>' +
