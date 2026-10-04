@@ -13,13 +13,13 @@
 <style>
 :root{--bg:#f5f6fa;--surface:#ffffff;--surface-2:#eef0f6;--surface-3:#e2e5ee;--text:#0e1018;--text-2:#3a3d4d;--muted:#6b7285;--muted-2:#9ca3b5;--border:rgba(0,0,0,.06);--border-2:rgba(0,0,0,.1);--gold:#c98f3d;--gold-2:#e8b567;--gold-soft:rgba(201,143,61,.12);--accent:#5b8cff;--accent-soft:rgba(91,140,255,.12);--danger:#e8435f;--danger-soft:rgba(232,67,95,.12);--success:#10b981;--success-soft:rgba(16,185,129,.12);--blue:#3b82f6;--blue-soft:rgba(59,130,246,.12);--grad-gold:linear-gradient(135deg,#f4c885,#e8b567 50%,#d4a574);--shadow-sm:0 2px 8px rgba(0,0,0,.04);--shadow-md:0 8px 24px rgba(0,0,0,.08);--shadow-lg:0 20px 50px rgba(0,0,0,.12);--shadow-gold:0 8px 24px rgba(201,143,61,.25);--ease:cubic-bezier(.2,.8,.3,1);--radius-sm:12px;--radius:16px;--radius-lg:22px;--radius-xl:28px}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-input,textarea{user-select:text;-webkit-user-select:text}
+input,textarea,select{user-select:text;-webkit-user-select:text}
 html,body{height:100%;overscroll-behavior:none}
 body{font-family:'Cairo','Inter',system-ui,-apple-system,sans-serif;color:var(--text);background:var(--bg);overflow:hidden;-webkit-font-smoothing:antialiased;font-size:15px;position:relative}
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(1200px 800px at 100% 0%,rgba(232,181,103,.06),transparent 55%),radial-gradient(1000px 700px at 0% 100%,rgba(91,140,255,.05),transparent 55%)}
-button,input,textarea{font-family:inherit;color:inherit;font-size:inherit}
+button,input,textarea,select{font-family:inherit;color:inherit;font-size:inherit}
 button{cursor:pointer;border:none;background:none;transition:.2s var(--ease)}
-input,textarea{outline:none;border:none;background:none}
+input,textarea,select{outline:none;border:none;background:none}
 ::-webkit-scrollbar{width:0;height:0}
 img{max-width:100%;display:block}
 a{color:var(--gold);text-decoration:none;cursor:pointer}
@@ -51,8 +51,9 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .auth-tabs button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow-sm)}
 .field{margin-bottom:16px}
 .field label{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:9px;padding-inline-start:6px}
-.field input,.field textarea{width:100%;padding:15px 17px;border-radius:var(--radius);background:var(--surface);border:1.5px solid var(--border-2);color:var(--text);font-size:.95rem;transition:border-color .2s,box-shadow .2s}
-.field input:focus,.field textarea:focus{border-color:var(--gold);box-shadow:0 0 0 4px var(--gold-soft)}
+.field input,.field textarea,.field select{width:100%;padding:15px 17px;border-radius:var(--radius);background:var(--surface);border:1.5px solid var(--border-2);color:var(--text);font-size:.95rem;transition:border-color .2s,box-shadow .2s}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--gold);box-shadow:0 0 0 4px var(--gold-soft)}
+.field select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%236b7285' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:left 17px center;padding-inline-start:44px}
 .field .hint{font-size:.7rem;color:var(--muted);margin-top:6px;padding-inline-start:6px}
 .btn-main{width:100%;padding:16px;border-radius:var(--radius);background:var(--grad-gold);color:#1a1207;font-size:1rem;font-weight:800;box-shadow:var(--shadow-gold);display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .15s}
 .btn-main:active{transform:scale(.97)}
@@ -78,7 +79,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .bottom-nav button.on{color:var(--gold);background:var(--gold-soft)}
 .bottom-nav button i{font-size:20px}
 .bottom-nav .badge{position:absolute;top:2px;inset-inline-end:calc(50% - 20px);min-width:17px;height:17px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--surface)}
-.fab{position:fixed;bottom:calc(96px + env(safe-area-inset-bottom));inset-inline-end:24px;width:58px;height:58px;border-radius:50%;background:var(--grad-gold);color:#1a1207;display:grid;place-items:center;box-shadow:0 10px 28px rgba(201,143,61,.45);z-index:55;font-size:26px;transition:transform .15s,box-shadow .15s;font-weight:900}
+.fab{position:fixed;bottom:calc(96px + env(safe-area-inset-bottom));inset-inline-end:24px;width:58px;height:58px;border-radius:50%;background:var(--grad-gold);color:#1a1207;display:grid;place-items:center;box-shadow:0 10px 28px rgba(201,143,61,.45);z-index:55;font-size:26px;transition:transform .15s;font-weight:900}
 .fab:active{transform:scale(.9)}
 .fab.hide{display:none}
 .list-pad{padding:16px 18px;display:flex;flex-direction:column;gap:11px}
@@ -224,7 +225,7 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .ua .ua-sub{font-size:.76rem;color:var(--muted);margin-top:2px}
 .avatar-picker-section-title{font-size:.8rem;font-weight:800;color:var(--muted);margin:16px 0 10px;padding-inline-start:6px}
 .avatar-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:0 2px}
-.avatar-picker .ap-item{aspect-ratio:1;border-radius:50%;overflow:hidden;cursor:pointer;border:3px solid transparent;transition:.15s;position:relative;box-shadow:var(--shadow-sm)}
+.avatar-picker .ap-item{aspect-ratio:1;border-radius:50%;overflow:hidden;cursor:pointer;border:3px solid transparent;transition:.15s;position:relative;box-shadow:var(--shadow-sm);background:#fff}
 .avatar-picker .ap-item.selected{border-color:var(--gold);box-shadow:0 0 0 4px var(--gold-soft)}
 .avatar-picker .ap-item:active{transform:scale(.92)}
 .avatar-picker .ap-item img{width:100%;height:100%;display:block;border-radius:50%}
@@ -248,25 +249,54 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
     <div class="auth-logo"><i class="fa-solid fa-comment-dots"></i></div>
     <h1 class="auth-title">Dust<span>.</span></h1>
     <p class="auth-sub" id="authSub">اختر اسمك وابدأ</p>
+
     <div class="auth-tabs">
       <button id="tabRegister" type="button" class="on">حساب جديد</button>
       <button id="tabLogin" type="button">تسجيل دخول</button>
     </div>
+
     <div class="field">
       <label>اسم المستخدم</label>
       <input id="rgName" placeholder="أحمد أو ahmed" maxlength="20" autocomplete="username" dir="auto" />
       <div class="hint" id="nameHint">عربي أو إنجليزي — أرقام و _ — بدون رموز خاصة</div>
     </div>
+
     <div class="field">
       <label>كلمة المرور</label>
       <input id="rgPass" type="password" placeholder="6 أحرف على الأقل" maxlength="128" autocomplete="current-password" dir="ltr" style="text-align:left" />
       <div class="hint">6 أحرف على الأقل — احفظها جيداً</div>
     </div>
+
     <div class="field" id="confirmField">
       <label>تأكيد كلمة المرور</label>
       <input id="rgPass2" type="password" placeholder="أعد كتابتها" maxlength="128" autocomplete="new-password" dir="ltr" style="text-align:left" />
     </div>
+
+    <div id="securityFields">
+      <div class="field">
+        <label>سؤال الأمان <span style="color:var(--muted);font-weight:500">(اختياري — لاسترجاع كلمة المرور)</span></label>
+        <select id="rgSecQ">
+          <option value="-1">— بدون سؤال أمان —</option>
+          <option value="0">ما اسم أول مدرسة لك؟</option>
+          <option value="1">ما اسم حيوانك الأليف الأول؟</option>
+          <option value="2">ما اسم مدينتك المفضلة؟</option>
+          <option value="3">ما اسم أفضل صديق في طفولتك؟</option>
+          <option value="4">ما هي مهنة والدك؟</option>
+          <option value="5">ما اسم أول كتاب قرأته؟</option>
+          <option value="6">ما هو طبقك المفضل؟</option>
+          <option value="7">ما اسم فريقك الرياضي المفضل؟</option>
+        </select>
+      </div>
+      <div class="field" id="secAnswerField" style="display:none">
+        <label>إجابة السؤال</label>
+        <input id="rgSecA" placeholder="الجواب" maxlength="100" autocomplete="off" />
+        <div class="hint">احفظها جيداً — ستحتاجها إن نسيت كلمة المرور</div>
+      </div>
+    </div>
+
     <button id="btnRegister" class="btn-main"><i class="fa-solid fa-arrow-left"></i> إنشاء حساب</button>
+    <button id="btnForgot" type="button" style="width:100%;padding:12px;color:var(--gold);font-weight:700;font-size:.85rem;background:none;border:none;margin-top:8px;cursor:pointer;display:none">نسيت كلمة المرور؟</button>
+
     <div class="warn-card">
       <div class="w-icon"><i class="fa-solid fa-circle-info"></i></div>
       <div class="w-text" id="authNote">كلمة مرورك محفوظة بتشفير قوي — لا يمكن استرجاعها إن نسيتها.</div>
@@ -355,85 +385,100 @@ var socket = io({ transports: ['websocket', 'polling'] });
 var $ = function(id){ return document.getElementById(id); };
 var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
 
-/* ========== AVATARS (15 preset SVGs) ========== */
+/* ========== AVATARS (22 preset SVGs) ========== */
 function buildAvatarSVG(a){
   var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">';
-  s += '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">';
+  s += '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">';
   s += '<stop offset="0" stop-color="' + a.bg1 + '"/><stop offset="1" stop-color="' + a.bg2 + '"/></linearGradient></defs>';
   s += '<rect width="100" height="100" fill="url(#g)"/>';
+  s += '<path d="M18 102 Q18 80 34 76 L66 76 Q82 80 82 102 Z" fill="' + a.shirt + '"/>';
+  s += '<rect x="45" y="66" width="10" height="14" fill="' + a.skinDark + '"/>';
+  s += '<ellipse cx="' + (50 - a.headRX) + '" cy="52" rx="3" ry="4" fill="' + a.skin + '"/>';
+  s += '<ellipse cx="' + (50 + a.headRX) + '" cy="52" rx="3" ry="4" fill="' + a.skin + '"/>';
+  s += '<ellipse cx="50" cy="52" rx="' + a.headRX + '" ry="' + a.headRY + '" fill="' + a.skin + '"/>';
+  if (a.hairBack) s += a.hairBack;
   s += a.hair;
-  s += '<ellipse cx="50" cy="58" rx="20" ry="23" fill="' + a.skin + '"/>';
-  if (a.beard) s += '<path d="M40 66 Q50 84 60 66 Q58 78 50 80 Q42 78 40 66 Z" fill="' + a.hairColor + '" opacity=".92"/>';
-  s += '<circle cx="43" cy="58" r="2.2" fill="#1a1a1a"/>';
-  s += '<circle cx="57" cy="58" r="2.2" fill="#1a1a1a"/>';
-  s += '<path d="M45 68 Q50 72 55 68" stroke="#1a1a1a" stroke-width="2" fill="none" stroke-linecap="round"/>';
-  if (a.glasses) s += '<circle cx="43" cy="58" r="6" fill="none" stroke="#333" stroke-width="1.6"/><circle cx="57" cy="58" r="6" fill="none" stroke="#333" stroke-width="1.6"/><line x1="49" y1="58" x2="51" y2="58" stroke="#333" stroke-width="1.6"/>';
+  s += '<path d="M' + (50 - 10) + ' ' + (50 - 5) + ' Q' + (50 - 6) + ' ' + (50 - 7) + ' ' + (50 - 3) + ' ' + (50 - 5) + '" stroke="' + a.browColor + '" stroke-width="1" fill="none" stroke-linecap="round"/>';
+  s += '<path d="M' + (50 + 3) + ' ' + (50 - 5) + ' Q' + (50 + 6) + ' ' + (50 - 7) + ' ' + (50 + 10) + ' ' + (50 - 5) + '" stroke="' + a.browColor + '" stroke-width="1" fill="none" stroke-linecap="round"/>';
+  s += '<ellipse cx="' + (50 - 6.5) + '" cy="53" rx="2.2" ry="2.6" fill="#1a1a1a"/>';
+  s += '<ellipse cx="' + (50 + 6.5) + '" cy="53" rx="2.2" ry="2.6" fill="#1a1a1a"/>';
+  s += '<circle cx="' + (50 - 6) + '" cy="52" r="0.8" fill="#fff"/>';
+  s += '<circle cx="' + (50 + 7) + '" cy="52" r="0.8" fill="#fff"/>';
+  s += '<ellipse cx="' + (50 - 11) + '" cy="59" rx="3" ry="1.8" fill="#ff9d9d" opacity=".55"/>';
+  s += '<ellipse cx="' + (50 + 11) + '" cy="59" rx="3" ry="1.8" fill="#ff9d9d" opacity=".55"/>';
+  s += '<path d="M' + (50 - 3) + ' 62 Q50 65 ' + (50 + 3) + ' 62" stroke="#1a1a1a" stroke-width="1.2" fill="none" stroke-linecap="round"/>';
+  if (a.beard) s += a.beard;
+  if (a.glasses) {
+    s += '<circle cx="' + (50 - 6.5) + '" cy="53" r="5.5" fill="none" stroke="#1a1a1a" stroke-width="1.3"/>';
+    s += '<circle cx="' + (50 + 6.5) + '" cy="53" r="5.5" fill="none" stroke="#1a1a1a" stroke-width="1.3"/>';
+    s += '<line x1="' + (50 - 1) + '" y1="53" x2="' + (50 + 1) + '" y2="53" stroke="#1a1a1a" stroke-width="1.3"/>';
+  }
+  if (a.accessory) s += a.accessory;
   s += '</svg>';
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(s);
 }
 
 var AVATAR_DEFS = [
-  /* ===== رجال ===== */
-  { id:'m1', gender:'male', label:'شاب',
-    bg1:'#7c9cff', bg2:'#4a6fd4', skin:'#f5d6ba', hairColor:'#1a1a1a',
-    hair:'<path d="M30 52 Q30 32 50 32 Q70 32 70 52 Q70 44 62 40 Q55 37 50 37 Q45 37 38 40 Q30 44 30 52 Z" fill="#1a1a1a"/>' },
+  { id:'m1', gender:'male', label:'شاب', bg1:'#7c9cff', bg2:'#4a6fd4', skin:'#f5d6ba', skinDark:'#e8c19a', shirt:'#4a6fd4', headRX:20, headRY:22, browColor:'#1a1a1a',
+    hair:'<path d="M30 50 Q28 26 50 26 Q72 26 70 50 Q70 40 62 35 Q55 32 50 32 Q45 32 38 35 Q30 40 30 50 Z" fill="#1a1a1a"/>' },
+  { id:'m2', gender:'male', label:'بلحية', bg1:'#f4a261', bg2:'#c76b2c', skin:'#e8c19a', skinDark:'#d4a574', shirt:'#c76b2c', headRX:20, headRY:22, browColor:'#4a2c1a',
+    hair:'<path d="M30 50 Q28 26 50 26 Q72 26 70 50 Q70 40 62 35 Q55 32 50 32 Q45 32 38 35 Q30 40 30 50 Z" fill="#4a2c1a"/>',
+    beard:'<path d="M38 62 Q50 82 62 62 Q60 76 50 78 Q40 76 38 62 Z" fill="#4a2c1a"/>' },
+  { id:'m3', gender:'male', label:'مجعّد', bg1:'#4ecdc4', bg2:'#2a9d8f', skin:'#f5d6ba', skinDark:'#e8c19a', shirt:'#2a9d8f', headRX:20, headRY:22, browColor:'#1a1a1a',
+    hair:'<circle cx="32" cy="36" r="7" fill="#1a1a1a"/><circle cx="42" cy="30" r="7" fill="#1a1a1a"/><circle cx="58" cy="30" r="7" fill="#1a1a1a"/><circle cx="68" cy="36" r="7" fill="#1a1a1a"/><path d="M30 50 Q28 30 50 28 Q72 30 70 50 Q70 40 62 36 Q55 33 50 33 Q45 33 38 36 Q30 40 30 50 Z" fill="#1a1a1a"/>' },
+  { id:'m4', gender:'male', label:'أشقر', bg1:'#c084fc', bg2:'#7c3aed', skin:'#f5d6ba', skinDark:'#e8c19a', shirt:'#7c3aed', headRX:20, headRY:22, browColor:'#8b5a2b',
+    hair:'<path d="M32 48 Q30 28 50 28 Q70 28 68 48 Q68 40 62 37 Q55 34 50 34 Q45 34 38 37 Q32 40 32 48 Z" fill="#d4a574"/>' },
+  { id:'m5', gender:'male', label:'داكن', bg1:'#f472b6', bg2:'#be185d', skin:'#c68642', skinDark:'#a86b30', shirt:'#be185d', headRX:20, headRY:22, browColor:'#0f0f0f',
+    hair:'<path d="M33 46 Q33 30 50 30 Q67 30 67 46 Q67 40 60 37 Q54 35 50 35 Q46 35 40 37 Q33 40 33 46 Z" fill="#0f0f0f"/>' },
+  { id:'m6', gender:'male', label:'نظارة', bg1:'#60a5fa', bg2:'#1e40af', skin:'#f5d6ba', skinDark:'#e8c19a', shirt:'#1e40af', headRX:20, headRY:22, browColor:'#3a2a1a', glasses:true,
+    hair:'<path d="M30 50 Q28 26 50 26 Q72 26 70 50 Q70 40 62 35 Q55 32 50 32 Q45 32 38 35 Q30 40 30 50 Z" fill="#3a2a1a"/>' },
+  { id:'m7', gender:'male', label:'شعر طويل', bg1:'#fbbf24', bg2:'#d97706', skin:'#f5d6ba', skinDark:'#e8c19a', shirt:'#d97706', headRX:20, headRY:22, browColor:'#1a1a1a',
+    hairBack:'<path d="M24 60 Q24 26 50 26 Q76 26 76 60 L76 78 L70 78 Q70 55 66 45 Q60 35 50 35 Q40 35 34 45 Q30 55 30 78 L24 78 Z" fill="#1a1a1a"/>',
+    hair:'<path d="M30 46 Q30 28 50 28 Q70 28 70 46 Q70 36 60 33 Q54 32 50 32 Q46 32 40 33 Q30 36 30 46 Z" fill="#1a1a1a"/>' },
+  { id:'m8', gender:'male', label:'أحمر', bg1:'#ef4444', bg2:'#991b1b', skin:'#f5d6ba', skinDark:'#e8c19a', shirt:'#991b1b', headRX:20, headRY:22, browColor:'#7c2d12',
+    hair:'<path d="M30 50 Q28 26 50 26 Q72 26 70 50 Q70 40 62 35 Q55 32 50 32 Q45 32 38 35 Q30 40 30 50 Z" fill="#b45309"/>',
+    beard:'<path d="M38 62 Q50 82 62 62 Q60 76 50 78 Q40 76 38 62 Z" fill="#b45309"/>' },
 
-  { id:'m2', gender:'male', label:'شاب بلحية',
-    bg1:'#f4a261', bg2:'#c76b2c', skin:'#e8c19a', hairColor:'#4a2c1a', beard:true,
-    hair:'<path d="M30 52 Q30 32 50 32 Q70 32 70 52 Q70 44 62 40 Q55 37 50 37 Q45 37 38 40 Q30 44 30 52 Z" fill="#4a2c1a"/>' },
+  { id:'f1', gender:'female', label:'فتاة', bg1:'#f472b6', bg2:'#9f1239', skin:'#f5d6ba', skinDark:'#e8c19a', shirt:'#9f1239', headRX:19, headRY:21, browColor:'#1a1a1a',
+    hairBack:'<path d="M24 60 Q24 26 50 26 Q76 26 76 60 L76 82 Q76 88 70 88 L66 88 Q70 68 66 55 Q60 40 50 40 Q40 40 34 55 Q30 68 34 88 L30 88 Q24 88 24 82 Z" fill="#1a1a1a"/>',
+    hair:'<path d="M30 46 Q30 26 50 26 Q70 26 70 46 Q70 34 60 32 Q54 30 50 30 Q46 30 40 32 Q30 34 30 46 Z" fill="#1a1a1a"/>' },
+  { id:'f2', gender:'female', label:'أشقر', bg1:'#fcd34d', bg2:'#d97706', skin:'#f5d6ba', skinDark:'#e8c19a', shirt:'#d97706', headRX:19, headRY:21, browColor:'#8b5a2b',
+    hairBack:'<path d="M24 60 Q24 26 50 26 Q76 26 76 60 L76 82 Q76 88 70 88 L66 88 Q70 68 66 55 Q60 40 50 40 Q40 40 34 55 Q30 68 34 88 L30 88 Q24 88 24 82 Z" fill="#f4c885"/>',
+    hair:'<path d="M30 46 Q30 26 50 26 Q70 26 70 46 Q70 34 60 32 Q54 30 50 30 Q46 30 40 32 Q30 34 30 46 Z" fill="#f4c885"/>' },
+  { id:'f3', gender:'female', label:'كعكة', bg1:'#34d399', bg2:'#065f46', skin:'#e8c19a', skinDark:'#d4a574', shirt:'#065f46', headRX:19, headRY:21, browColor:'#4a2c1a',
+    hair:'<circle cx="50" cy="20" r="11" fill="#6b4423"/><path d="M28 50 Q26 28 50 26 Q74 28 72 50 Q72 38 62 34 Q55 32 50 32 Q45 32 38 34 Q28 38 28 50 Z" fill="#6b4423"/>' },
+  { id:'f4', gender:'female', label:'قصير', bg1:'#c084fc', bg2:'#6b21a8', skin:'#f5d6ba', skinDark:'#e8c19a', shirt:'#6b21a8', headRX:19, headRY:21, browColor:'#7c2d12',
+    hair:'<path d="M26 60 Q24 26 50 26 Q76 26 74 60 Q74 44 68 38 Q60 32 50 32 Q40 32 32 38 Q26 44 26 60 Z" fill="#dc2626"/>' },
+  { id:'f5', gender:'female', label:'مجعّدة', bg1:'#60a5fa', bg2:'#1e3a8a', skin:'#c68642', skinDark:'#a86b30', shirt:'#1e3a8a', headRX:19, headRY:21, browColor:'#0f0f0f',
+    hair:'<circle cx="31" cy="38" r="7" fill="#1a1a1a"/><circle cx="41" cy="32" r="7" fill="#1a1a1a"/><circle cx="59" cy="32" r="7" fill="#1a1a1a"/><circle cx="69" cy="38" r="7" fill="#1a1a1a"/><path d="M30 48 Q28 30 50 28 Q72 30 70 48 Q70 38 62 34 Q55 32 50 32 Q45 32 38 34 Q30 38 30 48 Z" fill="#1a1a1a"/>' },
+  { id:'f6', gender:'female', label:'حجاب', bg1:'#fb923c', bg2:'#9a3412', skin:'#f5d6ba', skinDark:'#e8c19a', shirt:'#9a3412', headRX:18, headRY:20, browColor:'#1a1a1a',
+    hairBack:'<path d="M22 60 Q22 24 50 24 Q78 24 78 60 L78 90 Q78 96 70 96 L30 96 Q22 96 22 90 Z" fill="#5c3317"/>',
+    hair:'<path d="M26 50 Q26 26 50 26 Q74 26 74 50 Q74 40 68 36 Q60 32 50 32 Q40 32 32 36 Q26 40 26 50 Z" fill="#5c3317"/>' },
+  { id:'f7', gender:'female', label:'ذيل', bg1:'#06b6d4', bg2:'#0e7490', skin:'#e8c19a', skinDark:'#d4a574', shirt:'#0e7490', headRX:19, headRY:21, browColor:'#1a1a1a',
+    hair:'<path d="M28 50 Q26 28 50 26 Q74 28 72 50 Q72 38 62 34 Q55 32 50 32 Q45 32 38 34 Q28 38 28 50 Z" fill="#1a1a1a"/><path d="M62 60 Q76 68 74 92 Q66 80 62 70 Z" fill="#1a1a1a"/>' },
 
-  { id:'m3', gender:'male', label:'شاب مجعّد',
-    bg1:'#4ecdc4', bg2:'#2a9d8f', skin:'#f5d6ba', hairColor:'#1a1a1a',
-    hair:'<path d="M28 52 Q28 30 50 30 Q72 30 72 52 Q72 42 62 38 Q55 36 50 36 Q45 36 38 38 Q28 42 28 52 Z" fill="#1a1a1a"/><circle cx="32" cy="38" r="6" fill="#1a1a1a"/><circle cx="42" cy="34" r="6" fill="#1a1a1a"/><circle cx="58" cy="34" r="6" fill="#1a1a1a"/><circle cx="68" cy="38" r="6" fill="#1a1a1a"/><circle cx="50" cy="32" r="6" fill="#1a1a1a"/>' },
-
-  { id:'m4', gender:'male', label:'شاب أشقر',
-    bg1:'#c084fc', bg2:'#7c3aed', skin:'#f5d6ba', hairColor:'#d4a574',
-    hair:'<path d="M32 50 Q32 34 50 34 Q68 34 68 50 Q68 42 62 40 Q55 38 50 38 Q45 38 38 40 Q32 42 32 50 Z" fill="#d4a574"/>' },
-
-  { id:'m5', gender:'male', label:'شاب حليق',
-    bg1:'#f472b6', bg2:'#be185d', skin:'#c68642', hairColor:'#0f0f0f',
-    hair:'<path d="M33 48 Q33 36 50 36 Q67 36 67 48 Q67 42 60 40 Q54 39 50 39 Q46 39 40 40 Q33 42 33 48 Z" fill="#0f0f0f"/>' },
-
-  { id:'m6', gender:'male', label:'شاب بنظارة',
-    bg1:'#60a5fa', bg2:'#1e40af', skin:'#f5d6ba', hairColor:'#3a2a1a', glasses:true,
-    hair:'<path d="M30 52 Q30 32 50 32 Q70 32 70 52 Q70 44 62 40 Q55 37 50 37 Q45 37 38 40 Q30 44 30 52 Z" fill="#3a2a1a"/>' },
-
-  { id:'m7', gender:'male', label:'شاب بشعر طويل',
-    bg1:'#fbbf24', bg2:'#d97706', skin:'#f5d6ba', hairColor:'#1a1a1a',
-    hair:'<path d="M26 60 Q26 30 50 30 Q74 30 74 60 L74 78 L68 78 Q68 60 66 48 Q62 38 50 38 Q38 38 34 48 Q32 60 32 78 L26 78 Z" fill="#1a1a1a"/>' },
-
-  { id:'m8', gender:'male', label:'شاب أحمر بلحية',
-    bg1:'#ef4444', bg2:'#991b1b', skin:'#f5d6ba', hairColor:'#b45309', beard:true,
-    hair:'<path d="M30 52 Q30 32 50 32 Q70 32 70 52 Q70 44 62 40 Q55 37 50 37 Q45 37 38 40 Q30 44 30 52 Z" fill="#b45309"/>' },
-
-  /* ===== نساء ===== */
-  { id:'f1', gender:'female', label:'فتاة',
-    bg1:'#f472b6', bg2:'#9f1239', skin:'#f5d6ba', hairColor:'#1a1a1a',
-    hair:'<path d="M24 60 Q24 28 50 28 Q76 28 76 60 L76 90 Q76 94 72 94 L68 94 Q68 72 66 55 Q62 40 50 40 Q38 40 34 55 Q32 72 32 94 L28 94 Q24 94 24 90 Z" fill="#1a1a1a"/>' },
-
-  { id:'f2', gender:'female', label:'فتاة أشقر',
-    bg1:'#fcd34d', bg2:'#d97706', skin:'#f5d6ba', hairColor:'#f4c885',
-    hair:'<path d="M24 60 Q24 28 50 28 Q76 28 76 60 L76 90 Q76 94 72 94 L68 94 Q68 72 66 55 Q62 40 50 40 Q38 40 34 55 Q32 72 32 94 L28 94 Q24 94 24 90 Z" fill="#f4c885"/>' },
-
-  { id:'f3', gender:'female', label:'فتاة كعكة',
-    bg1:'#34d399', bg2:'#065f46', skin:'#e8c19a', hairColor:'#6b4423',
-    hair:'<circle cx="50" cy="22" r="12" fill="#6b4423"/><path d="M28 55 Q28 32 50 32 Q72 32 72 55 Q72 44 62 40 Q55 37 50 37 Q45 37 38 40 Q28 44 28 55 Z" fill="#6b4423"/>' },
-
-  { id:'f4', gender:'female', label:'فتاة شعر قصير',
-    bg1:'#c084fc', bg2:'#6b21a8', skin:'#f5d6ba', hairColor:'#dc2626',
-    hair:'<path d="M26 62 Q26 30 50 30 Q74 30 74 62 Q74 48 68 44 Q62 40 50 40 Q38 40 32 44 Q26 48 26 62 Z" fill="#dc2626"/>' },
-
-  { id:'f5', gender:'female', label:'فتاة مجعّدة',
-    bg1:'#60a5fa', bg2:'#1e3a8a', skin:'#c68642', hairColor:'#1a1a1a',
-    hair:'<circle cx="32" cy="40" r="8" fill="#1a1a1a"/><circle cx="42" cy="34" r="8" fill="#1a1a1a"/><circle cx="58" cy="34" r="8" fill="#1a1a1a"/><circle cx="68" cy="40" r="8" fill="#1a1a1a"/><path d="M30 55 Q30 34 50 34 Q70 34 70 55 Q70 45 62 42 Q55 40 50 40 Q45 40 38 42 Q30 45 30 55 Z" fill="#1a1a1a"/>' },
-
-  { id:'f6', gender:'female', label:'فتاة غرّة',
-    bg1:'#fb923c', bg2:'#9a3412', skin:'#f5d6ba', hairColor:'#5c3317',
-    hair:'<path d="M24 60 Q24 28 50 28 Q76 28 76 60 L76 90 Q76 94 72 94 L68 94 Q68 72 66 55 Q62 40 50 40 Q38 40 34 55 Q32 72 32 94 L28 94 Q24 94 24 90 Z" fill="#5c3317"/><path d="M30 44 Q50 36 70 44 Q68 48 50 48 Q32 48 30 44 Z" fill="#3d1f0d"/>' },
-
-  { id:'f7', gender:'female', label:'فتاة ذيل فرس',
-    bg1:'#06b6d4', bg2:'#0e7490', skin:'#e8c19a', hairColor:'#1a1a1a',
-    hair:'<path d="M28 55 Q28 32 50 32 Q72 32 72 55 Q72 44 62 40 Q55 37 50 37 Q45 37 38 40 Q28 44 28 55 Z" fill="#1a1a1a"/><path d="M60 60 Q74 70 70 92 Q66 80 60 72 Z" fill="#1a1a1a"/>' }
+  { id:'c1', gender:'child', label:'طفل مبتسم', bg1:'#a78bfa', bg2:'#7c3aed', skin:'#ffe0bd', skinDark:'#f5cfa3', shirt:'#7c3aed', headRX:21, headRY:22, browColor:'#5a3a1a',
+    hair:'<path d="M30 44 Q28 22 50 22 Q72 22 70 44 Q70 34 60 30 Q55 28 50 28 Q45 28 40 30 Q30 34 30 44 Z" fill="#5a3a1a"/>',
+    accessory:'<circle cx="42" cy="62" r="1.2" fill="#e8b567"/><circle cx="58" cy="62" r="1.2" fill="#e8b567"/>' },
+  { id:'c2', gender:'child', label:'طفلة ضفائر', bg1:'#f9a8d4', bg2:'#db2777', skin:'#ffe0bd', skinDark:'#f5cfa3', shirt:'#db2777', headRX:20, headRY:21, browColor:'#4a2c1a',
+    hairBack:'<circle cx="24" cy="52" r="9" fill="#4a2c1a"/><circle cx="76" cy="52" r="9" fill="#4a2c1a"/>',
+    hair:'<path d="M28 44 Q26 22 50 22 Q74 22 72 44 Q72 32 62 28 Q55 26 50 26 Q45 26 38 28 Q28 32 28 44 Z" fill="#4a2c1a"/>',
+    accessory:'<circle cx="24" cy="52" r="3" fill="#ef4444"/><circle cx="76" cy="52" r="3" fill="#ef4444"/>' },
+  { id:'c3', gender:'child', label:'طفل قبعة', bg1:'#34d399', bg2:'#059669', skin:'#ffe0bd', skinDark:'#f5cfa3', shirt:'#059669', headRX:21, headRY:22, browColor:'#3a2a1a',
+    hair:'<path d="M32 40 Q32 26 50 26 Q68 26 68 40 Q68 34 60 32 Q54 30 50 30 Q46 30 40 32 Q32 34 32 40 Z" fill="#3a2a1a"/>',
+    accessory:'<path d="M28 34 Q28 22 50 22 Q72 22 72 34 L72 36 L28 36 Z" fill="#3b82f6"/><rect x="26" y="34" width="48" height="3" fill="#1e40af"/>' },
+  { id:'c4', gender:'child', label:'طفلة ورد', bg1:'#fbbf24', bg2:'#d97706', skin:'#ffe0bd', skinDark:'#f5cfa3', shirt:'#d97706', headRX:20, headRY:21, browColor:'#5a3a1a',
+    hairBack:'<path d="M26 60 Q26 24 50 24 Q74 24 74 60 L74 84 Q74 88 68 88 L64 88 Q66 68 62 55 Q58 42 50 42 Q42 42 38 55 Q34 68 36 88 L32 88 Q26 88 26 84 Z" fill="#8b5a2b"/>',
+    hair:'<path d="M30 46 Q30 26 50 26 Q70 26 70 46 Q70 36 60 33 Q54 32 50 32 Q46 32 40 33 Q30 36 30 46 Z" fill="#8b5a2b"/>',
+    accessory:'<circle cx="66" cy="34" r="5" fill="#f472b6"/><circle cx="66" cy="34" r="2" fill="#fb923c"/>' },
+  { id:'c5', gender:'child', label:'طفل بنظارة', bg1:'#60a5fa', bg2:'#2563eb', skin:'#c68642', skinDark:'#a86b30', shirt:'#2563eb', headRX:21, headRY:22, browColor:'#1a1a1a', glasses:true,
+    hair:'<path d="M32 42 Q32 24 50 24 Q68 24 68 42 Q68 34 60 31 Q54 29 50 29 Q46 29 40 31 Q32 34 32 42 Z" fill="#1a1a1a"/>' },
+  { id:'c6', gender:'child', label:'طفلة وردة', bg1:'#fb7185', bg2:'#be123c', skin:'#ffe0bd', skinDark:'#f5cfa3', shirt:'#be123c', headRX:20, headRY:21, browColor:'#5a3a1a',
+    hair:'<circle cx="50" cy="20" r="10" fill="#3a2a1a"/><path d="M28 46 Q26 26 50 24 Q74 26 72 46 Q72 34 62 30 Q55 28 50 28 Q45 28 38 30 Q28 34 28 46 Z" fill="#3a2a1a"/>',
+    accessory:'<circle cx="56" cy="22" r="4" fill="#f472b6"/><circle cx="56" cy="22" r="1.5" fill="#fbbf24"/>' },
+  { id:'c7', gender:'child', label:'طفل أشقر', bg1:'#fcd34d', bg2:'#f59e0b', skin:'#ffe0bd', skinDark:'#f5cfa3', shirt:'#f59e0b', headRX:21, headRY:22, browColor:'#8b5a2b',
+    hair:'<path d="M30 44 Q28 22 50 22 Q72 22 70 44 Q70 34 60 30 Q55 28 50 28 Q45 28 40 30 Q30 34 30 44 Z" fill="#fbbf24"/>',
+    accessory:'<circle cx="43" cy="62" r="1.2" fill="#e8b567"/><circle cx="57" cy="62" r="1.2" fill="#e8b567"/>' }
 ];
 
 var AVATAR_URLS = {};
@@ -479,7 +524,6 @@ function sanitizeName(raw){
   s = s.replace(/\s+/g, '_');
   return s;
 }
-
 function attachLongPress(el, cb, dur){
   dur = dur || 500;
   var timer = null, sx = 0, sy = 0;
@@ -544,7 +588,6 @@ function verifiedBadge(u){
   if (!u || !u.verified) return '';
   return '<span class="verified-badge" title="موثق"><i class="fa-solid fa-circle-check"></i></span>';
 }
-
 function avatarHTML(user, size){
   var sz = size ? 'width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size*0.42) + 'px' : '';
   if (user && user.deleted) {
@@ -559,7 +602,6 @@ function avatarHTML(user, size){
   var nm = (user && user.display_name) ? user.display_name : '';
   return '<div class="avatar" style="background:linear-gradient(135deg,' + color + ',#d4a574);' + sz + '">' + esc(initial(nm)) + dot + '</div>';
 }
-
 function toast(text, type){
   var c = $('toasts');
   while(c.children.length >= 4) c.removeChild(c.firstChild);
@@ -619,22 +661,105 @@ function setAuthMode(mode){
   if (mode === 'register') {
     tabR.classList.add('on'); tabL.classList.remove('on');
     $('confirmField').style.display = '';
+    $('securityFields').style.display = '';
+    $('btnForgot').style.display = 'none';
     $('btnRegister').innerHTML = '<i class="fa-solid fa-arrow-left"></i> إنشاء حساب';
     $('authSub').textContent = 'اختر اسمك وكلمة مرور';
     $('nameHint').textContent = 'عربي أو إنجليزي — أرقام و _ — بدون رموز خاصة';
-    $('authNote').innerHTML = 'كلمة مرورك محفوظة بتشفير قوي — لا يمكن استرجاعها إن نسيتها.';
+    $('authNote').innerHTML = 'أضف سؤال أمان لاسترجاع كلمة المرور إن نسيتها.';
   } else {
     tabL.classList.add('on'); tabR.classList.remove('on');
     $('confirmField').style.display = 'none';
+    $('securityFields').style.display = 'none';
+    $('btnForgot').style.display = 'block';
     $('btnRegister').innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> تسجيل الدخول';
     $('authSub').textContent = 'أدخل اسمك وكلمة المرور';
     $('nameHint').textContent = '';
-    $('authNote').innerHTML = 'كلمة المرور محفوظة بشكل <b>مشفّر</b> ولا يمكن استرجاعها.';
+    $('authNote').innerHTML = 'كلمة المرور محفوظة بشكل <b>مشفّر</b> ولا يمكن استرجاعها بدون سؤال أمان.';
   }
   $('authErr').classList.remove('show');
 }
 $('tabRegister').addEventListener('click', function(){ setAuthMode('register'); });
 $('tabLogin').addEventListener('click', function(){ setAuthMode('login'); });
+
+$('rgSecQ').addEventListener('change', function(){
+  var v = this.value;
+  if (v === '-1') $('secAnswerField').style.display = 'none';
+  else $('secAnswerField').style.display = '';
+});
+
+$('btnForgot').addEventListener('click', showForgotModal);
+
+function showForgotModal(){
+  showModal(
+    '<div class="modal-header"><button class="back-btn" id="fpBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">استرجاع كلمة المرور</div><div class="spacer"></div></div>' +
+    '<div style="padding:14px;background:var(--gold-soft);border-radius:14px;font-size:.82rem;line-height:1.75;color:var(--gold);margin-bottom:18px"><b><i class="fa-solid fa-circle-info"></i> ملاحظة:</b> يجب أن تكون قد أضفت سؤال أمان عند التسجيل.</div>' +
+    '<div id="fpStep1">' +
+      '<div class="field"><label>اسم المستخدم</label><input id="fpName" placeholder="اسمك" maxlength="20" autocomplete="off" dir="auto" /></div>' +
+      '<div id="fpErr1" style="color:var(--danger);font-size:.85rem;font-weight:700;text-align:center;min-height:20px;margin-bottom:10px"></div>' +
+      '<button class="btn-main" id="fpNext">التالي</button>' +
+    '</div>' +
+    '<div id="fpStep2" style="display:none">' +
+      '<div style="padding:14px;background:var(--surface-2);border-radius:14px;margin-bottom:16px;font-size:.9rem;line-height:1.7"><b style="color:var(--muted);font-size:.75rem;display:block;margin-bottom:4px">سؤال الأمان:</b><span id="fpQuestion" style="font-weight:800"></span></div>' +
+      '<div class="field"><label>الإجابة</label><input id="fpAnswer" placeholder="اكتب جوابك" maxlength="100" autocomplete="off" /></div>' +
+      '<div class="field"><label>كلمة المرور الجديدة</label><input type="password" id="fpNewPass" placeholder="6 أحرف على الأقل" maxlength="128" dir="ltr" style="text-align:left" /></div>' +
+      '<div class="field"><label>تأكيد الجديدة</label><input type="password" id="fpNewPass2" maxlength="128" dir="ltr" style="text-align:left" /></div>' +
+      '<div id="fpErr2" style="color:var(--danger);font-size:.85rem;font-weight:700;text-align:center;min-height:20px;margin-bottom:10px"></div>' +
+      '<button class="btn-main" id="fpReset" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff">تعيين كلمة المرور الجديدة</button>' +
+    '</div>'
+  );
+  $('fpBack').addEventListener('click', closeModal);
+
+  var lookedUpName = '';
+
+  $('fpNext').addEventListener('click', async function(){
+    var name = sanitizeName($('fpName').value);
+    if (!name) { $('fpErr1').textContent = 'أدخل اسمك'; return; }
+    var btn = $('fpNext');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div>';
+    try {
+      var r = await api('/recovery/lookup', { method: 'POST', body: JSON.stringify({ name: name }) });
+      lookedUpName = name;
+      $('fpQuestion').textContent = r.question;
+      $('fpStep1').style.display = 'none';
+      $('fpStep2').style.display = '';
+      setTimeout(function(){ $('fpAnswer').focus(); }, 200);
+    } catch(e) {
+      if (e.message === 'user_not_found') $('fpErr1').textContent = 'لا يوجد حساب بهذا الاسم';
+      else if (e.message === 'no_security_question') $('fpErr1').textContent = 'هذا الحساب ليس لديه سؤال أمان';
+      else if (e.message === 'too_many_recovery_attempts') $('fpErr1').textContent = 'محاولات كثيرة — انتظر 15 دقيقة';
+      else $('fpErr1').textContent = e.message;
+      btn.disabled = false;
+      btn.textContent = 'التالي';
+    }
+  });
+
+  $('fpReset').addEventListener('click', async function(){
+    var answer = $('fpAnswer').value.trim();
+    var p1 = $('fpNewPass').value;
+    var p2 = $('fpNewPass2').value;
+    if (!answer) { $('fpErr2').textContent = 'أدخل الإجابة'; return; }
+    if (!p1 || p1.length < 6) { $('fpErr2').textContent = 'كلمة المرور 6 أحرف على الأقل'; return; }
+    if (p1 !== p2) { $('fpErr2').textContent = 'كلمتا المرور غير متطابقتين'; return; }
+    var btn = $('fpReset');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div>';
+    try {
+      await api('/recovery/reset', { method: 'POST', body: JSON.stringify({ name: lookedUpName, answer: answer, new_password: p1 }) });
+      closeModal();
+      toast('✓ تم تعيين كلمة مرور جديدة', 'ok');
+      setAuthMode('login');
+      $('rgName').value = lookedUpName;
+      $('rgPass').focus();
+    } catch(e) {
+      if (e.message === 'wrong_answer') $('fpErr2').textContent = 'الإجابة خاطئة';
+      else $('fpErr2').textContent = e.message;
+      btn.disabled = false;
+      btn.textContent = 'تعيين كلمة المرور الجديدة';
+    }
+  });
+}
 
 $('btnRegister').addEventListener('click', async function(){
   var name = sanitizeName($('rgName').value);
@@ -651,6 +776,13 @@ $('btnRegister').addEventListener('click', async function(){
       if (password !== password2) { this.disabled = false; return showErr('كلمتا المرور غير متطابقتين'); }
       endpoint = '/register';
       body = { name: name, color: randomColor, password: password };
+      var sq = parseInt($('rgSecQ').value, 10);
+      if (sq >= 0) {
+        var sa = $('rgSecA').value.trim();
+        if (sa.length < 2) { this.disabled = false; return showErr('أدخل إجابة سؤال الأمان'); }
+        body.security_q = sq;
+        body.security_a = sa;
+      }
     } else {
       endpoint = '/login';
       body = { name: name, password: password };
@@ -819,6 +951,7 @@ function showAdminActionModal(type, uid){
   if (!u) { toast('المستخدم غير موجود', 'err'); return; }
   if (type === 'ban' && u.banned) type = 'unban';
   if (type === 'verify' && u.verified) type = 'unverify';
+
   var config = {
     verify:   { icon: 'fa-circle-check', bg: 'var(--blue-soft)', color: '#3b82f6', title: 'توثيق المستخدم', desc: 'سيحصل <b>' + esc(u.display_name) + '</b> على علامة <i class="fa-solid fa-circle-check" style="color:#3b82f6"></i> <b>زرقاء</b> بجانب اسمه.', btnText: 'توثيق', btnBg: 'linear-gradient(135deg,#3b82f6,#2563eb)', btnColor: '#fff', endpoint: '/admin/user/' + uid + '/verify', body: { action: 'verify' }, success: 'تم التوثيق ✓' },
     unverify: { icon: 'fa-circle-xmark', bg: 'var(--surface-2)', color: 'var(--muted)', title: 'إزالة التوثيق', desc: 'ستُزال العلامة الزرقاء من <b>' + esc(u.display_name) + '</b>.', btnText: 'إزالة التوثيق', btnBg: 'linear-gradient(135deg,#6b7285,#4b5563)', btnColor: '#fff', endpoint: '/admin/user/' + uid + '/verify', body: { action: 'unverify' }, success: 'تمت الإزالة' },
@@ -1234,6 +1367,12 @@ function showAvatarPicker(){
     html += '<div class="ap-item' + (ME.avatar_id === a.id ? ' selected' : '') + '" data-avid="' + a.id + '" title="' + a.label + '"><img src="' + AVATAR_URLS[a.id] + '" alt="' + a.label + '"></div>';
   });
   html += '</div>';
+  html += '<div class="avatar-picker-section-title">أطفال</div>';
+  html += '<div class="avatar-picker">';
+  AVATAR_DEFS.filter(function(a){ return a.gender === 'child'; }).forEach(function(a){
+    html += '<div class="ap-item' + (ME.avatar_id === a.id ? ' selected' : '') + '" data-avid="' + a.id + '" title="' + a.label + '"><img src="' + AVATAR_URLS[a.id] + '" alt="' + a.label + '"></div>';
+  });
+  html += '</div>';
   showModal(html);
   $('avBack').addEventListener('click', closeModal);
   if ($('avRemove')) $('avRemove').addEventListener('click', function(){ saveAvatar(null); });
@@ -1241,7 +1380,6 @@ function showAvatarPicker(){
     el.addEventListener('click', function(){ saveAvatar(el.dataset.avid); });
   });
 }
-
 async function saveAvatar(aid){
   try {
     await api('/me/avatar', { method: 'PUT', body: JSON.stringify({ avatar_id: aid }) });
@@ -1308,7 +1446,6 @@ function showAddFriendMenu(){
   $('afmCamera').addEventListener('click', function(){ closeModal(); setTimeout(startQrCamera, 150); });
   $('afmCode').addEventListener('click', function(){ closeModal(); setTimeout(showEnterQrId, 150); });
 }
-
 async function startQrCamera(){
   showModal('<div class="modal-header"><button class="back-btn" id="scanBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">مسح QR</div><div class="spacer"></div></div><div id="qrReader"></div>');
   $('scanBack').addEventListener('click', function(){ stopQrCamera(); closeModal(); });
@@ -1445,7 +1582,6 @@ function showMessageMenu(msgId, isMine, text){
     });
   }
 }
-
 function showReportModal(opts){
   var reasons = [
     { v: 'spam', l: 'رسائل مزعجة', i: 'fa-envelope-open-text' },
