@@ -1,5 +1,5 @@
 /* ============================================================
-   db.js — Turso Database Connection & Initialization
+   db.js — Turso Database Connection & Clean Initialization
    ============================================================ */
 'use strict';
 
@@ -20,6 +20,27 @@ const db = createClient({
 });
 
 async function initDb() {
+    // 1. فحص ما إذا كان المخطط قديماً (لا يحتوي على عمود deleted)
+    let needsReset = false;
+    try {
+        await db.execute('SELECT deleted FROM users LIMIT 1');
+    } catch (e) {
+        if (e.message && (e.message.includes('no such column') || e.message.includes('no such table'))) {
+            needsReset = true;
+        }
+    }
+
+    // 2. إذا كان المخطط قديماً، احذف الجداول القديمة
+    if (needsReset) {
+        console.log('🔄 Old schema detected in Turso. Dropping old tables to recreate...');
+        const tablesToDrop = ['reports', 'push_subs', 'dms', 'blocks', 'friendships', 'users', 'admin_logs'];
+        for (const t of tablesToDrop) {
+            try { await db.execute(`DROP TABLE IF EXISTS ${t}`); } catch(e) {}
+        }
+        console.log('✅ Old tables dropped successfully');
+    }
+
+    // 3. إنشاء الجداول بالمخطط الصحيح
     const schemaQueries = [
         `CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,33 +96,21 @@ async function initDb() {
     ];
 
     for (const query of schemaQueries) {
-        try { await db.execute(query); } catch (e) { console.error('Schema error:', e.message); }
-    }
-
-    // أوامر إجبارية لإضافة الأعمدة المفقودة (حل مشكلة no such column: deleted)
-    const migrations = [
-        'ALTER TABLE users ADD COLUMN deleted INTEGER DEFAULT 0',
-        'ALTER TABLE dms ADD COLUMN deleted INTEGER DEFAULT 0',
-        'ALTER TABLE users ADD COLUMN public_key TEXT',
-        'ALTER TABLE dms ADD COLUMN edited INTEGER DEFAULT 0',
-        'ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0',
-        'ALTER TABLE users ADD COLUMN banned INTEGER DEFAULT 0',
-        'ALTER TABLE users ADD COLUMN password_hash TEXT',
-        'ALTER TABLE users ADD COLUMN verified INTEGER DEFAULT 0',
-        'ALTER TABLE users ADD COLUMN avatar_id TEXT',
-        'ALTER TABLE users ADD COLUMN security_q INTEGER',
-        'ALTER TABLE users ADD COLUMN security_a_hash TEXT',
-        'ALTER TABLE users ADD COLUMN verification_expiry DATETIME',
-        'ALTER TABLE users ADD COLUMN has_used_trial BOOLEAN DEFAULT 0'
-    ];
-    
-    for (const q of migrations) {
-        try { await db.execute(q); } catch (e) {
-            // نتجاهل الخطأ لأن العمود قد يكون موجوداً مسبقاً
+        try {
+            await db.execute(query);
+        } catch (e) {
+            console.error('Schema error:', e.message);
         }
     }
 
-    console.log('✅ Database initialized successfully with Turso');
+    // 4. التحقق النهائي: تأكد من وجود عمود deleted
+    try {
+        await db.execute('SELECT deleted FROM users LIMIT 1');
+        console.log('✅ Database initialized successfully with Turso');
+    } catch (e) {
+        console.error('❌ Critical error: deleted column still missing!');
+        console.error(e.message);
+    }
 }
 
 module.exports = { db, initDb };
