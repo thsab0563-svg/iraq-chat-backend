@@ -79,21 +79,26 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .bottom-nav button i{font-size:20px}
 .bottom-nav .badge{position:absolute;top:2px;inset-inline-end:calc(50% - 20px);min-width:17px;height:17px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--surface)}
 .fab{position:fixed;bottom:calc(96px + env(safe-area-inset-bottom));inset-inline-end:24px;width:58px;height:58px;border-radius:50%;background:var(--grad-gold);color:#1a1207;display:grid;place-items:center;box-shadow:0 10px 28px rgba(201,143,61,.45);z-index:55;font-size:26px;transition:transform .15s,box-shadow .15s;font-weight:900}
-.fab:active{transform:scale(.9);box-shadow:0 5px 16px rgba(201,143,61,.35)}
+.fab:active{transform:scale(.9)}
 .fab.hide{display:none}
 .list-pad{padding:16px 18px;display:flex;flex-direction:column;gap:11px}
 .user-row{display:flex;align-items:center;gap:13px;padding:13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:transform .15s,background .2s}
 .user-row:active{transform:scale(.98);background:var(--surface-2)}
 .avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:1.05rem;flex:0 0 auto;position:relative;overflow:hidden;box-shadow:0 0 0 2px var(--surface)}
 .avatar .online-dot{position:absolute;bottom:0;inset-inline-end:0;width:13px;height:13px;border-radius:50%;background:var(--success);border:2.5px solid var(--surface);box-shadow:0 0 8px rgba(16,185,129,.8);z-index:2}
+.avatar.avatar-img{background:#fff}
+.avatar.avatar-img img{width:100%;height:100%;display:block;border-radius:50%}
 .user-row .ur-info{flex:1;min-width:0}
 .user-row .ur-name{font-weight:800;font-size:.95rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .user-row .ur-sub{font-size:.76rem;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .user-row .ur-sub.online{color:var(--success);font-weight:600}
 .user-row .ur-unread{background:var(--danger);color:#fff;font-size:.7rem;font-weight:800;padding:3px 9px;border-radius:99px;min-width:22px;text-align:center}
 .account-wrap{padding:32px 20px 24px;display:flex;flex-direction:column;align-items:center;gap:14px}
-.account-avatar{width:110px;height:110px;border-radius:50%;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;font-weight:900;font-size:2.6rem;box-shadow:var(--shadow-gold);border:5px solid var(--surface);position:relative}
-.account-name{font-size:1.6rem;font-weight:900;text-align:center;letter-spacing:-.3px;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
+.account-avatar{width:110px;height:110px;border-radius:50%;display:grid;place-items:center;background:var(--grad-gold);color:#1a1207;font-weight:900;font-size:2.6rem;box-shadow:var(--shadow-gold);border:5px solid var(--surface);position:relative;cursor:pointer;transition:transform .15s;overflow:hidden}
+.account-avatar:active{transform:scale(.95)}
+.account-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.account-avatar .edit-hint{position:absolute;bottom:0;inset-inline-end:0;background:var(--gold);color:#1a1207;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:16px;border:4px solid var(--surface);box-shadow:var(--shadow-gold);z-index:3}
+.account-name{font-size:1.6rem;font-weight:900;text-align:center;letter-spacing:-.3px;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
 .account-username{font-size:.9rem;color:var(--muted)}
 .account-info-card{width:100%;max-width:360px;margin-top:14px;padding:18px;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius-lg);display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow-sm)}
 .account-info-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.88rem}
@@ -217,6 +222,12 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
 .ua .ua-info{flex:1;min-width:0}
 .ua .ua-name{font-weight:800;font-size:.98rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .ua .ua-sub{font-size:.76rem;color:var(--muted);margin-top:2px}
+.avatar-picker-section-title{font-size:.8rem;font-weight:800;color:var(--muted);margin:16px 0 10px;padding-inline-start:6px}
+.avatar-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:0 2px}
+.avatar-picker .ap-item{aspect-ratio:1;border-radius:50%;overflow:hidden;cursor:pointer;border:3px solid transparent;transition:.15s;position:relative;box-shadow:var(--shadow-sm)}
+.avatar-picker .ap-item.selected{border-color:var(--gold);box-shadow:0 0 0 4px var(--gold-soft)}
+.avatar-picker .ap-item:active{transform:scale(.92)}
+.avatar-picker .ap-item img{width:100%;height:100%;display:block;border-radius:50%}
 @media(min-width:720px){.modal{align-items:center}.modal-card{border-radius:var(--radius-xl);margin:20px}.bottom-nav{inset-inline:auto;left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 32px))}.fab{inset-inline-end:calc(50% - 280px + 24px)}}
 </style>
 </head>
@@ -237,31 +248,25 @@ a{color:var(--gold);text-decoration:none;cursor:pointer}
     <div class="auth-logo"><i class="fa-solid fa-comment-dots"></i></div>
     <h1 class="auth-title">Dust<span>.</span></h1>
     <p class="auth-sub" id="authSub">اختر اسمك وابدأ</p>
-
     <div class="auth-tabs">
       <button id="tabRegister" type="button" class="on">حساب جديد</button>
       <button id="tabLogin" type="button">تسجيل دخول</button>
     </div>
-
     <div class="field">
       <label>اسم المستخدم</label>
       <input id="rgName" placeholder="أحمد أو ahmed" maxlength="20" autocomplete="username" dir="auto" />
       <div class="hint" id="nameHint">عربي أو إنجليزي — أرقام و _ — بدون رموز خاصة</div>
     </div>
-
     <div class="field">
       <label>كلمة المرور</label>
       <input id="rgPass" type="password" placeholder="6 أحرف على الأقل" maxlength="128" autocomplete="current-password" dir="ltr" style="text-align:left" />
       <div class="hint">6 أحرف على الأقل — احفظها جيداً</div>
     </div>
-
     <div class="field" id="confirmField">
       <label>تأكيد كلمة المرور</label>
       <input id="rgPass2" type="password" placeholder="أعد كتابتها" maxlength="128" autocomplete="new-password" dir="ltr" style="text-align:left" />
     </div>
-
     <button id="btnRegister" class="btn-main"><i class="fa-solid fa-arrow-left"></i> إنشاء حساب</button>
-
     <div class="warn-card">
       <div class="w-icon"><i class="fa-solid fa-circle-info"></i></div>
       <div class="w-text" id="authNote">كلمة مرورك محفوظة بتشفير قوي — لا يمكن استرجاعها إن نسيتها.</div>
@@ -350,6 +355,91 @@ var socket = io({ transports: ['websocket', 'polling'] });
 var $ = function(id){ return document.getElementById(id); };
 var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
 
+/* ========== AVATARS (15 preset SVGs) ========== */
+function buildAvatarSVG(a){
+  var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">';
+  s += '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">';
+  s += '<stop offset="0" stop-color="' + a.bg1 + '"/><stop offset="1" stop-color="' + a.bg2 + '"/></linearGradient></defs>';
+  s += '<rect width="100" height="100" fill="url(#g)"/>';
+  s += a.hair;
+  s += '<ellipse cx="50" cy="58" rx="20" ry="23" fill="' + a.skin + '"/>';
+  if (a.beard) s += '<path d="M40 66 Q50 84 60 66 Q58 78 50 80 Q42 78 40 66 Z" fill="' + a.hairColor + '" opacity=".92"/>';
+  s += '<circle cx="43" cy="58" r="2.2" fill="#1a1a1a"/>';
+  s += '<circle cx="57" cy="58" r="2.2" fill="#1a1a1a"/>';
+  s += '<path d="M45 68 Q50 72 55 68" stroke="#1a1a1a" stroke-width="2" fill="none" stroke-linecap="round"/>';
+  if (a.glasses) s += '<circle cx="43" cy="58" r="6" fill="none" stroke="#333" stroke-width="1.6"/><circle cx="57" cy="58" r="6" fill="none" stroke="#333" stroke-width="1.6"/><line x1="49" y1="58" x2="51" y2="58" stroke="#333" stroke-width="1.6"/>';
+  s += '</svg>';
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(s);
+}
+
+var AVATAR_DEFS = [
+  /* ===== رجال ===== */
+  { id:'m1', gender:'male', label:'شاب',
+    bg1:'#7c9cff', bg2:'#4a6fd4', skin:'#f5d6ba', hairColor:'#1a1a1a',
+    hair:'<path d="M30 52 Q30 32 50 32 Q70 32 70 52 Q70 44 62 40 Q55 37 50 37 Q45 37 38 40 Q30 44 30 52 Z" fill="#1a1a1a"/>' },
+
+  { id:'m2', gender:'male', label:'شاب بلحية',
+    bg1:'#f4a261', bg2:'#c76b2c', skin:'#e8c19a', hairColor:'#4a2c1a', beard:true,
+    hair:'<path d="M30 52 Q30 32 50 32 Q70 32 70 52 Q70 44 62 40 Q55 37 50 37 Q45 37 38 40 Q30 44 30 52 Z" fill="#4a2c1a"/>' },
+
+  { id:'m3', gender:'male', label:'شاب مجعّد',
+    bg1:'#4ecdc4', bg2:'#2a9d8f', skin:'#f5d6ba', hairColor:'#1a1a1a',
+    hair:'<path d="M28 52 Q28 30 50 30 Q72 30 72 52 Q72 42 62 38 Q55 36 50 36 Q45 36 38 38 Q28 42 28 52 Z" fill="#1a1a1a"/><circle cx="32" cy="38" r="6" fill="#1a1a1a"/><circle cx="42" cy="34" r="6" fill="#1a1a1a"/><circle cx="58" cy="34" r="6" fill="#1a1a1a"/><circle cx="68" cy="38" r="6" fill="#1a1a1a"/><circle cx="50" cy="32" r="6" fill="#1a1a1a"/>' },
+
+  { id:'m4', gender:'male', label:'شاب أشقر',
+    bg1:'#c084fc', bg2:'#7c3aed', skin:'#f5d6ba', hairColor:'#d4a574',
+    hair:'<path d="M32 50 Q32 34 50 34 Q68 34 68 50 Q68 42 62 40 Q55 38 50 38 Q45 38 38 40 Q32 42 32 50 Z" fill="#d4a574"/>' },
+
+  { id:'m5', gender:'male', label:'شاب حليق',
+    bg1:'#f472b6', bg2:'#be185d', skin:'#c68642', hairColor:'#0f0f0f',
+    hair:'<path d="M33 48 Q33 36 50 36 Q67 36 67 48 Q67 42 60 40 Q54 39 50 39 Q46 39 40 40 Q33 42 33 48 Z" fill="#0f0f0f"/>' },
+
+  { id:'m6', gender:'male', label:'شاب بنظارة',
+    bg1:'#60a5fa', bg2:'#1e40af', skin:'#f5d6ba', hairColor:'#3a2a1a', glasses:true,
+    hair:'<path d="M30 52 Q30 32 50 32 Q70 32 70 52 Q70 44 62 40 Q55 37 50 37 Q45 37 38 40 Q30 44 30 52 Z" fill="#3a2a1a"/>' },
+
+  { id:'m7', gender:'male', label:'شاب بشعر طويل',
+    bg1:'#fbbf24', bg2:'#d97706', skin:'#f5d6ba', hairColor:'#1a1a1a',
+    hair:'<path d="M26 60 Q26 30 50 30 Q74 30 74 60 L74 78 L68 78 Q68 60 66 48 Q62 38 50 38 Q38 38 34 48 Q32 60 32 78 L26 78 Z" fill="#1a1a1a"/>' },
+
+  { id:'m8', gender:'male', label:'شاب أحمر بلحية',
+    bg1:'#ef4444', bg2:'#991b1b', skin:'#f5d6ba', hairColor:'#b45309', beard:true,
+    hair:'<path d="M30 52 Q30 32 50 32 Q70 32 70 52 Q70 44 62 40 Q55 37 50 37 Q45 37 38 40 Q30 44 30 52 Z" fill="#b45309"/>' },
+
+  /* ===== نساء ===== */
+  { id:'f1', gender:'female', label:'فتاة',
+    bg1:'#f472b6', bg2:'#9f1239', skin:'#f5d6ba', hairColor:'#1a1a1a',
+    hair:'<path d="M24 60 Q24 28 50 28 Q76 28 76 60 L76 90 Q76 94 72 94 L68 94 Q68 72 66 55 Q62 40 50 40 Q38 40 34 55 Q32 72 32 94 L28 94 Q24 94 24 90 Z" fill="#1a1a1a"/>' },
+
+  { id:'f2', gender:'female', label:'فتاة أشقر',
+    bg1:'#fcd34d', bg2:'#d97706', skin:'#f5d6ba', hairColor:'#f4c885',
+    hair:'<path d="M24 60 Q24 28 50 28 Q76 28 76 60 L76 90 Q76 94 72 94 L68 94 Q68 72 66 55 Q62 40 50 40 Q38 40 34 55 Q32 72 32 94 L28 94 Q24 94 24 90 Z" fill="#f4c885"/>' },
+
+  { id:'f3', gender:'female', label:'فتاة كعكة',
+    bg1:'#34d399', bg2:'#065f46', skin:'#e8c19a', hairColor:'#6b4423',
+    hair:'<circle cx="50" cy="22" r="12" fill="#6b4423"/><path d="M28 55 Q28 32 50 32 Q72 32 72 55 Q72 44 62 40 Q55 37 50 37 Q45 37 38 40 Q28 44 28 55 Z" fill="#6b4423"/>' },
+
+  { id:'f4', gender:'female', label:'فتاة شعر قصير',
+    bg1:'#c084fc', bg2:'#6b21a8', skin:'#f5d6ba', hairColor:'#dc2626',
+    hair:'<path d="M26 62 Q26 30 50 30 Q74 30 74 62 Q74 48 68 44 Q62 40 50 40 Q38 40 32 44 Q26 48 26 62 Z" fill="#dc2626"/>' },
+
+  { id:'f5', gender:'female', label:'فتاة مجعّدة',
+    bg1:'#60a5fa', bg2:'#1e3a8a', skin:'#c68642', hairColor:'#1a1a1a',
+    hair:'<circle cx="32" cy="40" r="8" fill="#1a1a1a"/><circle cx="42" cy="34" r="8" fill="#1a1a1a"/><circle cx="58" cy="34" r="8" fill="#1a1a1a"/><circle cx="68" cy="40" r="8" fill="#1a1a1a"/><path d="M30 55 Q30 34 50 34 Q70 34 70 55 Q70 45 62 42 Q55 40 50 40 Q45 40 38 42 Q30 45 30 55 Z" fill="#1a1a1a"/>' },
+
+  { id:'f6', gender:'female', label:'فتاة غرّة',
+    bg1:'#fb923c', bg2:'#9a3412', skin:'#f5d6ba', hairColor:'#5c3317',
+    hair:'<path d="M24 60 Q24 28 50 28 Q76 28 76 60 L76 90 Q76 94 72 94 L68 94 Q68 72 66 55 Q62 40 50 40 Q38 40 34 55 Q32 72 32 94 L28 94 Q24 94 24 90 Z" fill="#5c3317"/><path d="M30 44 Q50 36 70 44 Q68 48 50 48 Q32 48 30 44 Z" fill="#3d1f0d"/>' },
+
+  { id:'f7', gender:'female', label:'فتاة ذيل فرس',
+    bg1:'#06b6d4', bg2:'#0e7490', skin:'#e8c19a', hairColor:'#1a1a1a',
+    hair:'<path d="M28 55 Q28 32 50 32 Q72 32 72 55 Q72 44 62 40 Q55 37 50 37 Q45 37 38 40 Q28 44 28 55 Z" fill="#1a1a1a"/><path d="M60 60 Q74 70 70 92 Q66 80 60 72 Z" fill="#1a1a1a"/>' }
+];
+
+var AVATAR_URLS = {};
+AVATAR_DEFS.forEach(function(a){ AVATAR_URLS[a.id] = buildAvatarSVG(a); });
+
+/* ========== State ========== */
 var ME = null, TOKEN = localStorage.getItem('token');
 var CURRENT_DM = null;
 var soundOn = true;
@@ -364,7 +454,7 @@ var lastLongPressAt = 0;
 var lastAdminUsers = [];
 var reportsFilter = 'pending';
 
-/* View stack for Android back */
+/* ========== View stack ========== */
 var viewStack = [];
 function pushView(v){ viewStack.push(v); try { history.pushState({v:v}, ''); } catch(e){} }
 window.addEventListener('popstate', function(){
@@ -381,6 +471,7 @@ window.addEventListener('popstate', function(){
   }
 });
 
+/* ========== Helpers ========== */
 var NAME_REGEX = /^[\u0600-\u06FFa-zA-Z][\u0600-\u06FFa-zA-Z0-9_]{1,19}$/;
 function sanitizeName(raw){
   var s = String(raw || '').trim();
@@ -453,17 +544,22 @@ function verifiedBadge(u){
   if (!u || !u.verified) return '';
   return '<span class="verified-badge" title="موثق"><i class="fa-solid fa-circle-check"></i></span>';
 }
+
 function avatarHTML(user, size){
   var sz = size ? 'width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size*0.42) + 'px' : '';
   if (user && user.deleted) {
     var iconSz = Math.round((size||46)*0.5);
     return '<div class="avatar" style="background:#4a4f5c;color:#c8cddc;' + sz + '"><i class="fa-solid fa-user-slash" style="font-size:' + iconSz + 'px"></i></div>';
   }
-  var color = (user && user.color) || '#e8b567';
   var dot = (user && user.online) ? '<span class="online-dot"></span>' : '';
+  if (user && user.avatar_id && AVATAR_URLS[user.avatar_id]) {
+    return '<div class="avatar avatar-img" style="' + sz + '"><img src="' + AVATAR_URLS[user.avatar_id] + '" alt="">' + dot + '</div>';
+  }
+  var color = (user && user.color) || '#e8b567';
   var nm = (user && user.display_name) ? user.display_name : '';
   return '<div class="avatar" style="background:linear-gradient(135deg,' + color + ',#d4a574);' + sz + '">' + esc(initial(nm)) + dot + '</div>';
 }
+
 function toast(text, type){
   var c = $('toasts');
   while(c.children.length >= 4) c.removeChild(c.firstChild);
@@ -500,15 +596,13 @@ async function api(path, opts){
 function handleApiError(e){
   if(e.message === 'session_expired' || e.message === 'invalid_token'){
     toast('انتهت الجلسة', 'err');
-    localStorage.removeItem('token');
-    TOKEN = null;
+    localStorage.removeItem('token'); TOKEN = null;
     setTimeout(function(){ location.reload(); }, 1500);
     return true;
   }
   if(e.message === 'banned'){
     toast('🚫 تم حظر حسابك', 'err');
-    localStorage.removeItem('token');
-    TOKEN = null;
+    localStorage.removeItem('token'); TOKEN = null;
     setTimeout(function(){ location.reload(); }, 2500);
     return true;
   }
@@ -522,25 +616,20 @@ var authMode = 'register';
 function setAuthMode(mode){
   authMode = mode;
   var tabR = $('tabRegister'), tabL = $('tabLogin');
-  var confirm = $('confirmField');
-  var btn = $('btnRegister');
-  var note = $('authNote');
-  var sub = $('authSub');
-  var hint = $('nameHint');
   if (mode === 'register') {
     tabR.classList.add('on'); tabL.classList.remove('on');
-    confirm.style.display = '';
-    btn.innerHTML = '<i class="fa-solid fa-arrow-left"></i> إنشاء حساب';
-    sub.textContent = 'اختر اسمك وكلمة مرور';
-    hint.textContent = 'عربي أو إنجليزي — أرقام و _ — بدون رموز خاصة';
-    note.innerHTML = 'كلمة مرورك محفوظة بتشفير قوي — لا يمكن استرجاعها إن نسيتها.';
+    $('confirmField').style.display = '';
+    $('btnRegister').innerHTML = '<i class="fa-solid fa-arrow-left"></i> إنشاء حساب';
+    $('authSub').textContent = 'اختر اسمك وكلمة مرور';
+    $('nameHint').textContent = 'عربي أو إنجليزي — أرقام و _ — بدون رموز خاصة';
+    $('authNote').innerHTML = 'كلمة مرورك محفوظة بتشفير قوي — لا يمكن استرجاعها إن نسيتها.';
   } else {
     tabL.classList.add('on'); tabR.classList.remove('on');
-    confirm.style.display = 'none';
-    btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> تسجيل الدخول';
-    sub.textContent = 'أدخل اسمك وكلمة المرور';
-    hint.textContent = '';
-    note.innerHTML = 'كلمة المرور محفوظة بشكل <b>مشفّر</b> ولا يمكن استرجاعها.';
+    $('confirmField').style.display = 'none';
+    $('btnRegister').innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> تسجيل الدخول';
+    $('authSub').textContent = 'أدخل اسمك وكلمة المرور';
+    $('nameHint').textContent = '';
+    $('authNote').innerHTML = 'كلمة المرور محفوظة بشكل <b>مشفّر</b> ولا يمكن استرجاعها.';
   }
   $('authErr').classList.remove('show');
 }
@@ -548,18 +637,14 @@ $('tabRegister').addEventListener('click', function(){ setAuthMode('register'); 
 $('tabLogin').addEventListener('click', function(){ setAuthMode('login'); });
 
 $('btnRegister').addEventListener('click', async function(){
-  var raw = $('rgName').value;
-  var name = sanitizeName(raw);
+  var name = sanitizeName($('rgName').value);
   var password = $('rgPass').value;
   var password2 = $('rgPass2').value;
-
   if (!NAME_REGEX.test(name)) return showErr('اسم غير صالح — استخدم حروف عربية أو إنجليزية و _ (2-20)');
   if (!password || password.length < 6) return showErr('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
-
   this.disabled = true;
   var colors = ["#e8b567","#f4a261","#ff6b8a","#4ecdc4","#7c9cff","#c084fc","#f472b6","#34d399"];
   var randomColor = colors[Math.floor(Math.random() * colors.length)];
-
   try {
     var endpoint, body;
     if (authMode === 'register') {
@@ -587,7 +672,6 @@ $('btnRegister').addEventListener('click', async function(){
   this.disabled = false;
 });
 
-/* ========== ENTER APP ========== */
 async function enterApp(user){
   ME = user;
   soundOn = true;
@@ -606,7 +690,7 @@ function showAdminNav(){
   else nav.classList.add('hide');
 }
 
-/* ========== ADMIN DASHBOARD ========== */
+/* ========== ADMIN ========== */
 async function loadAdmin(){
   var box = $('adminContent');
   box.innerHTML = '<div style="text-align:center;padding:40px"><div class="spinner"></div></div>';
@@ -735,17 +819,15 @@ function showAdminActionModal(type, uid){
   if (!u) { toast('المستخدم غير موجود', 'err'); return; }
   if (type === 'ban' && u.banned) type = 'unban';
   if (type === 'verify' && u.verified) type = 'unverify';
-
   var config = {
-    verify:   { icon: 'fa-circle-check', bg: 'var(--blue-soft)', color: '#3b82f6', title: 'توثيق المستخدم', desc: 'سيحصل <b>' + esc(u.display_name) + '</b> على علامة <i class="fa-solid fa-circle-check" style="color:#3b82f6"></i> <b>زرقاء</b> بجانب اسمه في كل مكان.', btnText: 'توثيق', btnBg: 'linear-gradient(135deg,#3b82f6,#2563eb)', btnColor: '#fff', endpoint: '/admin/user/' + uid + '/verify', body: { action: 'verify' }, success: 'تم التوثيق ✓' },
+    verify:   { icon: 'fa-circle-check', bg: 'var(--blue-soft)', color: '#3b82f6', title: 'توثيق المستخدم', desc: 'سيحصل <b>' + esc(u.display_name) + '</b> على علامة <i class="fa-solid fa-circle-check" style="color:#3b82f6"></i> <b>زرقاء</b> بجانب اسمه.', btnText: 'توثيق', btnBg: 'linear-gradient(135deg,#3b82f6,#2563eb)', btnColor: '#fff', endpoint: '/admin/user/' + uid + '/verify', body: { action: 'verify' }, success: 'تم التوثيق ✓' },
     unverify: { icon: 'fa-circle-xmark', bg: 'var(--surface-2)', color: 'var(--muted)', title: 'إزالة التوثيق', desc: 'ستُزال العلامة الزرقاء من <b>' + esc(u.display_name) + '</b>.', btnText: 'إزالة التوثيق', btnBg: 'linear-gradient(135deg,#6b7285,#4b5563)', btnColor: '#fff', endpoint: '/admin/user/' + uid + '/verify', body: { action: 'unverify' }, success: 'تمت الإزالة' },
-    ban:      { icon: 'fa-ban', bg: 'var(--danger-soft)', color: 'var(--danger)', title: 'حظر المستخدم', desc: 'سيمنع <b>' + esc(u.display_name) + '</b> من الدخول للتطبيق فوراً. يمكنك رفع الحظر لاحقاً.', btnText: 'حظر', btnBg: 'linear-gradient(135deg,#ef4444,#dc2626)', btnColor: '#fff', endpoint: '/admin/user/' + uid + '/ban', body: { action: 'ban' }, success: 'تم الحظر' },
+    ban:      { icon: 'fa-ban', bg: 'var(--danger-soft)', color: 'var(--danger)', title: 'حظر المستخدم', desc: 'سيمنع <b>' + esc(u.display_name) + '</b> من الدخول للتطبيق فوراً.', btnText: 'حظر', btnBg: 'linear-gradient(135deg,#ef4444,#dc2626)', btnColor: '#fff', endpoint: '/admin/user/' + uid + '/ban', body: { action: 'ban' }, success: 'تم الحظر' },
     unban:    { icon: 'fa-check', bg: 'var(--success-soft)', color: 'var(--success)', title: 'رفع الحظر', desc: 'سيتمكن <b>' + esc(u.display_name) + '</b> من الدخول مجدداً.', btnText: 'رفع الحظر', btnBg: 'linear-gradient(135deg,#10b981,#059669)', btnColor: '#fff', endpoint: '/admin/user/' + uid + '/ban', body: { action: 'unban' }, success: 'تم رفع الحظر' },
-    delete:   { icon: 'fa-trash', bg: 'var(--danger-soft)', color: 'var(--danger)', title: 'حذف نهائي', desc: '<b style="color:var(--danger)">⚠️ تحذير:</b> سيُحذف <b>' + esc(u.display_name) + '</b> وكل رسائله وصداقاته نهائياً. لا يمكن التراجع.', btnText: 'حذف نهائي', btnBg: 'linear-gradient(135deg,#ef4444,#991b1b)', btnColor: '#fff', endpoint: '/admin/user/' + uid, method: 'DELETE', body: null, success: 'تم الحذف' },
-    admin:    { icon: 'fa-shield-halved', bg: 'var(--gold-soft)', color: 'var(--gold)', title: u.is_admin ? 'إزالة صلاحية المسؤول' : 'ترقية إلى مسؤول', desc: u.is_admin ? 'سيفقد <b>' + esc(u.display_name) + '</b> كل الصلاحيات الإدارية.' : 'سيحصل <b>' + esc(u.display_name) + '</b> على كل صلاحيات المسؤول بما فيها حظر وحذف المستخدمين.', btnText: u.is_admin ? 'إزالة الصلاحية' : 'ترقية', btnBg: 'var(--grad-gold)', btnColor: '#1a1207', endpoint: '/admin/user/' + uid + '/admin', body: null, success: u.is_admin ? 'تمت الإزالة' : 'تمت الترقية' }
+    delete:   { icon: 'fa-trash', bg: 'var(--danger-soft)', color: 'var(--danger)', title: 'حذف نهائي', desc: '<b style="color:var(--danger)">⚠️ تحذير:</b> سيُحذف <b>' + esc(u.display_name) + '</b> وكل رسائله وصداقاته نهائياً.', btnText: 'حذف نهائي', btnBg: 'linear-gradient(135deg,#ef4444,#991b1b)', btnColor: '#fff', endpoint: '/admin/user/' + uid, method: 'DELETE', body: null, success: 'تم الحذف' },
+    admin:    { icon: 'fa-shield-halved', bg: 'var(--gold-soft)', color: 'var(--gold)', title: u.is_admin ? 'إزالة صلاحية المسؤول' : 'ترقية إلى مسؤول', desc: u.is_admin ? 'سيفقد <b>' + esc(u.display_name) + '</b> كل الصلاحيات الإدارية.' : 'سيحصل <b>' + esc(u.display_name) + '</b> على كل صلاحيات المسؤول.', btnText: u.is_admin ? 'إزالة الصلاحية' : 'ترقية', btnBg: 'var(--grad-gold)', btnColor: '#1a1207', endpoint: '/admin/user/' + uid + '/admin', body: null, success: u.is_admin ? 'تمت الإزالة' : 'تمت الترقية' }
   };
   var c = config[type]; if (!c) return;
-
   showModal(
     '<div class="admin-action-modal">' +
       '<div class="aa-icon" style="background:' + c.bg + ';color:' + c.color + '"><i class="fa-solid ' + c.icon + '"></i></div>' +
@@ -768,14 +850,8 @@ function showAdminActionModal(type, uid){
       var opts = { method: c.method || 'POST' };
       if (c.body) opts.body = JSON.stringify(c.body);
       await api(c.endpoint, opts);
-      closeModal();
-      toast(c.success, 'ok');
-      loadAdmin();
-    } catch(e) {
-      toast(e.message, 'err');
-      btn.disabled = false;
-      btn.textContent = c.btnText;
-    }
+      closeModal(); toast(c.success, 'ok'); loadAdmin();
+    } catch(e) { toast(e.message, 'err'); btn.disabled = false; btn.textContent = c.btnText; }
   });
 }
 
@@ -800,13 +876,10 @@ async function loadAdminReports(){
       var reporterName = rep.reporter ? esc(rep.reporter.display_name) : 'محذوف';
       var reportedName = rep.reported ? esc(rep.reported.display_name) : 'غير معروف';
       html += '<div class="' + cls + '">';
-      html += '<div class="report-head">';
-      html += '<div style="flex:1;min-width:0">';
-      html += '<div style="font-weight:800;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><i class="fa-solid fa-flag" style="color:var(--danger);margin-inline-end:6px"></i> بلاغ ضد <b>' + reportedName + '</b></div>';
+      html += '<div class="report-head"><div style="flex:1;min-width:0">';
+      html += '<div style="font-weight:800;font-size:.9rem"><i class="fa-solid fa-flag" style="color:var(--danger);margin-inline-end:6px"></i> بلاغ ضد <b>' + reportedName + '</b></div>';
       html += '<div style="font-size:.72rem;color:var(--muted);margin-top:3px">من: ' + reporterName + ' • ' + time + '</div>';
-      html += '</div>';
-      html += '<span class="report-reason">' + (REASON_LABELS[rep.reason] || rep.reason) + '</span>';
-      html += '</div>';
+      html += '</div><span class="report-reason">' + (REASON_LABELS[rep.reason] || rep.reason) + '</span></div>';
       if (rep.msg_snapshot || (rep.msg && rep.msg.text)) {
         var txt = rep.msg_snapshot || (rep.msg && rep.msg.text) || '';
         html += '<div class="report-msg"><div style="font-size:.68rem;font-weight:800;color:var(--gold);margin-bottom:6px">الرسالة المبلغ عنها:</div>' + esc(txt) + '</div>';
@@ -836,8 +909,7 @@ async function loadAdminReports(){
         b.disabled = true;
         try {
           await api('/admin/reports/' + rid + '/resolve', { method: 'POST', body: JSON.stringify({ action: act }) });
-          toast('تم', 'ok');
-          loadAdminReports();
+          toast('تم', 'ok'); loadAdminReports();
           if (act === 'ban_user') loadAdmin();
         } catch(e) { toast(e.message, 'err'); b.disabled = false; }
       });
@@ -859,8 +931,7 @@ function showBroadcastModal(){
     btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div>';
     try {
       var r = await api('/admin/broadcast', { method: 'POST', body: JSON.stringify({ text: txt }) });
-      toast('تم لـ ' + r.sent + ' مستخدم ✓', 'ok');
-      closeModal();
+      toast('تم لـ ' + r.sent + ' مستخدم ✓', 'ok'); closeModal();
     } catch(e) { toast(e.message, 'err'); btn.disabled = false; btn.textContent = 'إرسال'; }
   });
 }
@@ -885,10 +956,7 @@ socket.on('notification', function(n){
   if (!n) return;
   if (n.type === 'friend_added') { toast(n.text || 'صديق جديد', 'ok'); loadChats(); }
   else if (n.type === 'dm') { if (soundOn) playBeep(); loadChats(); }
-  else if (n.type === 'report') {
-    toast(n.text || '🚨 بلاغ جديد', 'err');
-    if (currentTab === 'admin') loadAdmin();
-  }
+  else if (n.type === 'report') { toast(n.text || '🚨 بلاغ جديد', 'err'); if (currentTab === 'admin') loadAdmin(); }
   else toast(n.text || 'إشعار', 'info');
 });
 socket.on('user-online', function(d){ onlineUsers[d.userId] = true; if(currentTab === 'chats') loadChats(); });
@@ -938,12 +1006,8 @@ socket.on('dm-read-receipt', function(){
 });
 socket.on('dm-typing', function(d){
   if(CURRENT_DM && CURRENT_DM.user.id === d.fromId){
-    if(d.isTyping){
-      $('chatSub').textContent = 'يكتب الآن...';
-      $('chatSub').className = 'ch-sub online';
-      clearTimeout(d._t);
-      d._t = setTimeout(function(){ updateChatStatus(d.fromId); }, 3000);
-    } else updateChatStatus(d.fromId);
+    if(d.isTyping){ $('chatSub').textContent = 'يكتب الآن...'; $('chatSub').className = 'ch-sub online'; clearTimeout(d._t); d._t = setTimeout(function(){ updateChatStatus(d.fromId); }, 3000); }
+    else updateChatStatus(d.fromId);
   }
 });
 socket.on('dm-deleted', function(d){
@@ -951,8 +1015,7 @@ socket.on('dm-deleted', function(d){
   if (el) {
     var bubble = el.querySelector('.cbubble');
     if (bubble) { bubble.classList.add('deleted'); bubble.innerHTML = 'تم حذف الرسالة'; bubble.dataset.plain = ''; }
-    var marks = el.querySelector('.read-marks');
-    if (marks) marks.style.display = 'none';
+    var marks = el.querySelector('.read-marks'); if (marks) marks.style.display = 'none';
   }
   if(currentTab === 'chats') loadChats();
 });
@@ -973,10 +1036,8 @@ socket.on('dm-conversation-deleted', function(d){
 });
 
 async function updateChatStatus(userId){
-  if(onlineUsers[userId]){
-    $('chatSub').innerHTML = '<i class="fa-solid fa-circle" style="font-size:8px"></i> متصل الآن';
-    $('chatSub').className = 'ch-sub online';
-  } else {
+  if(onlineUsers[userId]){ $('chatSub').innerHTML = '<i class="fa-solid fa-circle" style="font-size:8px"></i> متصل الآن'; $('chatSub').className = 'ch-sub online'; }
+  else {
     try {
       var r = await api('/users/' + userId);
       $('chatSub').textContent = r.user.online ? 'متصل الآن' : fmtLastSeen(r.user.last_seen);
@@ -1115,8 +1176,14 @@ async function loadAccount(){
     var r = await api('/me');
     ME = r.user;
     var box = $('accountContent');
+    var avHTML = ME.avatar_id && AVATAR_URLS[ME.avatar_id]
+      ? '<img src="' + AVATAR_URLS[ME.avatar_id] + '" alt="">'
+      : esc(initial(ME.display_name));
     box.innerHTML =
-      '<div class="account-avatar">' + esc(initial(ME.display_name)) + (ME.verified ? '<span class="verified-badge" style="position:absolute;bottom:5px;inset-inline-end:5px;background:var(--surface);border-radius:50%;padding:4px;font-size:18px"><i class="fa-solid fa-circle-check"></i></span>' : '') + '</div>' +
+      '<div class="account-avatar" id="accountAvatarClick">' + avHTML +
+        '<div class="edit-hint"><i class="fa-solid fa-pen"></i></div>' +
+        (ME.verified ? '<span class="verified-badge" style="position:absolute;top:5px;inset-inline-end:5px;background:var(--surface);border-radius:50%;padding:4px;font-size:18px;z-index:4"><i class="fa-solid fa-circle-check"></i></span>' : '') +
+      '</div>' +
       '<div class="account-name">' + esc(ME.display_name) + verifiedBadge(ME) + '</div>' +
       '<div class="account-username">@' + esc(ME.username) + '</div>' +
       '<div class="account-info-card">' +
@@ -1127,8 +1194,11 @@ async function loadAccount(){
       '</div>' +
       '<div class="account-actions">' +
         '<button class="btn-outline" id="btnChangePass"><i class="fa-solid fa-key"></i> تغيير كلمة المرور</button>' +
+        '<button class="btn-outline" id="btnChangeAvatar"><i class="fa-solid fa-image-portrait"></i> تغيير الصورة الشخصية</button>' +
         '<button class="btn-danger-outline" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>' +
       '</div>';
+    $('accountAvatarClick').addEventListener('click', showAvatarPicker);
+    $('btnChangeAvatar').addEventListener('click', showAvatarPicker);
     $('btnChangePass').addEventListener('click', showChangePasswordModal);
     $('btnLogout').addEventListener('click', function(){
       showConfirm({
@@ -1137,14 +1207,50 @@ async function loadAccount(){
         confirmText: 'تسجيل الخروج', danger: false,
         onConfirm: async function(){
           try { await api('/logout', { method: 'POST' }); } catch(_){}
-          localStorage.removeItem('token');
-          TOKEN = null; ME = null;
+          localStorage.removeItem('token'); TOKEN = null; ME = null;
           toast('تم تسجيل الخروج', 'ok');
           setTimeout(function(){ location.reload(); }, 1000);
         }
       });
     });
   } catch(e) { if(!handleApiError(e)) toast(e.message, 'err'); }
+}
+
+/* ========== AVATAR PICKER ========== */
+function showAvatarPicker(){
+  var html = '<div class="modal-header"><button class="back-btn" id="avBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">اختر صورتك</div><div class="spacer"></div></div>';
+  if (ME.avatar_id) {
+    html += '<button class="modal-item" id="avRemove" style="margin-bottom:16px"><div class="mi-icon danger"><i class="fa-solid fa-xmark"></i></div><div class="mi-info"><div class="mi-title">إزالة الصورة</div><div class="mi-sub">العودة للحرف الأول</div></div></button>';
+  }
+  html += '<div class="avatar-picker-section-title">رجال</div>';
+  html += '<div class="avatar-picker">';
+  AVATAR_DEFS.filter(function(a){ return a.gender === 'male'; }).forEach(function(a){
+    html += '<div class="ap-item' + (ME.avatar_id === a.id ? ' selected' : '') + '" data-avid="' + a.id + '" title="' + a.label + '"><img src="' + AVATAR_URLS[a.id] + '" alt="' + a.label + '"></div>';
+  });
+  html += '</div>';
+  html += '<div class="avatar-picker-section-title">نساء</div>';
+  html += '<div class="avatar-picker">';
+  AVATAR_DEFS.filter(function(a){ return a.gender === 'female'; }).forEach(function(a){
+    html += '<div class="ap-item' + (ME.avatar_id === a.id ? ' selected' : '') + '" data-avid="' + a.id + '" title="' + a.label + '"><img src="' + AVATAR_URLS[a.id] + '" alt="' + a.label + '"></div>';
+  });
+  html += '</div>';
+  showModal(html);
+  $('avBack').addEventListener('click', closeModal);
+  if ($('avRemove')) $('avRemove').addEventListener('click', function(){ saveAvatar(null); });
+  $$('[data-avid]').forEach(function(el){
+    el.addEventListener('click', function(){ saveAvatar(el.dataset.avid); });
+  });
+}
+
+async function saveAvatar(aid){
+  try {
+    await api('/me/avatar', { method: 'PUT', body: JSON.stringify({ avatar_id: aid }) });
+    ME.avatar_id = aid;
+    toast(aid ? 'تم تعيين الصورة ✓' : 'تمت الإزالة', 'ok');
+    closeModal();
+    loadAccount();
+    if (currentTab === 'chats') loadChats();
+  } catch(e) { toast(e.message, 'err'); }
 }
 
 function showChangePasswordModal(){
@@ -1270,7 +1376,6 @@ function renderDMMsg(m){
   var body = document.createElement('div'); body.className = 'cmsg-body';
   var meta = document.createElement('div'); meta.className = 'cmeta'; meta.textContent = fmtTime(m.time);
   var bubble = document.createElement('div'); bubble.className = 'cbubble';
-
   if (m.deleted) {
     bubble.classList.add('deleted');
     bubble.textContent = 'تم حذف الرسالة';
@@ -1352,9 +1457,8 @@ function showReportModal(opts){
   ];
   var reasonsHtml = '';
   reasons.forEach(function(r){
-    reasonsHtml += '<button class="report-reason-btn" data-r="' + r.v + '" style="width:100%;padding:14px;border-radius:14px;background:var(--surface-2);border:1.5px solid transparent;display:flex;align-items:center;gap:12px;margin-bottom:8px;font-weight:700;text-align:start;transition:.15s"><span style="width:38px;height:38px;border-radius:11px;background:var(--danger-soft);color:var(--danger);display:grid;place-items:center;font-size:16px"><i class="fa-solid ' + r.i + '"></i></span><span style="flex:1">' + r.l + '</span><i class="fa-solid fa-chevron-left" style="color:var(--muted);font-size:12px"></i></button>';
+    reasonsHtml += '<button class="report-reason-btn" data-r="' + r.v + '" style="width:100%;padding:14px;border-radius:14px;background:var(--surface-2);border:1.5px solid transparent;display:flex;align-items:center;gap:12px;margin-bottom:8px;font-weight:700;text-align:start"><span style="width:38px;height:38px;border-radius:11px;background:var(--danger-soft);color:var(--danger);display:grid;place-items:center;font-size:16px"><i class="fa-solid ' + r.i + '"></i></span><span style="flex:1">' + r.l + '</span><i class="fa-solid fa-chevron-left" style="color:var(--muted);font-size:12px"></i></button>';
   });
-
   showModal(
     '<div class="modal-header"><button class="back-btn" id="rpBack"><i class="fa-solid fa-chevron-right"></i></button><div class="title">الإبلاغ</div><div class="spacer"></div></div>' +
     (opts.preview ? '<div style="padding:12px 14px;background:var(--surface-2);border-radius:12px;font-size:.85rem;line-height:1.7;margin-bottom:16px;border-inline-start:3px solid var(--gold);white-space:pre-wrap;word-break:break-word;max-height:100px;overflow:hidden">' + esc(opts.preview) + '</div>' : '') +
@@ -1366,7 +1470,6 @@ function showReportModal(opts){
       '<button class="btn-main" id="reportSubmit" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff">إرسال البلاغ</button>' +
     '</div>'
   );
-
   $('rpBack').addEventListener('click', function(){ closeModal(); });
   var selectedReason = null;
   var btns = $('reportReasons').querySelectorAll('.report-reason-btn');
@@ -1389,8 +1492,7 @@ function showReportModal(opts){
       if (opts.msgId) body.reported_msg_id = opts.msgId;
       if (opts.userId) body.reported_user_id = opts.userId;
       await api('/reports', { method: 'POST', body: JSON.stringify(body) });
-      closeModal();
-      toast('✓ تم إرسال البلاغ للمسؤول', 'ok');
+      closeModal(); toast('✓ تم إرسال البلاغ للمسؤول', 'ok');
     } catch(e) {
       if (e.message === 'already_reported') { closeModal(); toast('سبق أن أبلغت عن هذا', 'info'); return; }
       if (e.message === 'own_message' || e.message === 'self_report') { closeModal(); toast('لا يمكنك الإبلاغ عن نفسك', 'err'); return; }
@@ -1542,4 +1644,4 @@ function playBeep(){
 })();
 </script>
 </body>
-  </html>
+</html>
