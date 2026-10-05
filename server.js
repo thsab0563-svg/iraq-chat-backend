@@ -21,10 +21,8 @@ const QRCode = require('qrcode');
 const cors = require('cors');
 const { nanoid } = require('nanoid');
 
-// 👇 استيراد قاعدة البيانات من ملف db.js
 const { db, initDb } = require('./db');
 
-/* ===== 1. Environment ===== */
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET || JWT_SECRET.length < 32) { console.error('❌ JWT_SECRET missing'); process.exit(1); }
 
@@ -35,7 +33,6 @@ const DB_KEY = Buffer.from(DB_KEY_HEX, 'utf8');
 const PUBLIC_URL = process.env.PUBLIC_URL || 'http://localhost:8080';
 const PORT = parseInt(process.env.PORT || '8080', 10);
 
-/* ===== 2. Password hashing ===== */
 const SCRYPT_N = 16384, SCRYPT_R = 8, SCRYPT_P = 1, SCRYPT_KEYLEN = 64;
 
 function hashPassword(password) {
@@ -60,11 +57,6 @@ function verifyPassword(password, stored) {
   } catch (e) { return false; }
 }
 
-function normalizeAnswer(a) {
-  return String(a || '').trim().toLowerCase().replace(/\s+/g, ' ');
-}
-
-/* ===== 3. Admin Secret ===== */
 const ADMIN_SECRET = process.env.ADMIN_SECRET || '';
 const ADMIN_USER_ID = process.env.ADMIN_USER_ID || '';
 
@@ -84,7 +76,6 @@ async function ensureAdminById() {
 ensureAdminById();
 setInterval(ensureAdminById, 60 * 1000);
 
-/* ===== 4. Field encryption ===== */
 function encryptField(plain) {
   if (!plain) return null;
   const iv = crypto.randomBytes(12);
@@ -106,7 +97,6 @@ function decryptField(payload) {
   } catch (e) { return null; }
 }
 
-/* ===== 5. Helpers ===== */
 function now() { return Date.now(); }
 function hashToken(token) { return crypto.createHash('sha256').update(token).digest('hex'); }
 const ONLINE_USERS = new Map();
@@ -119,17 +109,6 @@ function validateUsername(name) {
 }
 
 const ALLOWED_AVATARS = ['m1','m2','m3','m4','m5','m6','m7','m8','f1','f2','f3','f4','f5','f6','f7','c1','c2','c3','c4','c5','c6','c7'];
-
-const SECURITY_QUESTIONS = [
-  'ما اسم أول مدرسة لك؟',
-  'ما اسم حيوانك الأليف الأول؟',
-  'ما اسم مدينتك المفضلة؟',
-  'ما اسم أفضل صديق في طفولتك؟',
-  'ما هي مهنة والدك؟',
-  'ما اسم أول كتاب قرأته؟',
-  'ما هو طبقك المفضل؟',
-  'ما اسم فريقك الرياضي المفضل؟'
-];
 
 function publicUser(row, includePrivate = false) {
   if (!row) return null;
@@ -163,7 +142,6 @@ function mapMessage(m) {
 
 const REPORT_REASONS = ['spam', 'harassment', 'inappropriate', 'scam', 'impersonation', 'other'];
 
-/* ===== 6. Express ===== */
 const app = express();
 app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: { policy: 'cross-origin' } }));
@@ -182,27 +160,22 @@ const UPLOAD_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d' }));
 
-/* ===== 7. HTTP + Socket.io ===== */
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
   pingTimeout: 30000, pingInterval: 25000, maxHttpBufferSize: 1e6
 });
 
-/* ===== 8. Rate limit ===== */
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: { error: 'too_many_requests' } });
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 15, message: { error: 'too_many_login_attempts' } });
-const recoveryLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: { error: 'too_many_recovery_attempts' } });
 const apiLimiter = rateLimit({ windowMs: 60 * 1000, max: 240, message: { error: 'rate_limit_exceeded' } });
 const reportLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10, message: { error: 'too_many_reports' } });
 
 app.use('/api/', apiLimiter);
 app.use('/api/register', authLimiter);
 app.use('/api/login', loginLimiter);
-app.use('/api/recovery', recoveryLimiter);
 app.use('/api/reports', reportLimiter);
 
-/* ===== 9. Middleware ===== */
 async function authRequired(req, res, next) {
   const h = req.headers.authorization || '';
   const token = h.startsWith('Bearer ') ? h.slice(7) : null;
@@ -228,16 +201,14 @@ function adminRequired(req, res, next) {
   next();
 }
 
-/* ===== 10. Register (سؤال الأمان إجباري) ===== */
+/* ===== 10. Register (بدون سؤال أمان) ===== */
 app.post('/api/register',
   body('name').trim().isLength({ min: 2, max: 20 }).matches(NAME_REGEX).custom((v) => !/[<>&"'`\\\/;(){}\[\]\s]/.test(v)),
   body('password').isLength({ min: 6, max: 128 }),
   body('color').optional().matches(/^#[0-9a-f]{6}$/i),
-  body('security_q').isInt({ min: 0, max: 7 }).withMessage('يجب اختيار سؤال أمان'),
-  body('security_a').trim().isLength({ min: 2, max: 100 }).withMessage('يجب إدخال إجابة صحيحة'),
   validate,
   async (req, res) => {
-    const { name, color, password, security_q, security_a } = req.body;
+    const { name, color, password } = req.body;
     const baseName = name.trim();
     if (!validateUsername(baseName)) return res.status(400).json({ error: 'invalid_input' });
 
@@ -245,14 +216,12 @@ app.post('/api/register',
     if (existsResult.rows.length > 0) return res.status(409).json({ error: 'username_taken' });
 
     const passwordHash = hashPassword(password);
-    const secQ = security_q;
-    const secAHash = hashPassword(normalizeAnswer(security_a));
 
     const qrId = nanoid(16).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16);
     const insertResult = await db.execute({
-      sql: `INSERT INTO users (username, display_name, color, qr_id, token_hash, password_hash, security_q, security_a_hash, created_at, last_seen)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [baseName, baseName, color || '#e8b567', qrId, 'pending', passwordHash, secQ, secAHash, now(), now()]
+      sql: `INSERT INTO users (username, display_name, color, qr_id, token_hash, password_hash, created_at, last_seen)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [baseName, baseName, color || '#e8b567', qrId, 'pending', passwordHash, now(), now()]
     });
 
     const userId = insertResult.lastInsertRowid;
@@ -264,7 +233,6 @@ app.post('/api/register',
   }
 );
 
-/* ===== 11. Login ===== */
 app.post('/api/login',
   body('name').trim().isLength({ min: 2, max: 20 }),
   body('password').isLength({ min: 1, max: 128 }),
@@ -294,7 +262,6 @@ app.post('/api/login',
   }
 );
 
-/* ===== 12. Change Password ===== */
 app.post('/api/change-password', authRequired,
   body('current_password').isLength({ min: 1, max: 128 }),
   body('new_password').isLength({ min: 6, max: 128 }),
@@ -309,52 +276,6 @@ app.post('/api/change-password', authRequired,
   }
 );
 
-/* ===== 13. Password Recovery ===== */
-app.post('/api/recovery/lookup',
-  body('name').trim().isLength({ min: 2, max: 20 }),
-  validate,
-  async (req, res) => {
-    const name = req.body.name.trim();
-    const userResult = await db.execute({ sql: 'SELECT id, username, display_name, security_q, security_a_hash FROM users WHERE username = ? AND deleted = 0', args: [name] });
-    const user = userResult.rows[0];
-    if (!user) return res.status(404).json({ error: 'user_not_found' });
-    if (user.security_q === null || user.security_q === undefined || !user.security_a_hash) {
-      return res.status(400).json({ error: 'no_security_question' });
-    }
-    res.json({
-      ok: true, username: user.username, display_name: user.display_name,
-      question_index: user.security_q, question: SECURITY_QUESTIONS[user.security_q] || ''
-    });
-  }
-);
-
-app.post('/api/recovery/reset',
-  body('name').trim().isLength({ min: 2, max: 20 }),
-  body('answer').trim().isLength({ min: 1, max: 100 }),
-  body('new_password').isLength({ min: 6, max: 128 }),
-  validate,
-  async (req, res) => {
-    const name = req.body.name.trim();
-    const answer = req.body.answer;
-    const newPassword = req.body.new_password;
-
-    const userResult = await db.execute({ sql: 'SELECT * FROM users WHERE username = ? AND deleted = 0', args: [name] });
-    const user = userResult.rows[0];
-    if (!user) return res.status(404).json({ error: 'user_not_found' });
-    if (!user.security_a_hash) return res.status(400).json({ error: 'no_security_question' });
-    if (user.banned === 1) return res.status(403).json({ error: 'banned' });
-
-    const norm = normalizeAnswer(answer);
-    if (!verifyPassword(norm, user.security_a_hash)) {
-      return res.status(401).json({ error: 'wrong_answer' });
-    }
-
-    await db.execute({ sql: 'UPDATE users SET password_hash = ? WHERE id = ?', args: [hashPassword(newPassword), user.id] });
-    res.json({ ok: true });
-  }
-);
-
-/* ===== 14. Logout ===== */
 app.post('/api/logout', authRequired, async (req, res) => {
   const uid = req.userId;
   await db.execute({ sql: 'UPDATE users SET token_hash = ?, public_key = NULL WHERE id = ?', args: [hashToken('loggedout_' + uid + '_' + Date.now()), uid] });
@@ -369,7 +290,6 @@ app.post('/api/logout', authRequired, async (req, res) => {
   res.json({ ok: true });
 });
 
-/* ===== 15. User routes ===== */
 app.get('/api/me', authRequired, (req, res) => res.json({ user: publicUser(req.user, true) }));
 
 app.put('/api/me', authRequired,
@@ -429,11 +349,6 @@ app.get('/api/users/:id', authRequired, async (req, res) => {
   res.json({ user: publicUser(row), isFriend: friendResult.rows.length > 0, blocked: blockResult.rows.length > 0 });
 });
 
-app.get('/api/security-questions', (req, res) => {
-  res.json({ questions: SECURITY_QUESTIONS });
-});
-
-/* ===== 16. Reports ===== */
 app.post('/api/reports', authRequired,
   body('reported_user_id').optional().isInt({ min: 1 }),
   body('reported_msg_id').optional().isInt({ min: 1 }),
@@ -477,7 +392,6 @@ app.post('/api/reports', authRequired,
   }
 );
 
-/* ===== 17. Admin Routes ===== */
 app.get('/api/admin/stats', authRequired, adminRequired, async (req, res) => {
   const totalUsers = (await db.execute('SELECT COUNT(*) as c FROM users WHERE deleted = 0')).rows[0].c;
   const activeUsers = (await db.execute({ sql: 'SELECT COUNT(*) as c FROM users WHERE deleted = 0 AND last_seen > ?', args: [Date.now() - 24*60*60*1000] })).rows[0].c;
@@ -673,7 +587,6 @@ app.delete('/api/admin/reports/:id', authRequired, adminRequired, async (req, re
   res.json({ ok: true });
 });
 
-/* ===== 18. QR ===== */
 app.get('/api/qr/image', authRequired, async (req, res) => {
   try {
     const link = `${PUBLIC_URL}/?qr=${req.user.qr_id}`;
@@ -682,7 +595,6 @@ app.get('/api/qr/image', authRequired, async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'qr_failed' }); }
 });
 
-/* ===== 19. Friends ===== */
 app.post('/api/friends/add-by-qr', authRequired,
   body('qr_id').trim().isLength({ min: 8, max: 32 }).matches(/^[a-z0-9]+$/i),
   validate,
@@ -709,7 +621,6 @@ app.post('/api/friends/add-by-qr', authRequired,
   }
 );
 
-/* ===== 20. DM ===== */
 app.get('/api/dm-conversations', authRequired, async (req, res) => {
   const rows = (await db.execute({
     sql: `SELECT CASE WHEN from_id = ? THEN to_id ELSE from_id END AS other_id, MAX(time) AS last_time
@@ -777,7 +688,6 @@ app.delete('/api/dms/:messageId', authRequired, async (req, res) => {
   res.json({ ok: true });
 });
 
-/* ===== 21. Upload ===== */
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
   filename: (req, file, cb) => {
@@ -795,7 +705,6 @@ app.post('/upload', authRequired, upload.single('image'), (req, res) => {
   res.json({ url: `${PUBLIC_URL}/uploads/${req.file.filename}` });
 });
 
-/* ===== 22. Push ===== */
 let pushEnabled = false;
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:admin@dust.app', process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
@@ -823,7 +732,6 @@ async function sendPush(userId, payload) {
   for (const id of dead) await db.execute({ sql: 'DELETE FROM push_subs WHERE id = ?', args: [id] });
 }
 
-/* ===== 23. Socket.io ===== */
 async function verifyToken(token) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
@@ -922,14 +830,12 @@ io.on('connection', (socket) => {
   });
 });
 
-/* ===== 24. Cleanup ===== */
 setInterval(async () => {
   const cutoff = now() - (48 * 60 * 60 * 1000);
   const r = await db.execute({ sql: 'DELETE FROM dms WHERE time < ? AND read = 1', args: [cutoff] });
   if (r.rowsAffected > 0) console.log(`🧹 Cleaned ${r.rowsAffected} messages`);
 }, 60 * 60 * 1000);
 
-/* ===== 25. Health ===== */
 app.get('/health', async (req, res) => {
   try {
     res.json({
@@ -948,7 +854,6 @@ app.get('/health', async (req, res) => {
   }
 });
 
-/* ===== 26. Fallback ===== */
 app.get('*', (req, res) => {
   const idx = path.join(PUBLIC_DIR, 'index.html');
   if (fs.existsSync(idx)) return res.sendFile(idx);
@@ -961,14 +866,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'server_error' });
 });
 
-/* ===== 27. Start ===== */
 initDb().then(() => {
   server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Dust Server v13.3.0 on port ${PORT}`);
     console.log(`🔗 ${PUBLIC_URL}`);
     console.log(`🔐 Password: scrypt (N=${SCRYPT_N})`);
-    console.log(`🛡️  Recovery: ${SECURITY_QUESTIONS.length} questions`);
-    console.log(`🎨 Avatars: ${ALLOWED_AVATARS.length}`);
     console.log(`📦 DB: Turso Cloud Database`);
   });
 }).catch(err => {
