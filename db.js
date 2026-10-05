@@ -1,5 +1,5 @@
 /* ============================================================
-   db.js — Turso Database Connection & Clean Initialization (Fixed)
+   db.js — Turso Database Connection & Clean Initialization
    ============================================================ */
 'use strict';
 
@@ -20,7 +20,7 @@ const db = createClient({
 });
 
 async function initDb() {
-    // 1. فحص ما إذا كان المخطط قديماً (لا يحتوي على عمود deleted)
+    // 1. فحص ما إذا كان المخطط قديماً
     let needsReset = false;
     try {
         await db.execute('SELECT deleted FROM users LIMIT 1');
@@ -30,7 +30,6 @@ async function initDb() {
             needsReset = true;
         } else {
             console.error('❌ Error checking schema:', e.message);
-            // إذا كان هناك خطأ آخر، نفضل إعادة التعيين لتجنب مشاكل أكبر
             needsReset = true;
         }
     }
@@ -39,20 +38,16 @@ async function initDb() {
     if (needsReset) {
         console.log('🔄 Old schema detected in Turso. Dropping old tables to recreate...');
         const tablesToDrop = ['reports', 'push_subs', 'dms', 'blocks', 'friendships', 'users', 'admin_logs'];
-        
-        // استخدام batch لحذف كل الجداول مرة واحدة
         const dropQueries = tablesToDrop.map(t => ({ sql: `DROP TABLE IF EXISTS ${t}` }));
         try {
             await db.batch(dropQueries);
             console.log('✅ Old tables dropped successfully');
         } catch (e) {
             console.error('❌ Failed to drop old tables:', e.message);
-            // نستمر على أي حال، ربما بعض الجداول لم تكن موجودة أساساً
         }
     }
 
-    // 3. إنشاء الجداول بالمخطط الصحيح باستخدام batch
-    // ملاحظة: تم تغيير BOOLEAN إلى INTEGER لتجنب أخطاء Turso
+    // 3. إنشاء الجداول بالمخطط الصحيح (بدون أي أوامر ALTER TABLE)
     const schemaQueries = [
         { sql: `CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -108,19 +103,12 @@ async function initDb() {
     ];
 
     try {
-        // استخدام batch لإنشاء كل الجداول دفعة واحدة لضمان التكامل
         await db.batch(schemaQueries);
         console.log('✅ Tables created successfully.');
     } catch (e) {
         console.error('❌ Schema error during batch creation:', e.message);
-        // إذا فشل الـ batch، سنحاول تنفيذ الأوامر واحداً تلو الآخر لمعرفة أين المشكلة بالضبط
         for (const query of schemaQueries) {
-            try {
-                await db.execute(query);
-            } catch (err) {
-                console.error('❌ Failed query:', query.sql.substring(0, 50) + '...');
-                console.error('   Error:', err.message);
-            }
+            try { await db.execute(query); } catch (err) { console.error('❌ Failed query:', query.sql.substring(0, 50), err.message); }
         }
     }
 
@@ -130,9 +118,7 @@ async function initDb() {
         console.log('🎉 Database initialized successfully with Turso!');
     } catch (e) {
         console.error('❌ CRITICAL: deleted column still missing after recreation!');
-        console.error('   This means the table creation failed. Check Turso logs.');
         console.error('   Error:', e.message);
-        // إيقاف السيرفر هنا أفضل من تشغيله وهو معطوب
         process.exit(1);
     }
 }
