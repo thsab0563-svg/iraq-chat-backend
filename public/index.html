@@ -801,19 +801,26 @@ $('btnRegister').addEventListener('click', async function(){
   var name = sanitizeName($('rgName').value);
   var password = $('rgPass').value;
   var password2 = $('rgPass2').value;
+  
   if (!NAME_REGEX.test(name)) return showErr('اسم غير صالح — استخدم حروف عربية أو إنجليزية و _ (2-20)');
   if (!password || password.length < 6) return showErr('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
   
   // 🔒 التحقق الإجباري من سؤال الأمان (فقط عند التسجيل)
   if (authMode === 'register') {
     var sqVal = $('rgSecQ').value;
+    
+    // التحقق من اختيار السؤال
     if (sqVal === '' || sqVal === null || sqVal === undefined) {
       return showErr('⚠️ يجب عليك اختيار سؤال أمان قبل المتابعة');
     }
+    
+    // التحقق من إجابة السؤال
     var sa = $('rgSecA').value.trim();
     if (sa.length < 2) {
       return showErr('⚠️ يجب عليك إدخال إجابة صحيحة لسؤال الأمان (حرفان على الأقل)');
     }
+    
+    // التحقق من تطابق كلمتي المرور
     if (password !== password2) {
       return showErr('كلمتا المرور غير متطابقتين');
     }
@@ -1825,15 +1832,5 @@ function playBeep(){
 
 })();
 </script>
-  <script>
-// حماية إضافية: حذف خيار "بدون سؤال أمان" من الواجهة إذا ظهر
-setTimeout(function() {
-    document.querySelectorAll('.modal-item').forEach(function(el) {
-        if (el.textContent && el.textContent.includes('بدون سؤال أمان')) {
-            el.remove();
-        }
-    });
-}, 1000);
-  </script>
 </body>
   </html>
